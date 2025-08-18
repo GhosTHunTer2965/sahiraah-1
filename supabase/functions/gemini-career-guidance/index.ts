@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const geminiApiKey = 'AIzaSyDeYsXpdJgBR98IxfV8NjFk6Wm8ml2f7YY';
+const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,7 +19,7 @@ serve(async (req) => {
     console.log('Gemini Career Guidance:', { action, currentQuestionCount, answersCount: answers?.length });
 
     if (!geminiApiKey) {
-      throw new Error('Gemini API key not configured');
+      throw new Error('Gemini API key not configured. Please set GEMINI_API_KEY in Supabase secrets.');
     }
 
     if (action === 'generate_question') {
@@ -63,7 +63,7 @@ async function generateNextQuestion(answers: any[], currentQuestionCount: number
 
 STUDENT PROFILE:
 - Name: ${userName}
-- Education Level: ${educationLevel}
+- Education Level: ${educationLevel} (Note: SSLC=10th grade, PUC=12th grade, BE/BTech=Engineering degree, BA=Bachelor of Arts, CA=Chartered Accountant, BBA=Bachelor of Business Administration)
 - Current Question: ${currentQuestionCount + 1} of ${maxQuestions}
 
 PREVIOUS RESPONSES:
@@ -73,10 +73,11 @@ TASK: Generate a SHORT, SIMPLE question that branches naturally from their previ
 
 1. Be MAXIMUM 15 words - keep it short and clear
 2. Build upon their previous responses to dive deeper into their interests  
-3. Be culturally relevant for Indian students and career market
-4. Focus on emerging careers and modern opportunities
+3. Be culturally relevant for Indian students and career market, understanding regional education terms
+4. Focus on emerging careers and modern opportunities in India
 5. Use simple language that's easy to understand
 6. Help reveal personality traits, skills, and interests
+7. Consider the student's education level and regional context (Karnataka/South India if SSLC/PUC mentioned)
 
 EXAMPLE BRANCHING LOGIC:
 - If they mentioned "Technology" → Ask "What tech area interests you most?"

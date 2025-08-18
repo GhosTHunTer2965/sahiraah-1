@@ -23,6 +23,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import CareerResultsChart from './CareerResultsChart';
 
 interface CareerRecommendation {
   title: string;
@@ -333,6 +334,9 @@ const GeminiCareerReport = ({ sessionId, onRetake }: Props) => {
           Retake Assessment
         </Button>
       </div>
+
+      {/* Graphical Analysis */}
+      <CareerResultsChart analysisData={analysisData} />
 
       {/* Personality Insights */}
       <Card>

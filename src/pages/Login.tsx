@@ -104,8 +104,8 @@ const Login = () => {
           return;
         }
 
-        // Store user data in localStorage for app-level access
-        localStorage.setItem("sahiraah_user", JSON.stringify(data.user));
+        // Store minimal user data in localStorage
+        localStorage.setItem("sahiraah_user_id", data.user.id);
         
         toast.success("Login successful! Welcome back!");
         
