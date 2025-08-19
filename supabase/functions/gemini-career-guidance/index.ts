@@ -16,9 +16,10 @@ serve(async (req) => {
   try {
     const { action, answers, currentQuestionCount, userName, educationLevel } = await req.json();
     
-    console.log('Gemini Career Guidance:', { action, currentQuestionCount, answersCount: answers?.length });
+    console.log('Gemini Career Guidance:', { action, currentQuestionCount, answersCount: answers?.length, userName, educationLevel });
 
     if (!geminiApiKey) {
+      console.error('GEMINI_API_KEY not found in environment variables');
       throw new Error('Gemini API key not configured. Please set GEMINI_API_KEY in Supabase secrets.');
     }
 
@@ -63,36 +64,48 @@ async function generateNextQuestion(answers: any[], currentQuestionCount: number
 
 STUDENT PROFILE:
 - Name: ${userName}
-- Education Level: ${educationLevel} (SSLC=10th grade, PUC=12th grade, BE/BTech=Engineering, BA=Bachelor of Arts, CA=Chartered Accountant, BBA=Business Administration)
+- Education Level: ${educationLevel}
 - Current Question: ${currentQuestionCount + 1} of ${maxQuestions}
 
+EDUCATION LEVEL UNDERSTANDING:
+- SSLC/10th Standard = Completed 10th grade (Karnataka/South India system)
+- PUC/12th Standard/+2 = Completed 12th grade (Pre-University Course)
+- BE/B.Tech = Bachelor of Engineering/Technology (4-year technical degree)
+- BA = Bachelor of Arts (3-year humanities/liberal arts degree)
+- CA = Chartered Accountant (professional accounting qualification)
+- BBA = Bachelor of Business Administration (3-year business degree)
+- BSc/B.Sc = Bachelor of Science (3-year science degree)
+- BCom/B.Com = Bachelor of Commerce (3-year commerce degree)
+
 PREVIOUS RESPONSES:
-${answerContext || 'No previous responses yet'}
+${answerContext || 'No previous responses yet - start with a broad interest discovery question'}
 
 CRITICAL TREE-BASED LOGIC:
 You MUST create questions that branch directly from their previous answers to go DEEPER into their interests. Each question should:
 
-1. Be MAXIMUM 12 words - extremely concise
+1. Be MAXIMUM 10 words - extremely concise and clear
 2. DIRECTLY BUILD on their last answer to explore deeper interests
 3. Focus on DISCOVERING INTERESTS, not just skills or background
-4. Use regional education understanding (SSLC/PUC = Karnataka/South India)
+4. Consider their education level appropriately
 5. Branch into specific interest areas based on their responses
 
 BRANCHING EXAMPLES:
-- If they said "Technology" → "Which technology fascinates you most - AI, apps, or websites?"
-- If they said "Creative" → "Do you prefer visual arts, writing, or performing?"
-- If they said "Business" → "Are you drawn to finance, marketing, or entrepreneurship?"
-- If they said "Science" → "What excites you more - research, healthcare, or innovation?"
+- If they said "Technology" → "AI, mobile apps, or web development - what excites you?"
+- If they said "Creative" → "Visual arts, writing, or performing - which draws you?"
+- If they said "Business" → "Finance, marketing, or entrepreneurship - what interests you?"
+- If they said "Science" → "Research, healthcare, or innovation - what motivates you?"
+- If they said "Teaching" → "Young children, teenagers, or adults - whom would you prefer?"
 
-INTEREST DISCOVERY PRIORITY:
+INTEREST DISCOVERY PRIORITY (focus on these areas):
 - What activities make them lose track of time?
 - What topics do they research for fun?
 - What problems do they want to solve?
 - What subjects naturally excite them?
+- What type of impact do they want to make?
 
 Return EXACTLY this JSON format:
 {
-  "question": "Direct, interest-focused question (max 12 words)",
+  "question": "Direct, interest-focused question (max 10 words)",
   "type": "text",
   "placeholder": "Share what interests you most...",
   "category": "interests_discovery",
@@ -283,19 +296,19 @@ IMPORTANT: Use ONLY verified, working course URLs. No 404 errors allowed. Focus 
           educationPath: "Computer Science, Engineering, or coding bootcamps",
           freeResources: {
             beginner: [
-              {"title": "HTML & CSS Basics", "url": "https://www.freecodecamp.org/learn/responsive-web-design/", "platform": "FreeCodeCamp", "duration": "4 weeks"},
-              {"title": "JavaScript Basics", "url": "https://www.codecademy.com/learn/introduction-to-javascript", "platform": "Codecademy", "duration": "6 weeks"},
-              {"title": "Programming Fundamentals", "url": "https://www.khanacademy.org/computing/computer-programming", "platform": "Khan Academy", "duration": "8 weeks"}
+              {"title": "Introduction to Programming", "url": "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/", "platform": "FreeCodeCamp", "duration": "4 weeks"},
+              {"title": "Computer Science Basics", "url": "https://www.khanacademy.org/computing/computer-programming", "platform": "Khan Academy", "duration": "6 weeks"},
+              {"title": "Programming Fundamentals", "url": "https://www.coursera.org/learn/programming-fundamentals", "platform": "Coursera", "duration": "8 weeks"}
             ],
             intermediate: [
-              {"title": "React.js Complete Course", "url": "https://www.youtube.com/watch?v=bMknfKXIFA8", "platform": "YouTube", "duration": "10 weeks"},
-              {"title": "Node.js Tutorial", "url": "https://www.youtube.com/watch?v=TlB_eWDSMt4", "platform": "YouTube", "duration": "8 weeks"},
-              {"title": "Database Fundamentals", "url": "https://www.coursera.org/learn/database-design", "platform": "Coursera", "duration": "6 weeks"}
+              {"title": "Web Development Bootcamp", "url": "https://www.freecodecamp.org/learn/responsive-web-design/", "platform": "FreeCodeCamp", "duration": "10 weeks"},
+              {"title": "Data Structures and Algorithms", "url": "https://www.khanacademy.org/computing/computer-science", "platform": "Khan Academy", "duration": "12 weeks"},
+              {"title": "Full Stack Development", "url": "https://www.coursera.org/specializations/full-stack-web-development", "platform": "Coursera", "duration": "16 weeks"}
             ],
             advanced: [
-              {"title": "System Design Basics", "url": "https://www.youtube.com/watch?v=ZgdS0EUmn70", "platform": "YouTube", "duration": "12 weeks"},
-              {"title": "AWS Cloud Essentials", "url": "https://www.youtube.com/watch?v=3hLmDS179YE", "platform": "YouTube", "duration": "10 weeks"},
-              {"title": "Machine Learning Intro", "url": "https://www.coursera.org/learn/machine-learning", "platform": "Coursera", "duration": "16 weeks"}
+              {"title": "Advanced Programming Concepts", "url": "https://ocw.mit.edu/courses/6-001-structure-and-interpretation-of-computer-programs-spring-2005/", "platform": "MIT OpenCourseWare", "duration": "12 weeks"},
+              {"title": "Software Engineering Principles", "url": "https://www.edx.org/course/software-engineering-introduction", "platform": "edX", "duration": "14 weeks"},
+              {"title": "System Design and Architecture", "url": "https://ocw.mit.edu/courses/6-033-computer-system-engineering-spring-2018/", "platform": "MIT OpenCourseWare", "duration": "16 weeks"}
             ]
           }
         }
