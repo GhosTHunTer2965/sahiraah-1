@@ -60,7 +60,7 @@ async function generateNextQuestion(answers: any[], currentQuestionCount: number
     `Q${i + 1}: ${a.question}\nAnswer: ${a.answer}`
   ).join('\n\n');
 
-  const questionPrompt = `You are an expert career counselor for Indian students. Generate the next SHORT question in a TREE-BASED career assessment that builds on previous answers to discover the student's TRUE INTERESTS.
+const questionPrompt = `You are an expert career counselor for Indian students. Generate the next SHORT question in a TREE-BASED career assessment that builds on previous answers to discover the student's TRUE INTERESTS and PERSONALITY.
 
 STUDENT PROFILE:
 - Name: ${userName}
@@ -68,51 +68,81 @@ STUDENT PROFILE:
 - Current Question: ${currentQuestionCount + 1} of ${maxQuestions}
 
 EDUCATION LEVEL UNDERSTANDING:
-- SSLC/10th Standard = Completed 10th grade (Karnataka/South India system)
-- PUC/12th Standard/+2 = Completed 12th grade (Pre-University Course)
+INDIAN EDUCATION BOARDS & SYSTEMS:
+- SSLC/10th Standard = Secondary School Leaving Certificate (Karnataka, Tamil Nadu, Kerala system)
+- ICSE/10th = Indian Certificate of Secondary Education (All India board)
+- CBSE/10th = Central Board of Secondary Education (All India board)
+- State Board 10th = Various state-specific 10th grade boards
+- PUC/+2/12th = Pre-University Course/Higher Secondary/12th Standard
+- CBSE 12th = Central Board 12th standard
+- ICSE/ISC 12th = Indian School Certificate 12th standard
+- State Board 12th = Various state-specific 12th grade boards
+- Intermediate = 12th standard in Andhra Pradesh/Telangana
+- HSC = Higher Secondary Certificate (Maharashtra, Gujarat)
+
+HIGHER EDUCATION:
 - BE/B.Tech = Bachelor of Engineering/Technology (4-year technical degree)
 - BA = Bachelor of Arts (3-year humanities/liberal arts degree)
-- CA = Chartered Accountant (professional accounting qualification)
-- BBA = Bachelor of Business Administration (3-year business degree)
 - BSc/B.Sc = Bachelor of Science (3-year science degree)
 - BCom/B.Com = Bachelor of Commerce (3-year commerce degree)
+- BBA = Bachelor of Business Administration (3-year business degree)
+- BCA = Bachelor of Computer Applications (3-year computer degree)
+- B.Pharma = Bachelor of Pharmacy (4-year pharmaceutical degree)
+- MBBS = Bachelor of Medicine and Surgery (5.5-year medical degree)
+- BDS = Bachelor of Dental Surgery (5-year dental degree)
+- LLB = Bachelor of Laws (3-year law degree)
+- CA = Chartered Accountant (professional accounting qualification)
+- CS = Company Secretary (professional qualification)
+- CMA = Cost and Management Accountant (professional qualification)
+- Diploma = 3-year technical diploma after 10th
+- ITI = Industrial Training Institute certificate
 
 PREVIOUS RESPONSES:
-${answerContext || 'No previous responses yet - start with a broad interest discovery question'}
+${answerContext || 'No previous responses yet - start with discovering their natural interests and what excites them'}
 
 CRITICAL TREE-BASED LOGIC:
 You MUST create questions that branch directly from their previous answers to go DEEPER into their interests. Each question should:
 
-1. Be MAXIMUM 10 words - extremely concise and clear
+1. Be MAXIMUM 8 words - extremely concise and clear
 2. DIRECTLY BUILD on their last answer to explore deeper interests
-3. Focus on DISCOVERING INTERESTS, not just skills or background
-4. Consider their education level appropriately
+3. Focus on DISCOVERING INTERESTS, PERSONALITY, and NATURAL INCLINATIONS
+4. Consider their education level appropriately (use simpler language for younger students)
 5. Branch into specific interest areas based on their responses
+6. Use SMART TREE BRANCHING - each answer should unlock a specific path
 
-BRANCHING EXAMPLES:
-- If they said "Technology" → "AI, mobile apps, or web development - what excites you?"
-- If they said "Creative" → "Visual arts, writing, or performing - which draws you?"
-- If they said "Business" → "Finance, marketing, or entrepreneurship - what interests you?"
-- If they said "Science" → "Research, healthcare, or innovation - what motivates you?"
-- If they said "Teaching" → "Young children, teenagers, or adults - whom would you prefer?"
+SMART TREE BRANCHING EXAMPLES:
+FIRST QUESTION: "What activities make you lose track of time?"
+IF Technology → "Programming, gaming, or digital design - which appeals more?"
+IF Creative → "Art, music, writing, or filmmaking - what draws you?"
+IF Sports → "Playing, coaching, sports medicine, or sports business?"
+IF Helping → "Teaching, healthcare, counseling, or social work?"
+IF Problem-solving → "Math puzzles, fixing things, research, or strategy?"
 
-INTEREST DISCOVERY PRIORITY (focus on these areas):
-- What activities make them lose track of time?
-- What topics do they research for fun?
-- What problems do they want to solve?
-- What subjects naturally excite them?
-- What type of impact do they want to make?
+DEEPER BRANCHING:
+IF Programming → "Building apps, websites, games, or AI systems?"
+IF Healthcare → "Treating patients, research, surgery, or mental health?"
+IF Teaching → "Young kids, teenagers, adults, or special needs?"
+IF Business → "Starting companies, managing teams, marketing, or finance?"
+
+INTEREST DISCOVERY PRIORITY AREAS:
+- What activities energize them naturally?
+- What problems do they want to solve in the world?
+- What subjects do they explore beyond school requirements?
+- How do they prefer to work - alone, in teams, leading?
+- What impact do they want to make?
+- What type of environment motivates them?
 
 Return EXACTLY this JSON format:
 {
-  "question": "Direct, interest-focused question (max 10 words)",
-  "type": "text",
+  "question": "Direct, interest-focused question (max 8 words)",
+  "type": "text", 
   "placeholder": "Share what interests you most...",
   "category": "interests_discovery",
   "reasoning": "How this branches from their previous answer to discover deeper interests"
 }
 
-Generate a question that naturally follows their journey of interest discovery.`;
+IMPORTANT: If this is question 1 and no previous responses, ask about natural interests or activities they enjoy.
+Generate a question that naturally follows their interest discovery journey with smart tree branching.`;
 
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
