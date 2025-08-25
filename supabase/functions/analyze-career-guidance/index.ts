@@ -5,7 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,30 +18,11 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, answers, studentName, educationLevel } = await req.json();
+    const { sessionId, userId, answers, studentName, educationLevel } = await req.json();
     
-    // Get authenticated user from Authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header provided');
-    }
-
-    // Create anon client with auth header to enforce RLS
-    const supabase = createClient(supabaseUrl!, supabaseAnonKey!, {
-      global: {
-        headers: {
-          authorization: authHeader,
-        },
-      },
-    });
-
-    // Get authenticated user
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-    if (authError || !authUser) {
-      throw new Error('Authentication failed');
-    }
-
-    console.log('Analyzing career guidance for authenticated user:', { sessionId, userId: authUser.id, studentName, educationLevel });
+    console.log('Analyzing career guidance for:', { sessionId, userId, studentName, educationLevel });
+    
+    const supabase = createClient(supabaseUrl!, supabaseKey!);
 
     // Enhanced fallback analysis when OpenAI fails
     let analysis;
@@ -147,17 +128,6 @@ Return response in JSON format:
       analysis = generateFallbackAnalysis(answers, studentName, educationLevel);
     }
 
-    // Verify session ownership before updating
-    const { data: sessionCheck, error: sessionCheckError } = await supabase
-      .from('user_quiz_sessions')
-      .select('user_id')
-      .eq('id', sessionId)
-      .single();
-
-    if (sessionCheckError || !sessionCheck || sessionCheck.user_id !== authUser.id) {
-      throw new Error('Session not found or access denied');
-    }
-
     // Update quiz session with analysis results
     const { error: sessionError } = await supabase
       .from('user_quiz_sessions')
@@ -170,8 +140,7 @@ Return response in JSON format:
         weaknesses: analysis.areasForImprovement,
         career_recommendations: analysis.careerRecommendations
       })
-      .eq('id', sessionId)
-      .eq('user_id', authUser.id);
+      .eq('id', sessionId);
 
     if (sessionError) {
       console.error('Session update error:', sessionError);
@@ -184,7 +153,7 @@ Return response in JSON format:
       const { error: historyError } = await supabase
         .from('user_career_history')
         .insert({
-          user_id: authUser.id, // Use authenticated user ID
+          user_id: userId,
           session_id: sessionId,
           career: career.title,
           reason: career.description,
@@ -196,12 +165,8 @@ Return response in JSON format:
             growth_potential: career.growthPotential,
             key_skills: career.keySkills,
             education_path: career.educationPath,
-            match_score: career.matchScore,
-            free_resources: career.freeResources || null
-          },
-          courses: career.freeResources ? Object.values(career.freeResources).flat() : null,
-          tags: career.keySkills || [],
-          roadmap_summary: `Complete ${career.educationPath} and develop skills in: ${career.keySkills?.join(', ')}`
+            match_score: career.matchScore
+          }
         });
 
       if (historyError) {
