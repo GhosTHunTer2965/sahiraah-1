@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -17,10 +16,9 @@ serve(async (req) => {
   try {
     const { action, answers, currentQuestionCount, userName, educationLevel } = await req.json();
     
-    console.log('Gemini Career Guidance:', { action, currentQuestionCount, answersCount: answers?.length, userName, educationLevel });
+    console.log('Gemini Career Guidance:', { action, currentQuestionCount, answersCount: answers?.length });
 
     if (!geminiApiKey) {
-      console.error('GEMINI_API_KEY not found in environment variables');
       throw new Error('Gemini API key not configured. Please set GEMINI_API_KEY in Supabase secrets.');
     }
 
@@ -61,53 +59,49 @@ async function generateNextQuestion(answers: any[], currentQuestionCount: number
     `Q${i + 1}: ${a.question}\nAnswer: ${a.answer}`
   ).join('\n\n');
 
-  const questionPrompt = `You are an expert career counselor for Indian students. Generate the next question in a personalized career assessment.
+  const questionPrompt = `You are an expert career counselor for Indian students. Generate the next SHORT question in a TREE-BASED career assessment that builds on previous answers to discover the student's TRUE INTERESTS.
 
 STUDENT PROFILE:
 - Name: ${userName}
-- Education Level: ${educationLevel}
+- Education Level: ${educationLevel} (SSLC=10th grade, PUC=12th grade, BE/BTech=Engineering, BA=Bachelor of Arts, CA=Chartered Accountant, BBA=Business Administration)
 - Current Question: ${currentQuestionCount + 1} of ${maxQuestions}
 
-EDUCATION LEVEL UNDERSTANDING:
-${educationLevel.toLowerCase().includes('sslc') || educationLevel.toLowerCase().includes('10th') ? 'Student is in 10th standard/SSLC - focus on discovering basic interests and aptitudes' : ''}
-${educationLevel.toLowerCase().includes('puc') || educationLevel.toLowerCase().includes('12th') ? 'Student is in 12th/PUC - focus on subject interests and career direction' : ''}
-${educationLevel.toLowerCase().includes('graduate') || educationLevel.toLowerCase().includes('degree') ? 'Student is a graduate - focus on specialization and career advancement' : ''}
-
 PREVIOUS RESPONSES:
-${answerContext || 'No previous responses yet - start with discovering their core interests'}
+${answerContext || 'No previous responses yet'}
 
-TREE-BASED QUESTIONING LOGIC:
-Create a question that builds directly on their previous answers. Each question should:
-1. Be specific and engaging (max 15 words)
-2. Build on their last answer to go deeper
-3. Focus on discovering interests, skills, and career aspirations
-4. Be appropriate for their education level
-5. Use simple, clear language
+CRITICAL TREE-BASED LOGIC:
+You MUST create questions that branch directly from their previous answers to go DEEPER into their interests. Each question should:
 
-QUESTION CATEGORIES TO EXPLORE:
-- interests: What activities engage them naturally?
-- skills: What are they naturally good at?
-- values: What matters most to them in work?
-- work_style: How do they prefer to work?
-- goals: What do they want to achieve?
-- subjects: Academic preferences and strengths
-- problem_solving: How they approach challenges
-- social_impact: What change they want to create
+1. Be MAXIMUM 12 words - extremely concise
+2. DIRECTLY BUILD on their last answer to explore deeper interests
+3. Focus on DISCOVERING INTERESTS, not just skills or background
+4. Use regional education understanding (SSLC/PUC = Karnataka/South India)
+5. Branch into specific interest areas based on their responses
+
+BRANCHING EXAMPLES:
+- If they said "Technology" → "Which technology fascinates you most - AI, apps, or websites?"
+- If they said "Creative" → "Do you prefer visual arts, writing, or performing?"
+- If they said "Business" → "Are you drawn to finance, marketing, or entrepreneurship?"
+- If they said "Science" → "What excites you more - research, healthcare, or innovation?"
+
+INTEREST DISCOVERY PRIORITY:
+- What activities make them lose track of time?
+- What topics do they research for fun?
+- What problems do they want to solve?
+- What subjects naturally excite them?
 
 Return EXACTLY this JSON format:
 {
-  "question": "Clear, engaging question based on their responses",
+  "question": "Direct, interest-focused question (max 12 words)",
   "type": "text",
-  "placeholder": "Helpful placeholder text for the answer field",
-  "category": "most_relevant_category",
-  "reasoning": "Brief explanation of why this question helps their career discovery"
+  "placeholder": "Share what interests you most...",
+  "category": "interests_discovery",
+  "reasoning": "How this branches from their previous answer to discover deeper interests"
 }
 
-Generate a question that naturally follows their journey of self-discovery.`;
+Generate a question that naturally follows their journey of interest discovery.`;
 
   try {
-    console.log('Calling Gemini API with prompt length:', questionPrompt.length);
-    
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
@@ -125,34 +119,22 @@ Generate a question that naturally follows their journey of self-discovery.`;
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      console.error('Invalid Gemini response structure:', data);
-      throw new Error('Invalid response from Gemini API');
-    }
-    
     const generatedText = data.candidates[0].content.parts[0].text;
-    console.log('Generated text:', generatedText);
     
     // Clean up the response to extract JSON
     const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      console.error('Could not extract JSON from:', generatedText);
       throw new Error('Could not extract JSON from response');
     }
 
     const questionData = JSON.parse(jsonMatch[0]);
-    console.log('Parsed question data:', questionData);
     
     // Validate the response
-    if (!questionData.question || !questionData.category) {
-      console.error('Invalid question format:', questionData);
+    if (!questionData.question) {
       throw new Error('Invalid question format from AI');
     }
 
@@ -186,55 +168,63 @@ async function generateCareerReport(answers: any[], userName: string, educationL
     `Q${i + 1}: ${a.question}\nAnswer: ${a.answer}`
   ).join('\n\n');
 
-  const reportPrompt = `You are an expert career counselor analyzing responses for personalized career guidance.
+  const reportPrompt = `You are an expert career counselor analyzing a student's interest-based assessment responses. Generate career recommendations based on their discovered INTERESTS.
 
 STUDENT PROFILE:
 - Name: ${userName}
-- Education Level: ${educationLevel}
-- Questions Answered: ${answers.length}
+- Education Level: ${educationLevel} (SSLC=10th grade, PUC=12th grade, BE/BTech=Engineering, BA=Bachelor of Arts, CA=Chartered Accountant, BBA=Business Administration)
+- Total Questions Answered: ${answers.length} (exactly 15 tree-based questions focused on interests)
 
-RESPONSES:
+INTEREST-BASED RESPONSES:
 ${answerContext}
 
-Generate career recommendations with VERIFIED, WORKING course links. Focus on careers that match their interests and education level.
+CRITICAL TASK: Analyze their interest patterns and provide exactly 5 career recommendations that MATCH their interests. Each career must include exactly 3 FREE, VERIFIED, WORKING courses per level.
+
+VERIFIED COURSE SOURCES (NO 404 ERRORS):
+- FreeCodeCamp: https://www.freecodecamp.org/learn/
+- Khan Academy: https://www.khanacademy.org/
+- Coursera (free courses): https://www.coursera.org/
+- edX (free courses): https://www.edx.org/
+- MIT OpenCourseWare: https://ocw.mit.edu/
+- Harvard Online: https://online-learning.harvard.edu/
 
 Return EXACTLY this JSON format:
 {
-  "strengths": ["Strength 1", "Strength 2", "Strength 3", "Strength 4"],
-  "areasForImprovement": ["Area 1", "Area 2", "Area 3"],
+  "strengths": ["Interest-based strength 1", "Interest-based strength 2", "Interest-based strength 3", "Interest-based strength 4"],
+  "areasForImprovement": ["Interest development area 1", "Interest development area 2", "Interest development area 3"],
   "careerRecommendations": [
     {
       "title": "Career Title",
-      "description": "Why this career matches their profile",
+      "description": "Why this career perfectly matches their discovered interests and passion areas",
       "matchScore": 95,
-      "growthPotential": "Growth opportunities in India",
+      "growthPotential": "Specific growth opportunities in India based on their interests",
       "salaryRange": "₹X-Y LPA",
-      "keySkills": ["Skill 1", "Skill 2", "Skill 3"],
-      "educationPath": "Recommended education path",
+      "keySkills": ["Interest-aligned skill 1", "Interest-aligned skill 2", "Interest-aligned skill 3"],
+      "educationPath": "Interest-based education recommendations for Indian context",
       "freeResources": {
         "beginner": [
-          {"title": "Course 1", "url": "https://www.freecodecamp.org/learn/", "platform": "FreeCodeCamp", "duration": "4 weeks"},
-          {"title": "Course 2", "url": "https://www.coursera.org/", "platform": "Coursera", "duration": "6 weeks"},
-          {"title": "Course 3", "url": "https://www.khanacademy.org/", "platform": "Khan Academy", "duration": "3 weeks"}
+          {"title": "Course Title 1", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 2", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 3", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"}
         ],
         "intermediate": [
-          {"title": "Course 1", "url": "https://www.edx.org/", "platform": "edX", "duration": "8 weeks"},
-          {"title": "Course 2", "url": "https://ocw.mit.edu/", "platform": "MIT OCW", "duration": "10 weeks"},
-          {"title": "Course 3", "url": "https://www.coursera.org/", "platform": "Coursera", "duration": "12 weeks"}
+          {"title": "Course Title 1", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 2", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 3", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"}
         ],
         "advanced": [
-          {"title": "Course 1", "url": "https://ocw.mit.edu/", "platform": "MIT OCW", "duration": "12 weeks"},
-          {"title": "Course 2", "url": "https://www.edx.org/", "platform": "edX", "duration": "14 weeks"},
-          {"title": "Course 3", "url": "https://online-learning.harvard.edu/", "platform": "Harvard Online", "duration": "16 weeks"}
+          {"title": "Course Title 1", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 2", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 3", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"}
         ]
       }
     }
   ],
-  "personalityInsights": "Analysis of their interests and work style",
-  "recommendedNextSteps": ["Step 1", "Step 2", "Step 3"]
+  "personalityInsights": "Detailed analysis of their interests and how they align with personality traits",
+  "recommendedNextSteps": ["Interest-based step 1", "Interest-based step 2", "Interest-based step 3"]
 }
 
-Focus on careers that genuinely match their responses and provide actionable guidance.`;
+IMPORTANT: Use ONLY verified, working course URLs. No 404 errors allowed. Focus on careers that match their INTERESTS, not just skills.`;
 
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
@@ -278,8 +268,41 @@ Focus on careers that genuinely match their responses and provide actionable gui
   } catch (error) {
     console.error('Error generating report:', error);
     
-    // Fallback analysis based on education level
-    const fallbackAnalysis = getFallbackAnalysis(educationLevel, answers);
+    // Fallback analysis
+    const fallbackAnalysis = {
+      strengths: ["Problem-solving", "Communication", "Adaptability", "Learning agility"],
+      areasForImprovement: ["Technical skills", "Leadership development", "Industry knowledge"],
+      careerRecommendations: [
+        {
+          title: "Software Developer",
+          description: "Based on your responses, you show strong logical thinking and problem-solving abilities suitable for software development.",
+          matchScore: 88,
+          growthPotential: "Excellent growth in India's expanding tech sector",
+          salaryRange: "₹6-25 LPA",
+          keySkills: ["Programming", "Problem Solving", "Logical Thinking"],
+          educationPath: "Computer Science, Engineering, or coding bootcamps",
+          freeResources: {
+            beginner: [
+              {"title": "HTML & CSS Basics", "url": "https://www.freecodecamp.org/learn/responsive-web-design/", "platform": "FreeCodeCamp", "duration": "4 weeks"},
+              {"title": "JavaScript Basics", "url": "https://www.codecademy.com/learn/introduction-to-javascript", "platform": "Codecademy", "duration": "6 weeks"},
+              {"title": "Programming Fundamentals", "url": "https://www.khanacademy.org/computing/computer-programming", "platform": "Khan Academy", "duration": "8 weeks"}
+            ],
+            intermediate: [
+              {"title": "React.js Complete Course", "url": "https://www.youtube.com/watch?v=bMknfKXIFA8", "platform": "YouTube", "duration": "10 weeks"},
+              {"title": "Node.js Tutorial", "url": "https://www.youtube.com/watch?v=TlB_eWDSMt4", "platform": "YouTube", "duration": "8 weeks"},
+              {"title": "Database Fundamentals", "url": "https://www.coursera.org/learn/database-design", "platform": "Coursera", "duration": "6 weeks"}
+            ],
+            advanced: [
+              {"title": "System Design Basics", "url": "https://www.youtube.com/watch?v=ZgdS0EUmn70", "platform": "YouTube", "duration": "12 weeks"},
+              {"title": "AWS Cloud Essentials", "url": "https://www.youtube.com/watch?v=3hLmDS179YE", "platform": "YouTube", "duration": "10 weeks"},
+              {"title": "Machine Learning Intro", "url": "https://www.coursera.org/learn/machine-learning", "platform": "Coursera", "duration": "16 weeks"}
+            ]
+          }
+        }
+      ],
+      personalityInsights: "You demonstrate strong analytical thinking and a systematic approach to problem-solving.",
+      recommendedNextSteps: ["Start with basic programming courses", "Build a portfolio of projects", "Network with industry professionals"]
+    };
     
     return new Response(JSON.stringify({
       success: true,
@@ -294,93 +317,41 @@ Focus on careers that genuinely match their responses and provide actionable gui
 function getFallbackQuestion(questionCount: number, answers: any[]) {
   const fallbackQuestions = [
     {
-      question: "What activities make you lose track of time?",
+      question: "What subjects interest you most?",
       type: "text",
-      placeholder: "Describe activities that deeply engage you...",
+      placeholder: "Type the subjects that interest you...",
       category: "interests",
-      reasoning: "Understanding your natural interests helps identify career paths that will keep you motivated."
+      reasoning: "Understanding core subject interests helps identify career paths."
     },
     {
-      question: "What kind of problems do you enjoy solving?",
+      question: "How do you prefer to work?",
       type: "text",
-      placeholder: "Share what type of challenges excite you...",
+      placeholder: "Describe your preferred work style...",
+      category: "work_style",
+      reasoning: "Work style preferences indicate suitable career environments."
+    },
+    {
+      question: "What motivates you in your career?",
+      type: "text",
+      placeholder: "Share what drives you professionally...",
+      category: "motivation",
+      reasoning: "Understanding motivations helps align career choices with personal values."
+    },
+    {
+      question: "Which technology field excites you?",
+      type: "text",
+      placeholder: "Tell us about technology that interests you...",
+      category: "technology",
+      reasoning: "Interest in emerging technologies guides future career opportunities."
+    },
+    {
+      question: "How do you solve problems?",
+      type: "text",
+      placeholder: "Describe your problem-solving approach...",
       category: "problem_solving",
-      reasoning: "Your problem-solving preferences reveal the type of work environment that suits you best."
-    },
-    {
-      question: "How do you prefer to work with others?",
-      type: "text",
-      placeholder: "Describe your ideal team dynamics...",
-      category: "teamwork",
-      reasoning: "Understanding your collaboration style helps match you with suitable career environments."
-    },
-    {
-      question: "What subjects interest you most in your studies?",
-      type: "text",
-      placeholder: "Tell us about your favorite subjects and why...",
-      category: "subjects",
-      reasoning: "Academic interests often translate into career preferences and guide educational paths."
-    },
-    {
-      question: "What impact do you want to make in the world?",
-      type: "text",
-      placeholder: "Share your vision for contributing to society...",
-      category: "values",
-      reasoning: "Your desired impact helps identify meaningful career paths that align with your values."
+      reasoning: "Problem-solving approach reveals leadership and decision-making style."
     }
   ];
 
   return fallbackQuestions[questionCount % fallbackQuestions.length];
-}
-
-function getFallbackAnalysis(educationLevel: string, answers: any[]) {
-  const isEarlyStage = educationLevel.toLowerCase().includes('10th') || educationLevel.toLowerCase().includes('sslc');
-  
-  return {
-    strengths: [
-      "Good communication skills",
-      "Willingness to learn",
-      "Problem-solving mindset",
-      "Adaptability"
-    ],
-    areasForImprovement: [
-      "Technical skill development",
-      "Industry knowledge",
-      "Professional experience"
-    ],
-    careerRecommendations: [
-      {
-        title: isEarlyStage ? "Technology & Programming" : "Software Development",
-        description: "Based on your responses, technology offers excellent growth opportunities with your learning attitude.",
-        matchScore: 85,
-        growthPotential: "Excellent growth in India's expanding tech sector",
-        salaryRange: isEarlyStage ? "₹3-8 LPA (entry level)" : "₹6-25 LPA",
-        keySkills: ["Programming", "Problem Solving", "Logical Thinking"],
-        educationPath: isEarlyStage ? "Consider Computer Science in 12th, then BE/B.Tech" : "Continuous learning through courses and projects",
-        freeResources: {
-          beginner: [
-            {"title": "Introduction to Programming", "url": "https://www.freecodecamp.org/learn/", "platform": "FreeCodeCamp", "duration": "4 weeks"},
-            {"title": "Computer Science Basics", "url": "https://www.khanacademy.org/computing/computer-programming", "platform": "Khan Academy", "duration": "6 weeks"},
-            {"title": "Programming Fundamentals", "url": "https://www.coursera.org/courses?query=programming%20basics", "platform": "Coursera", "duration": "8 weeks"}
-          ],
-          intermediate: [
-            {"title": "Web Development", "url": "https://www.freecodecamp.org/learn/responsive-web-design/", "platform": "FreeCodeCamp", "duration": "10 weeks"},
-            {"title": "Data Structures", "url": "https://www.coursera.org/courses?query=data%20structures", "platform": "Coursera", "duration": "12 weeks"},
-            {"title": "Full Stack Development", "url": "https://www.edx.org/learn/full-stack-development", "platform": "edX", "duration": "16 weeks"}
-          ],
-          advanced: [
-            {"title": "Advanced Programming", "url": "https://ocw.mit.edu/courses/6-001-structure-and-interpretation-of-computer-programs-spring-2005/", "platform": "MIT OCW", "duration": "12 weeks"},
-            {"title": "Software Engineering", "url": "https://www.edx.org/learn/software-engineering", "platform": "edX", "duration": "14 weeks"},
-            {"title": "System Design", "url": "https://ocw.mit.edu/courses/6-033-computer-system-engineering-spring-2018/", "platform": "MIT OCW", "duration": "16 weeks"}
-          ]
-        }
-      }
-    ],
-    personalityInsights: "You show curiosity and willingness to learn, which are excellent traits for career growth.",
-    recommendedNextSteps: [
-      "Start with basic courses in your area of interest",
-      "Build practical projects to gain experience",
-      "Connect with professionals in your chosen field"
-    ]
-  };
 }
