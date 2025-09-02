@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import AdBanner from "@/components/AdBanner";
 
 const ExploreResources = () => {
   return (
@@ -80,8 +79,6 @@ const ExploreResources = () => {
         </Card>
       </div>
 
-      {/* Resources Section Ad */}
-      <AdBanner size="leaderboard" className="mt-8" />
     </div>
   );
 };

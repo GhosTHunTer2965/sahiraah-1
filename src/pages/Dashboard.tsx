@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import GeminiCareerQuiz from "@/components/GeminiCareerQuiz";
 import GeminiCareerReport from "@/components/GeminiCareerReport";
 import ExploreResources from "@/components/ExploreResources";
-import AdBanner from "@/components/AdBanner";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -171,8 +170,6 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Top Dashboard Ad - Career focused */}
-        <AdBanner size="leaderboard" className="mb-8" educationalCategory="career" />
 
         {/* Quiz Section */}
         {quizCompleted && completedSessionId ? (
@@ -181,15 +178,11 @@ const Dashboard = () => {
               sessionId={completedSessionId} 
               onRetake={handleRetakeQuiz} 
             />
-            {/* Mid-Dashboard Ad - Skills focused */}
-            <AdBanner size="large-rectangle" className="my-8 flex justify-center" educationalCategory="skills" />
           </>
         ) : quizStarted ? (
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-blue-900 mb-6">Smart Career Assessment</h2>
             <GeminiCareerQuiz onComplete={handleQuizComplete} onBack={() => setQuizStarted(false)} />
-            {/* Quiz Section Ad - Courses focused */}
-            <AdBanner size="large-rectangle" className="mt-8 flex justify-center" educationalCategory="courses" />
           </div>
         ) : (
           <>
@@ -294,18 +287,12 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            {/* Sidebar Ad below the symmetric cards - General educational */}
-            <div className="flex justify-center mb-8">
-              <AdBanner size="large-rectangle" educationalCategory="general" />
-            </div>
           </>
         )}
 
         {/* Always show Explore Resources section */}
         <ExploreResources />
         
-        {/* Bottom Dashboard Ad - Courses focused */}
-        <AdBanner size="leaderboard" className="mt-8" educationalCategory="courses" />
       </div>
     </div>
   );
