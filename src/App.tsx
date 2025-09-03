@@ -16,6 +16,8 @@ import Courses from "./pages/Courses";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Settings from "./pages/Settings";
+import Skills from "./pages/Skills";
+import Jobs from "./pages/Jobs";
 import Contact from "./pages/Contact";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
@@ -141,6 +143,26 @@ const App = () => {
                 <ProtectedRoute>
                   <Layout>
                     <Courses />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/skills"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Skills />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/jobs"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Jobs />
                   </Layout>
                 </ProtectedRoute>
               }
