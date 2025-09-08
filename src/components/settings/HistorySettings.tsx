@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookIcon, HistoryIcon, ArrowRightIcon, TagIcon, RefreshCwIcon } from "lucide-react";
+import { BookIcon, HistoryIcon, ArrowRightIcon, TagIcon } from "lucide-react";
 import { CareerResult } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/toast/use-toast";
 import { HistoryDetailModal } from "./HistoryDetailModal";
 
 interface HistorySettingsProps {
@@ -25,8 +25,6 @@ export const HistorySettings = ({ userId }: HistorySettingsProps) => {
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<EnhancedCareerResult | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [refreshingCourses, setRefreshingCourses] = useState<string | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     const fetchCareerHistory = async () => {
@@ -90,34 +88,6 @@ export const HistorySettings = ({ userId }: HistorySettingsProps) => {
     setSelectedItem(null);
   };
 
-  const refreshCourseLinks = async (historyId: string) => {
-    setRefreshingCourses(historyId);
-    try {
-      const { data, error } = await supabase.functions.invoke('sanitize-history-courses', {
-        body: { historyId }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Courses Updated",
-        description: `Verified ${data.verifiedCount} out of ${data.sanitizedCount} course links`,
-      });
-
-      // Refresh the history data - we'll refetch by re-running the effect
-      window.location.reload();
-    } catch (error) {
-      console.error('Error refreshing course links:', error);
-      toast({
-        title: "Update Failed", 
-        description: "Could not refresh course links. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setRefreshingCourses(null);
-    }
-  };
-
   if (!userId) {
     return (
       <Card>
@@ -171,28 +141,14 @@ export const HistorySettings = ({ userId }: HistorySettingsProps) => {
                         <Badge className="bg-purple-100 text-purple-800">Links Explored</Badge>
                       )}
                     </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex items-center gap-2"
-                        onClick={() => handleViewDetails(result)}
-                      >
-                        View Details <ArrowRightIcon className="h-3 w-3" />
-                      </Button>
-                      {result.courses && Array.isArray(result.courses) && result.courses.length > 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => refreshCourseLinks(result.timestamp)}
-                          disabled={refreshingCourses === result.timestamp}
-                          className="flex items-center gap-2"
-                        >
-                          <RefreshCwIcon className={`h-3 w-3 ${refreshingCourses === result.timestamp ? 'animate-spin' : ''}`} />
-                          Refresh Links
-                        </Button>
-                      )}
-                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-2"
+                      onClick={() => handleViewDetails(result)}
+                    >
+                      View Details <ArrowRightIcon className="h-3 w-3" />
+                    </Button>
                   </div>
 
                   {/* Tags */}

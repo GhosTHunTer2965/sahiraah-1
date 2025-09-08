@@ -26,15 +26,6 @@ const Navbar = () => {
               <Link to="/dashboard">Dashboard</Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/skills">Skills</Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link to="/courses">Courses</Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <Link to="/jobs">Jobs</Link>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
               <Link to="/about">About</Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
@@ -62,9 +53,6 @@ const Navbar = () => {
             </SheetHeader>
             <div className="grid gap-4">
               <Link to="/dashboard">Dashboard</Link>
-              <Link to="/skills">Skills</Link>
-              <Link to="/courses">Courses</Link>
-              <Link to="/jobs">Jobs</Link>
               <Link to="/about">About</Link>
               <Link to="/contact">Contact</Link>
               <Link to="/settings">Settings</Link>
