@@ -13,13 +13,13 @@ interface NSQFQualification {
   id: string;
   level: number;
   title: string;
-  description: string;
+  description: string | null;
   sector: string;
-  sub_sector: string;
+  sub_sector: string | null;
   job_roles: string[];
-  entry_requirements: string;
-  credit_points: number;
-  duration_hours: number;
+  entry_requirements: string | null;
+  credit_points: number | null;
+  duration_hours: number | null;
   is_active: boolean;
 }
 
@@ -56,7 +56,14 @@ export default function NSQFQualificationBrowser({
       if (error) throw error;
       setQualifications((data || []).map(item => ({
         ...item,
-        job_roles: Array.isArray(item.job_roles) ? item.job_roles : []
+        job_roles: Array.isArray(item.job_roles) 
+          ? item.job_roles.map(role => String(role)) 
+          : [],
+        description: item.description || '',
+        sub_sector: item.sub_sector || '',
+        entry_requirements: item.entry_requirements || '',
+        credit_points: item.credit_points || 0,
+        duration_hours: item.duration_hours || 0
       })));
     } catch (error) {
       console.error('Error fetching NSQF qualifications:', error);
