@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      career_success_stories: {
+        Row: {
+          achievements: Json | null
+          advice_for_students: string | null
+          background_story: string
+          career_field: string
+          challenges_faced: Json | null
+          created_at: string
+          current_position: string
+          financial_investment: string | null
+          id: string
+          inspiration_rating: number | null
+          is_featured: boolean | null
+          key_learnings: Json | null
+          pathway_taken: string
+          resources_used: Json | null
+          starting_point: string
+          student_name: string
+          timeline: string
+          updated_at: string
+        }
+        Insert: {
+          achievements?: Json | null
+          advice_for_students?: string | null
+          background_story: string
+          career_field: string
+          challenges_faced?: Json | null
+          created_at?: string
+          current_position: string
+          financial_investment?: string | null
+          id?: string
+          inspiration_rating?: number | null
+          is_featured?: boolean | null
+          key_learnings?: Json | null
+          pathway_taken: string
+          resources_used?: Json | null
+          starting_point: string
+          student_name: string
+          timeline: string
+          updated_at?: string
+        }
+        Update: {
+          achievements?: Json | null
+          advice_for_students?: string | null
+          background_story?: string
+          career_field?: string
+          challenges_faced?: Json | null
+          created_at?: string
+          current_position?: string
+          financial_investment?: string | null
+          id?: string
+          inspiration_rating?: number | null
+          is_featured?: boolean | null
+          key_learnings?: Json | null
+          pathway_taken?: string
+          resources_used?: Json | null
+          starting_point?: string
+          student_name?: string
+          timeline?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       certification_providers: {
         Row: {
           contact_info: Json | null
@@ -46,6 +109,78 @@ export type Database = {
           name?: string
           recognition_level?: string | null
           type?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      colleges: {
+        Row: {
+          accreditation: Json | null
+          admission_requirements: Json | null
+          affiliation: string | null
+          college_type: string
+          contact_info: Json | null
+          courses_offered: Json | null
+          created_at: string
+          entrance_exams: Json | null
+          establishment_year: number | null
+          facilities: Json | null
+          fee_structure: Json | null
+          id: string
+          is_active: boolean | null
+          location: string
+          name: string
+          placement_statistics: Json | null
+          ranking_nirf: number | null
+          ranking_overall: number | null
+          state: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          accreditation?: Json | null
+          admission_requirements?: Json | null
+          affiliation?: string | null
+          college_type: string
+          contact_info?: Json | null
+          courses_offered?: Json | null
+          created_at?: string
+          entrance_exams?: Json | null
+          establishment_year?: number | null
+          facilities?: Json | null
+          fee_structure?: Json | null
+          id?: string
+          is_active?: boolean | null
+          location: string
+          name: string
+          placement_statistics?: Json | null
+          ranking_nirf?: number | null
+          ranking_overall?: number | null
+          state: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          accreditation?: Json | null
+          admission_requirements?: Json | null
+          affiliation?: string | null
+          college_type?: string
+          contact_info?: Json | null
+          courses_offered?: Json | null
+          created_at?: string
+          entrance_exams?: Json | null
+          establishment_year?: number | null
+          facilities?: Json | null
+          fee_structure?: Json | null
+          id?: string
+          is_active?: boolean | null
+          location?: string
+          name?: string
+          placement_statistics?: Json | null
+          ranking_nirf?: number | null
+          ranking_overall?: number | null
+          state?: string
+          updated_at?: string
           website_url?: string | null
         }
         Relationships: []
@@ -134,63 +269,228 @@ export type Database = {
       courses: {
         Row: {
           career_path: string
+          certification_type: string | null
           created_at: string
           description: string
           duration: string
+          estimated_salary_range: string | null
           has_certificate: boolean | null
           id: string
+          industry_recognition: string | null
           is_partner: boolean | null
           is_trending: boolean | null
+          job_guarantee: boolean | null
+          language_options: Json | null
+          learning_format: string | null
           level: string
           order_index: number
+          placement_assistance: boolean | null
+          platform_rating: number | null
+          prerequisites: Json | null
           price: number | null
+          price_range: string | null
           price_type: string | null
           provider: string | null
           rating: number | null
           review_count: number | null
           skills: string[]
+          success_stories_count: number | null
+          target_audience: string | null
           title: string
           url: string | null
         }
         Insert: {
           career_path: string
+          certification_type?: string | null
           created_at?: string
           description: string
           duration: string
+          estimated_salary_range?: string | null
           has_certificate?: boolean | null
           id?: string
+          industry_recognition?: string | null
           is_partner?: boolean | null
           is_trending?: boolean | null
+          job_guarantee?: boolean | null
+          language_options?: Json | null
+          learning_format?: string | null
           level: string
           order_index?: number
+          placement_assistance?: boolean | null
+          platform_rating?: number | null
+          prerequisites?: Json | null
           price?: number | null
+          price_range?: string | null
           price_type?: string | null
           provider?: string | null
           rating?: number | null
           review_count?: number | null
           skills: string[]
+          success_stories_count?: number | null
+          target_audience?: string | null
           title: string
           url?: string | null
         }
         Update: {
           career_path?: string
+          certification_type?: string | null
           created_at?: string
           description?: string
           duration?: string
+          estimated_salary_range?: string | null
           has_certificate?: boolean | null
           id?: string
+          industry_recognition?: string | null
           is_partner?: boolean | null
           is_trending?: boolean | null
+          job_guarantee?: boolean | null
+          language_options?: Json | null
+          learning_format?: string | null
           level?: string
           order_index?: number
+          placement_assistance?: boolean | null
+          platform_rating?: number | null
+          prerequisites?: Json | null
           price?: number | null
+          price_range?: string | null
           price_type?: string | null
           provider?: string | null
           rating?: number | null
           review_count?: number | null
           skills?: string[]
+          success_stories_count?: number | null
+          target_audience?: string | null
           title?: string
           url?: string | null
+        }
+        Relationships: []
+      }
+      educational_pathways: {
+        Row: {
+          alternative_routes: Json | null
+          career_prospects: Json | null
+          created_at: string
+          current_stage: string
+          difficulty_level: string | null
+          duration: string
+          id: string
+          is_recommended: boolean | null
+          milestones: Json | null
+          pathway_description: string | null
+          pathway_title: string
+          prerequisites: Json | null
+          priority_order: number | null
+          roi_analysis: Json | null
+          steps: Json
+          success_probability: number | null
+          target_career: string
+          total_investment_range: string | null
+          updated_at: string
+        }
+        Insert: {
+          alternative_routes?: Json | null
+          career_prospects?: Json | null
+          created_at?: string
+          current_stage: string
+          difficulty_level?: string | null
+          duration: string
+          id?: string
+          is_recommended?: boolean | null
+          milestones?: Json | null
+          pathway_description?: string | null
+          pathway_title: string
+          prerequisites?: Json | null
+          priority_order?: number | null
+          roi_analysis?: Json | null
+          steps?: Json
+          success_probability?: number | null
+          target_career: string
+          total_investment_range?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alternative_routes?: Json | null
+          career_prospects?: Json | null
+          created_at?: string
+          current_stage?: string
+          difficulty_level?: string | null
+          duration?: string
+          id?: string
+          is_recommended?: boolean | null
+          milestones?: Json | null
+          pathway_description?: string | null
+          pathway_title?: string
+          prerequisites?: Json | null
+          priority_order?: number | null
+          roi_analysis?: Json | null
+          steps?: Json
+          success_probability?: number | null
+          target_career?: string
+          total_investment_range?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      entrance_exams: {
+        Row: {
+          application_process: Json | null
+          average_attempts: number | null
+          coaching_centers: Json | null
+          conducting_body: string
+          created_at: string
+          difficulty_level: string | null
+          eligibility_criteria: Json | null
+          exam_dates: Json | null
+          exam_name: string
+          exam_pattern: Json | null
+          exam_type: string
+          id: string
+          is_active: boolean | null
+          preparation_resources: Json | null
+          preparation_timeline: string | null
+          success_rate: number | null
+          syllabus: Json | null
+          updated_at: string
+        }
+        Insert: {
+          application_process?: Json | null
+          average_attempts?: number | null
+          coaching_centers?: Json | null
+          conducting_body: string
+          created_at?: string
+          difficulty_level?: string | null
+          eligibility_criteria?: Json | null
+          exam_dates?: Json | null
+          exam_name: string
+          exam_pattern?: Json | null
+          exam_type: string
+          id?: string
+          is_active?: boolean | null
+          preparation_resources?: Json | null
+          preparation_timeline?: string | null
+          success_rate?: number | null
+          syllabus?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          application_process?: Json | null
+          average_attempts?: number | null
+          coaching_centers?: Json | null
+          conducting_body?: string
+          created_at?: string
+          difficulty_level?: string | null
+          eligibility_criteria?: Json | null
+          exam_dates?: Json | null
+          exam_name?: string
+          exam_pattern?: Json | null
+          exam_type?: string
+          id?: string
+          is_active?: boolean | null
+          preparation_resources?: Json | null
+          preparation_timeline?: string | null
+          success_rate?: number | null
+          syllabus?: Json | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -402,6 +702,69 @@ export type Database = {
           sector?: string
           sub_sector?: string | null
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scholarship_opportunities: {
+        Row: {
+          application_process: Json | null
+          benefits: Json | null
+          created_at: string
+          education_level: string
+          eligibility_criteria: Json | null
+          field_of_study: Json | null
+          id: string
+          important_dates: Json | null
+          is_active: boolean | null
+          official_website: string | null
+          provider: string
+          renewal_criteria: string | null
+          required_documents: Json | null
+          scholarship_name: string
+          scholarship_type: string
+          selection_process: string | null
+          target_group: string
+          updated_at: string
+        }
+        Insert: {
+          application_process?: Json | null
+          benefits?: Json | null
+          created_at?: string
+          education_level: string
+          eligibility_criteria?: Json | null
+          field_of_study?: Json | null
+          id?: string
+          important_dates?: Json | null
+          is_active?: boolean | null
+          official_website?: string | null
+          provider: string
+          renewal_criteria?: string | null
+          required_documents?: Json | null
+          scholarship_name: string
+          scholarship_type: string
+          selection_process?: string | null
+          target_group: string
+          updated_at?: string
+        }
+        Update: {
+          application_process?: Json | null
+          benefits?: Json | null
+          created_at?: string
+          education_level?: string
+          eligibility_criteria?: Json | null
+          field_of_study?: Json | null
+          id?: string
+          important_dates?: Json | null
+          is_active?: boolean | null
+          official_website?: string | null
+          provider?: string
+          renewal_criteria?: string | null
+          required_documents?: Json | null
+          scholarship_name?: string
+          scholarship_type?: string
+          selection_process?: string | null
+          target_group?: string
           updated_at?: string
         }
         Relationships: []
