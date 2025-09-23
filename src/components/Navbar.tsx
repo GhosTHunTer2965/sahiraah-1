@@ -26,6 +26,18 @@ const Navbar = () => {
               <Link to="/dashboard">Dashboard</Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
+              <Link to="/nsqf-explorer">NSQF Explorer</Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/college-explorer">Colleges</Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/educational-pathways">Pathways</Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/entrance-exams">Exams</Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
               <Link to="/about">About</Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
@@ -53,6 +65,10 @@ const Navbar = () => {
             </SheetHeader>
             <div className="grid gap-4">
               <Link to="/dashboard">Dashboard</Link>
+              <Link to="/nsqf-explorer">NSQF Explorer</Link>
+              <Link to="/college-explorer">Colleges</Link>
+              <Link to="/educational-pathways">Pathways</Link>
+              <Link to="/entrance-exams">Exams</Link>
               <Link to="/about">About</Link>
               <Link to="/contact">Contact</Link>
               <Link to="/settings">Settings</Link>

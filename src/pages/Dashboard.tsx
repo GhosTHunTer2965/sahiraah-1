@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import GeminiCareerQuiz from "@/components/GeminiCareerQuiz";
+import { EnhancedCareerQuiz } from "@/components/EnhancedCareerQuiz";
 import GeminiCareerReport from "@/components/GeminiCareerReport";
 import ExploreResources from "@/components/ExploreResources";
+import CareerGuidanceChatbot from "@/components/CareerGuidanceChatbot";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,6 +26,7 @@ const Dashboard = () => {
   const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
   const [hasExistingResults, setHasExistingResults] = useState(false);
   const [lastSessionId, setLastSessionId] = useState<string | null>(null);
+  const [showChatbot, setShowChatbot] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in with Supabase
@@ -181,13 +184,13 @@ const Dashboard = () => {
           </>
         ) : quizStarted ? (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-blue-900 mb-6">Smart Career Assessment</h2>
-            <GeminiCareerQuiz onComplete={handleQuizComplete} onBack={() => setQuizStarted(false)} />
+            <h2 className="text-2xl font-bold text-blue-900 mb-6">Enhanced Career Assessment</h2>
+            <EnhancedCareerQuiz onComplete={(_, sessionId) => handleQuizComplete(sessionId)} />
           </div>
         ) : (
           <>
-            {/* Symmetric Career Discovery and Recommendations Cards */}
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
+            {/* Three-column Career Discovery Cards */}
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
               {/* Begin Your Career Discovery Card */}
               <Card className="bg-white shadow-md">
                 <CardHeader>
@@ -232,6 +235,37 @@ const Dashboard = () => {
                    >
                      Take Career Quiz
                    </Button>
+                </CardFooter>
+              </Card>
+
+              {/* AI Career Guidance Card */}
+              <Card className="bg-white shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-blue-900">Have Plans or Doubts? Ask AI to Clarify</CardTitle>
+                  <CardDescription>Get instant career guidance with AI-powered chat advisor</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-6">
+                    <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
+                      <span className="text-purple-600 text-xl">🤖</span>
+                    </div>
+                    <h4 className="text-lg font-medium text-blue-900 mb-2">AI Career Advisor</h4>
+                    <p className="text-blue-700 mb-4">
+                      Chat with our AI to get personalized guidance on colleges, careers, exams, and more
+                    </p>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Dialog open={showChatbot} onOpenChange={setShowChatbot}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-purple-600 hover:bg-purple-700 text-white w-full">
+                        Chat with AI Advisor
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl h-[700px] p-0">
+                      <CareerGuidanceChatbot onClose={() => setShowChatbot(false)} />
+                    </DialogContent>
+                  </Dialog>
                 </CardFooter>
               </Card>
 

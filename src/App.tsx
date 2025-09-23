@@ -17,6 +17,10 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
+import NSQFExplorer from "./pages/NSQFExplorer";
+import CollegeExplorerPage from "./pages/CollegeExplorerPage";
+import EducationalPathwaysPage from "./pages/EducationalPathwaysPage";
+import EntranceExamGuidePage from "./pages/EntranceExamGuidePage";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
@@ -141,6 +145,46 @@ const App = () => {
                 <ProtectedRoute>
                   <Layout>
                     <Courses />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/nsqf-explorer"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <NSQFExplorer />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/college-explorer"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <CollegeExplorerPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/educational-pathways"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <EducationalPathwaysPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/entrance-exams"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <EntranceExamGuidePage />
                   </Layout>
                 </ProtectedRoute>
               }
