@@ -83,12 +83,26 @@ const App = () => {
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             <Route
               path="/"
               element={
-                <Layout>
-                  <Index />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>
               }
             />
             <Route
@@ -107,18 +121,6 @@ const App = () => {
                 </Layout>
               }
             />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/settings"
               element={
@@ -129,68 +131,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/career-guides"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CareerGuides />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/courses"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Courses />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/nsqf-explorer"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <NSQFExplorer />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/college-explorer"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CollegeExplorerPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/educational-pathways"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <EducationalPathwaysPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/entrance-exams"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <EntranceExamGuidePage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
