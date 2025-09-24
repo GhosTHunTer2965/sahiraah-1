@@ -1,6 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import AdBanner from "@/components/AdBanner";
 
 const Index = () => {
   return (
@@ -28,6 +29,8 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Strategic Ad Placement - Top Leaderboard */}
+      <AdBanner size="leaderboard" className="bg-gray-50 py-4" />
 
       {/* Features Section */}
       <div className="py-10 bg-white">
@@ -56,6 +59,10 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Mid-Content Ad - Large Rectangle positioned naturally */}
+      <div className="py-6 bg-blue-50 flex justify-center">
+        <AdBanner size="large-rectangle" />
+      </div>
 
       {/* Testimonials Section */}
       <div className="py-10 bg-blue-50">
@@ -89,6 +96,8 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Bottom Ad - Leaderboard */}
+      <AdBanner size="leaderboard" className="bg-white py-4" />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const geminiApiKey = 'AIzaSyDeYsXpdJgBR98IxfV8NjFk6Wm8ml2f7YY';
+const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,10 +16,11 @@ serve(async (req) => {
   try {
     const { action, answers, currentQuestionCount, userName, educationLevel } = await req.json();
     
-    console.log('Gemini Career Guidance:', { action, currentQuestionCount, answersCount: answers?.length });
+    console.log('Gemini Career Guidance:', { action, currentQuestionCount, answersCount: answers?.length, userName, educationLevel });
 
     if (!geminiApiKey) {
-      throw new Error('Gemini API key not configured');
+      console.error('GEMINI_API_KEY not found in environment variables');
+      throw new Error('Gemini API key not configured. Please set GEMINI_API_KEY in Supabase secrets.');
     }
 
     if (action === 'generate_question') {
@@ -59,40 +60,89 @@ async function generateNextQuestion(answers: any[], currentQuestionCount: number
     `Q${i + 1}: ${a.question}\nAnswer: ${a.answer}`
   ).join('\n\n');
 
-  const questionPrompt = `You are an expert career counselor for Indian students. Generate the next SHORT and EASY question in a dynamic tree-based career assessment.
+const questionPrompt = `You are an expert career counselor for Indian students. Generate the next SHORT question in a TREE-BASED career assessment that builds on previous answers to discover the student's TRUE INTERESTS and PERSONALITY.
 
 STUDENT PROFILE:
 - Name: ${userName}
 - Education Level: ${educationLevel}
 - Current Question: ${currentQuestionCount + 1} of ${maxQuestions}
 
+EDUCATION LEVEL UNDERSTANDING:
+INDIAN EDUCATION BOARDS & SYSTEMS:
+- SSLC/10th Standard = Secondary School Leaving Certificate (Karnataka, Tamil Nadu, Kerala system)
+- ICSE/10th = Indian Certificate of Secondary Education (All India board)
+- CBSE/10th = Central Board of Secondary Education (All India board)
+- State Board 10th = Various state-specific 10th grade boards
+- PUC/+2/12th = Pre-University Course/Higher Secondary/12th Standard
+- CBSE 12th = Central Board 12th standard
+- ICSE/ISC 12th = Indian School Certificate 12th standard
+- State Board 12th = Various state-specific 12th grade boards
+- Intermediate = 12th standard in Andhra Pradesh/Telangana
+- HSC = Higher Secondary Certificate (Maharashtra, Gujarat)
+
+HIGHER EDUCATION:
+- BE/B.Tech = Bachelor of Engineering/Technology (4-year technical degree)
+- BA = Bachelor of Arts (3-year humanities/liberal arts degree)
+- BSc/B.Sc = Bachelor of Science (3-year science degree)
+- BCom/B.Com = Bachelor of Commerce (3-year commerce degree)
+- BBA = Bachelor of Business Administration (3-year business degree)
+- BCA = Bachelor of Computer Applications (3-year computer degree)
+- B.Pharma = Bachelor of Pharmacy (4-year pharmaceutical degree)
+- MBBS = Bachelor of Medicine and Surgery (5.5-year medical degree)
+- BDS = Bachelor of Dental Surgery (5-year dental degree)
+- LLB = Bachelor of Laws (3-year law degree)
+- CA = Chartered Accountant (professional accounting qualification)
+- CS = Company Secretary (professional qualification)
+- CMA = Cost and Management Accountant (professional qualification)
+- Diploma = 3-year technical diploma after 10th
+- ITI = Industrial Training Institute certificate
+
 PREVIOUS RESPONSES:
-${answerContext || 'No previous responses yet'}
+${answerContext || 'No previous responses yet - start with discovering their natural interests and what excites them'}
 
-TASK: Generate a SHORT, SIMPLE question that branches naturally from their previous answers. The question should:
+CRITICAL TREE-BASED LOGIC:
+You MUST create questions that branch directly from their previous answers to go DEEPER into their interests. Each question should:
 
-1. Be MAXIMUM 15 words - keep it short and clear
-2. Build upon their previous responses to dive deeper into their interests  
-3. Be culturally relevant for Indian students and career market
-4. Focus on emerging careers and modern opportunities
-5. Use simple language that's easy to understand
-6. Help reveal personality traits, skills, and interests
+1. Be MAXIMUM 8 words - extremely concise and clear
+2. DIRECTLY BUILD on their last answer to explore deeper interests
+3. Focus on DISCOVERING INTERESTS, PERSONALITY, and NATURAL INCLINATIONS
+4. Consider their education level appropriately (use simpler language for younger students)
+5. Branch into specific interest areas based on their responses
+6. Use SMART TREE BRANCHING - each answer should unlock a specific path
 
-EXAMPLE BRANCHING LOGIC:
-- If they mentioned "Technology" → Ask "What tech area interests you most?"
-- If they mentioned "Creative" → Ask "Which creative field excites you?"
-- If they mentioned "Helping people" → Ask "How do you prefer to help others?"
+SMART TREE BRANCHING EXAMPLES:
+FIRST QUESTION: "What activities make you lose track of time?"
+IF Technology → "Programming, gaming, or digital design - which appeals more?"
+IF Creative → "Art, music, writing, or filmmaking - what draws you?"
+IF Sports → "Playing, coaching, sports medicine, or sports business?"
+IF Helping → "Teaching, healthcare, counseling, or social work?"
+IF Problem-solving → "Math puzzles, fixing things, research, or strategy?"
+
+DEEPER BRANCHING:
+IF Programming → "Building apps, websites, games, or AI systems?"
+IF Healthcare → "Treating patients, research, surgery, or mental health?"
+IF Teaching → "Young kids, teenagers, adults, or special needs?"
+IF Business → "Starting companies, managing teams, marketing, or finance?"
+
+INTEREST DISCOVERY PRIORITY AREAS:
+- What activities energize them naturally?
+- What problems do they want to solve in the world?
+- What subjects do they explore beyond school requirements?
+- How do they prefer to work - alone, in teams, leading?
+- What impact do they want to make?
+- What type of environment motivates them?
 
 Return EXACTLY this JSON format:
 {
-  "question": "Short, simple question text (max 15 words)",
-  "type": "text",
-  "placeholder": "Type your answer here...",
-  "category": "category_name",
-  "reasoning": "Why this question follows from their previous answers"
+  "question": "Direct, interest-focused question (max 8 words)",
+  "type": "text", 
+  "placeholder": "Share what interests you most...",
+  "category": "interests_discovery",
+  "reasoning": "How this branches from their previous answer to discover deeper interests"
 }
 
-Generate a question that feels like a natural continuation of the conversation.`;
+IMPORTANT: If this is question 1 and no previous responses, ask about natural interests or activities they enjoy.
+Generate a question that naturally follows their interest discovery journey with smart tree branching.`;
 
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
@@ -161,55 +211,63 @@ async function generateCareerReport(answers: any[], userName: string, educationL
     `Q${i + 1}: ${a.question}\nAnswer: ${a.answer}`
   ).join('\n\n');
 
-  const reportPrompt = `You are an expert career counselor analyzing a student's assessment responses. Generate a comprehensive career analysis.
+  const reportPrompt = `You are an expert career counselor analyzing a student's interest-based assessment responses. Generate career recommendations based on their discovered INTERESTS.
 
 STUDENT PROFILE:
 - Name: ${userName}
-- Education Level: ${educationLevel}
-- Total Questions Answered: ${answers.length}
+- Education Level: ${educationLevel} (SSLC=10th grade, PUC=12th grade, BE/BTech=Engineering, BA=Bachelor of Arts, CA=Chartered Accountant, BBA=Business Administration)
+- Total Questions Answered: ${answers.length} (exactly 15 tree-based questions focused on interests)
 
-RESPONSES:
+INTEREST-BASED RESPONSES:
 ${answerContext}
 
-TASK: Analyze the responses and provide exactly 5 career recommendations with detailed analysis.
+CRITICAL TASK: Analyze their interest patterns and provide exactly 5 career recommendations that MATCH their interests. Each career must include exactly 3 FREE, VERIFIED, WORKING courses per level.
+
+VERIFIED COURSE SOURCES (NO 404 ERRORS):
+- FreeCodeCamp: https://www.freecodecamp.org/learn/
+- Khan Academy: https://www.khanacademy.org/
+- Coursera (free courses): https://www.coursera.org/
+- edX (free courses): https://www.edx.org/
+- MIT OpenCourseWare: https://ocw.mit.edu/
+- Harvard Online: https://online-learning.harvard.edu/
 
 Return EXACTLY this JSON format:
 {
-  "strengths": ["Strength 1", "Strength 2", "Strength 3", "Strength 4"],
-  "areasForImprovement": ["Area 1", "Area 2", "Area 3"],
+  "strengths": ["Interest-based strength 1", "Interest-based strength 2", "Interest-based strength 3", "Interest-based strength 4"],
+  "areasForImprovement": ["Interest development area 1", "Interest development area 2", "Interest development area 3"],
   "careerRecommendations": [
     {
       "title": "Career Title",
-      "description": "Detailed description explaining why this career matches their profile",
+      "description": "Why this career perfectly matches their discovered interests and passion areas",
       "matchScore": 95,
-      "growthPotential": "Specific growth opportunities in India",
+      "growthPotential": "Specific growth opportunities in India based on their interests",
       "salaryRange": "₹X-Y LPA",
-      "keySkills": ["Skill 1", "Skill 2", "Skill 3"],
-      "educationPath": "Specific education recommendations",
+      "keySkills": ["Interest-aligned skill 1", "Interest-aligned skill 2", "Interest-aligned skill 3"],
+      "educationPath": "Interest-based education recommendations for Indian context",
       "freeResources": {
         "beginner": [
-          {"title": "HTML & CSS Basics", "url": "https://www.freecodecamp.org/learn/responsive-web-design/", "platform": "FreeCodeCamp", "duration": "4 weeks"},
-          {"title": "JavaScript for Beginners", "url": "https://www.codecademy.com/learn/introduction-to-javascript", "platform": "Codecademy", "duration": "6 weeks"},
-          {"title": "Programming Basics", "url": "https://www.khanacademy.org/computing/computer-programming", "platform": "Khan Academy", "duration": "8 weeks"}
+          {"title": "Course Title 1", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 2", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 3", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"}
         ],
         "intermediate": [
-          {"title": "React.js Complete Course", "url": "https://www.youtube.com/watch?v=bMknfKXIFA8", "platform": "YouTube", "duration": "10 weeks"},
-          {"title": "Node.js Tutorial", "url": "https://www.youtube.com/watch?v=TlB_eWDSMt4", "platform": "YouTube", "duration": "8 weeks"},
-          {"title": "Database Design", "url": "https://www.coursera.org/learn/database-design", "platform": "Coursera", "duration": "6 weeks"}
+          {"title": "Course Title 1", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 2", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 3", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"}
         ],
         "advanced": [
-          {"title": "System Design Primer", "url": "https://www.youtube.com/watch?v=ZgdS0EUmn70", "platform": "YouTube", "duration": "12 weeks"},
-          {"title": "AWS Cloud Practitioner", "url": "https://www.youtube.com/watch?v=3hLmDS179YE", "platform": "YouTube", "duration": "10 weeks"},
-          {"title": "Machine Learning Course", "url": "https://www.coursera.org/learn/machine-learning", "platform": "Coursera", "duration": "16 weeks"}
+          {"title": "Course Title 1", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 2", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"},
+          {"title": "Course Title 3", "url": "https://verified-working-url", "platform": "Platform Name", "duration": "X weeks"}
         ]
       }
     }
   ],
-  "personalityInsights": "Detailed personality analysis based on responses",
-  "recommendedNextSteps": ["Step 1", "Step 2", "Step 3"]
+  "personalityInsights": "Detailed analysis of their interests and how they align with personality traits",
+  "recommendedNextSteps": ["Interest-based step 1", "Interest-based step 2", "Interest-based step 3"]
 }
 
-Focus on careers relevant to India's job market and include ONLY working, free, and accessible course URLs.`;
+IMPORTANT: Use ONLY verified, working course URLs. No 404 errors allowed. Focus on careers that match their INTERESTS, not just skills.`;
 
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
@@ -268,19 +326,19 @@ Focus on careers relevant to India's job market and include ONLY working, free, 
           educationPath: "Computer Science, Engineering, or coding bootcamps",
           freeResources: {
             beginner: [
-              {"title": "HTML & CSS Basics", "url": "https://www.freecodecamp.org/learn/responsive-web-design/", "platform": "FreeCodeCamp", "duration": "4 weeks"},
-              {"title": "JavaScript Basics", "url": "https://www.codecademy.com/learn/introduction-to-javascript", "platform": "Codecademy", "duration": "6 weeks"},
-              {"title": "Programming Fundamentals", "url": "https://www.khanacademy.org/computing/computer-programming", "platform": "Khan Academy", "duration": "8 weeks"}
+              {"title": "Introduction to Programming", "url": "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/", "platform": "FreeCodeCamp", "duration": "4 weeks"},
+              {"title": "Computer Science Basics", "url": "https://www.khanacademy.org/computing/computer-programming", "platform": "Khan Academy", "duration": "6 weeks"},
+              {"title": "Programming Fundamentals", "url": "https://www.coursera.org/learn/programming-fundamentals", "platform": "Coursera", "duration": "8 weeks"}
             ],
             intermediate: [
-              {"title": "React.js Complete Course", "url": "https://www.youtube.com/watch?v=bMknfKXIFA8", "platform": "YouTube", "duration": "10 weeks"},
-              {"title": "Node.js Tutorial", "url": "https://www.youtube.com/watch?v=TlB_eWDSMt4", "platform": "YouTube", "duration": "8 weeks"},
-              {"title": "Database Fundamentals", "url": "https://www.coursera.org/learn/database-design", "platform": "Coursera", "duration": "6 weeks"}
+              {"title": "Web Development Bootcamp", "url": "https://www.freecodecamp.org/learn/responsive-web-design/", "platform": "FreeCodeCamp", "duration": "10 weeks"},
+              {"title": "Data Structures and Algorithms", "url": "https://www.khanacademy.org/computing/computer-science", "platform": "Khan Academy", "duration": "12 weeks"},
+              {"title": "Full Stack Development", "url": "https://www.coursera.org/specializations/full-stack-web-development", "platform": "Coursera", "duration": "16 weeks"}
             ],
             advanced: [
-              {"title": "System Design Basics", "url": "https://www.youtube.com/watch?v=ZgdS0EUmn70", "platform": "YouTube", "duration": "12 weeks"},
-              {"title": "AWS Cloud Essentials", "url": "https://www.youtube.com/watch?v=3hLmDS179YE", "platform": "YouTube", "duration": "10 weeks"},
-              {"title": "Machine Learning Intro", "url": "https://www.coursera.org/learn/machine-learning", "platform": "Coursera", "duration": "16 weeks"}
+              {"title": "Advanced Programming Concepts", "url": "https://ocw.mit.edu/courses/6-001-structure-and-interpretation-of-computer-programs-spring-2005/", "platform": "MIT OpenCourseWare", "duration": "12 weeks"},
+              {"title": "Software Engineering Principles", "url": "https://www.edx.org/course/software-engineering-introduction", "platform": "edX", "duration": "14 weeks"},
+              {"title": "System Design and Architecture", "url": "https://ocw.mit.edu/courses/6-033-computer-system-engineering-spring-2018/", "platform": "MIT OpenCourseWare", "duration": "16 weeks"}
             ]
           }
         }

@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import AdSenseAd from "@/components/AdSenseAd";
 
 const Privacy = () => {
   return (
@@ -9,7 +10,7 @@ const Privacy = () => {
           <h1 className="text-3xl font-bold mb-4 text-blue-900">Privacy Policy – SahiRaah</h1>
           <p className="text-gray-600 mb-4">Effective Date: 17/05/2025</p>
           
-          
+          <AdSenseAd adSlot="1234567890" className="mb-4" />
           
           <p className="mb-4">We take your privacy seriously. Here's how your data is handled:</p>
           
@@ -48,7 +49,7 @@ const Privacy = () => {
               </ul>
             </section>
             
-            
+            <AdSenseAd adSlot="1234567890" className="my-4" />
             
             <section>
               <h2 className="text-xl font-bold text-blue-800 mb-1">Social Login</h2>
