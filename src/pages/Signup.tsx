@@ -68,8 +68,7 @@ const Signup = () => {
         options: {
           data: {
             name
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          }
         }
       });
       

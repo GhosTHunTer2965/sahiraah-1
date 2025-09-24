@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import CourseDetail from "@/components/CourseDetail";
-import AdBanner from "@/components/AdBanner";
 
 const Courses = () => {
   const [selectedCourse, setSelectedCourse] = useState<number | null>(null);
@@ -127,8 +126,6 @@ const Courses = () => {
           Find courses and resources to build skills for your desired career path
         </p>
 
-        {/* Top Courses Ad */}
-        <AdBanner size="leaderboard" className="mb-8" />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {courses.slice(0, 3).map((course, index) => (
@@ -154,8 +151,6 @@ const Courses = () => {
           ))}
         </div>
 
-        {/* Mid-Content Ad */}
-        <AdBanner size="large-rectangle" className="my-8 flex justify-center" />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
           {courses.slice(3).map((course, index) => (
@@ -181,8 +176,6 @@ const Courses = () => {
           ))}
         </div>
 
-        {/* Bottom Courses Ad */}
-        <AdBanner size="leaderboard" className="mt-8" />
 
         {selectedCourse !== null && (
           <CourseDetail

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import CareerGuideDetail from "@/components/CareerGuideDetail";
-import AdBanner from "@/components/AdBanner";
 
 const CareerGuides = () => {
   const [selectedGuide, setSelectedGuide] = useState<number | null>(null);
@@ -193,8 +192,6 @@ const CareerGuides = () => {
           Explore comprehensive guides to various career paths and industries
         </p>
 
-        {/* Ad Banner */}
-        <AdBanner size="leaderboard" className="bg-white mb-8" />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {guides.map((guide, index) => (
