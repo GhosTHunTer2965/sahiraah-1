@@ -328,9 +328,9 @@ const GeminiCareerReport = ({ sessionId, onRetake }: Props) => {
           {downloadingPDF ? "Downloading..." : "Download PDF Report"}
           <DownloadIcon className="ml-2 h-4 w-4" />
         </Button>
-        <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
-          <ArrowRightIcon className="mr-2 h-4 w-4" />
-          Go Back to Dashboard
+        <Button variant="outline" onClick={onRetake}>
+          <RefreshCwIcon className="mr-2 h-4 w-4" />
+          Retake Assessment
         </Button>
       </div>
 
