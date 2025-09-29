@@ -17,6 +17,10 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
+import NSQFExplorer from "./pages/NSQFExplorer";
+import CollegeExplorerPage from "./pages/CollegeExplorerPage";
+import EducationalPathwaysPage from "./pages/EducationalPathwaysPage";
+import EntranceExamGuidePage from "./pages/EntranceExamGuidePage";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
@@ -79,12 +83,26 @@ const App = () => {
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             <Route
               path="/"
               element={
-                <Layout>
-                  <Index />
-                </Layout>
+                <ProtectedRoute>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                </ProtectedRoute>
               }
             />
             <Route
@@ -103,18 +121,6 @@ const App = () => {
                 </Layout>
               }
             />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/settings"
               element={
@@ -125,28 +131,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/career-guides"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <CareerGuides />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/courses"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Courses />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
