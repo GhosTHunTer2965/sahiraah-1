@@ -154,28 +154,44 @@ Focus on Indian context, authentic institutions, realistic salary ranges for Ind
       { role: 'user', content: message }
     ];
 
-    // Call OpenAI API
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Groq API instead of OpenAI
+    const groqApiKey = Deno.env.get('GROQ_API_KEY');
+    
+    if (!groqApiKey) {
+      console.error('GROQ_API_KEY not configured');
+      throw new Error('AI service not configured');
+    }
+
+    console.log('Calling Groq API...');
+    
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${groqApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'llama-3.3-70b-versatile',
         messages: messages,
         max_tokens: 2000,
         temperature: 0.7,
       }),
     });
 
-    if (!openAIResponse.ok) {
-      const errorData = await openAIResponse.text();
-      console.error('OpenAI API error:', errorData);
-      throw new Error('Failed to get AI response');
+    if (!groqResponse.ok) {
+      const errorData = await groqResponse.text();
+      console.error('Groq API error:', groqResponse.status, errorData);
+      throw new Error(`AI service error: ${groqResponse.status}`);
     }
 
-    const aiData = await openAIResponse.json();
+    const aiData = await groqResponse.json();
+    console.log('Groq response received');
+    
+    if (!aiData.choices || !aiData.choices[0] || !aiData.choices[0].message) {
+      console.error('Invalid AI response structure:', aiData);
+      throw new Error('Invalid response from AI service');
+    }
+    
     const aiMessage = aiData.choices[0].message.content;
 
     console.log('AI Response:', aiMessage);
