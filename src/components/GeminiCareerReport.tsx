@@ -14,6 +14,7 @@ import {
   GraduationCapIcon,
   IndianRupeeIcon,
   ArrowRightIcon,
+  ArrowLeftIcon,
   DownloadIcon,
   RefreshCwIcon,
   AlertTriangleIcon,
@@ -328,8 +329,8 @@ const GeminiCareerReport = ({ sessionId, onRetake }: Props) => {
           {downloadingPDF ? "Downloading..." : "Download PDF Report"}
           <DownloadIcon className="ml-2 h-4 w-4" />
         </Button>
-        <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
-          <ArrowRightIcon className="mr-2 h-4 w-4" />
+        <Button onClick={onRetake} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <ArrowLeftIcon className="mr-2 h-4 w-4" />
           Go Back to Dashboard
         </Button>
       </div>

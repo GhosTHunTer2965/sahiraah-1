@@ -79,8 +79,6 @@ const Dashboard = () => {
         if (existingSessions && existingSessions.length > 0) {
           setHasExistingResults(true);
           setLastSessionId(existingSessions[0].id);
-          setQuizCompleted(true);
-          setCompletedSessionId(existingSessions[0].id);
         }
 
       } catch (error) {
@@ -135,13 +133,15 @@ const Dashboard = () => {
   };
 
   const handleRetakeQuiz = () => {
-    setQuizStarted(true);
+    setQuizStarted(false);
     setQuizCompleted(false);
     setCompletedSessionId(null);
-    toast({
-      title: "Quiz Restarted",
-      description: "Let's explore again! Take the quiz again to discover more career paths."
-    });
+  };
+
+  const handleBackToDashboard = () => {
+    setQuizStarted(false);
+    setQuizCompleted(false);
+    setCompletedSessionId(null);
   };
 
   const handleViewLastResults = () => {
@@ -179,7 +179,7 @@ const Dashboard = () => {
           <>
             <GeminiCareerReport 
               sessionId={completedSessionId} 
-              onRetake={handleRetakeQuiz} 
+              onRetake={handleBackToDashboard} 
             />
           </>
         ) : quizStarted ? (
