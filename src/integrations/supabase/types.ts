@@ -588,6 +588,95 @@ export type Database = {
         }
         Relationships: []
       }
+      expert_sessions: {
+        Row: {
+          amount_paid: number | null
+          created_at: string | null
+          duration_minutes: number | null
+          expert_id: string
+          id: string
+          meeting_link: string | null
+          notes: string | null
+          payment_status: string | null
+          session_date: string
+          session_status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          expert_id: string
+          id?: string
+          meeting_link?: string | null
+          notes?: string | null
+          payment_status?: string | null
+          session_date: string
+          session_status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          expert_id?: string
+          id?: string
+          meeting_link?: string | null
+          notes?: string | null
+          payment_status?: string | null
+          session_date?: string
+          session_status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expert_sessions_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experts: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          expertise: Json | null
+          hourly_rate: number | null
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          name: string
+          title: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          expertise?: Json | null
+          hourly_rate?: number | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          name: string
+          title: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          expertise?: Json | null
+          hourly_rate?: number | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          name?: string
+          title?: string
+        }
+        Relationships: []
+      }
       job_applications: {
         Row: {
           applied_at: string

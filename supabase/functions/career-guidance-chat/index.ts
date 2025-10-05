@@ -90,59 +90,49 @@ serve(async (req) => {
     ]);
 
     // Build context for AI
-    const systemPrompt = `You are an expert career guidance counselor specializing in Indian education and career paths. You provide comprehensive, structured advice to students about their career goals.
+    const systemPrompt = `You are an expert career guidance counselor specializing in Indian education and career paths. You provide comprehensive, conversational advice to students about their career goals.
 
 Context Data Available:
 Top Indian Colleges: ${JSON.stringify(collegesData.data || [])}
 Entrance Exams: ${JSON.stringify(examsData.data || [])}
 Career Pathways: ${JSON.stringify(pathwaysData.data || [])}
 
-IMPORTANT: Structure your responses in the following JSON format with these exact sections:
+IMPORTANT INSTRUCTIONS:
+- Reply in a natural, conversational, and friendly tone as if you're chatting with a student
+- Break down your advice into clear, easy-to-read paragraphs
+- Use bullet points and numbered lists where appropriate to make information scannable
+- Include specific college names, entrance exam details, salary ranges when relevant
+- Provide actionable next steps and preparation tips
+- Be encouraging but realistic about challenges
+- Keep responses focused and not too lengthy (aim for 300-500 words)
+- Focus on Indian education context and authentic institutions
 
-{
-  "careerPathSummary": {
-    "feasibility": "Detailed assessment of how realistic their plan is",
-    "alternativeRoutes": ["Alternative path 1", "Alternative path 2"]
-  },
-  "collegesAndCourses": [
-    {
-      "name": "College Name",
-      "program": "Degree Program",
-      "entranceExam": "Required Exam",
-      "website": "URL",
-      "location": "City, State",
-      "admissionDeadline": "When to apply"
-    }
-  ],
-  "jobInsights": {
-    "roles": ["Job Role 1", "Job Role 2"],
-    "salaryRanges": {
-      "fresher": "X-Y LPA",
-      "experienced": "X-Y LPA",
-      "remote": "X-Y LPA"
-    },
-    "industryTrends": "Current market insights"
-  },
-  "preparationTips": {
-    "freeResources": [
-      {"name": "NPTEL", "url": "https://nptel.ac.in", "description": "Free IIT courses"},
-      {"name": "GATE Prep", "url": "https://gate.iitk.ac.in", "description": "Official resources"}
-    ],
-    "examStrategy": "How to prepare for entrance exams",
-    "skillDevelopment": "Technical skills to focus on"
-  },
-  "successProbability": {
-    "percentage": "XX%",
-    "factors": ["Factor 1", "Factor 2"],
-    "challenges": ["Challenge 1", "Challenge 2"]
-  },
-  "nextStepsRoadmap": [
-    {"step": "Action 1", "timeline": "When", "priority": "High/Medium/Low"},
-    {"step": "Action 2", "timeline": "When", "priority": "High/Medium/Low"}
-  ]
-}
+Example response format:
+"That's a great career goal! Let me help you understand the path to becoming a [career].
 
-Focus on Indian context, authentic institutions, realistic salary ranges for India, and actionable advice. Be encouraging but honest about challenges.`;
+To pursue [goal], you'll typically need to:
+• Complete [degree] from a reputed institution
+• Clear entrance exams like [exam names]
+• Build skills in [relevant skills]
+
+Here are some top colleges you should consider:
+1. [College Name] - [Location] - Entry via [exam]
+2. [College Name] - [Location] - Entry via [exam]
+
+For preparation, I recommend:
+- Start with [specific advice]
+- Focus on [key areas]
+- Check out free resources like NPTEL, Khan Academy
+
+Salary expectations: Freshers typically earn [X-Y LPA], while experienced professionals can make [X-Y LPA].
+
+Your next steps should be:
+1. [Action item with timeline]
+2. [Action item with timeline]
+
+Feel free to ask if you need more specific guidance on any aspect!"
+
+Remember: Write like a helpful mentor, not like a formal report. Be conversational and supportive.`;
 
     // Prepare messages for OpenAI
     const messages = [
@@ -196,38 +186,19 @@ Focus on Indian context, authentic institutions, realistic salary ranges for Ind
 
     console.log('AI Response:', aiMessage);
 
-    // Parse the AI response as JSON
-    let structuredResponse;
-    try {
-      structuredResponse = JSON.parse(aiMessage);
-    } catch (parseError) {
-      console.error('Failed to parse AI response as JSON:', parseError);
-      // Fallback to plain text response
-      structuredResponse = {
-        careerPathSummary: { feasibility: aiMessage, alternativeRoutes: [] },
-        collegesAndCourses: [],
-        jobInsights: { roles: [], salaryRanges: {}, industryTrends: "" },
-        preparationTips: { freeResources: [], examStrategy: "", skillDevelopment: "" },
-        successProbability: { percentage: "N/A", factors: [], challenges: [] },
-        nextStepsRoadmap: []
-      };
-    }
-
     // Store the AI response
     await supabaseClient
       .from('chat_messages')
       .insert({
         conversation_id: currentConversationId,
         content: aiMessage,
-        role: 'assistant',
-        metadata: structuredResponse
+        role: 'assistant'
       });
 
     return new Response(
       JSON.stringify({
-        response: structuredResponse,
-        conversationId: currentConversationId,
-        rawContent: aiMessage
+        message: aiMessage,
+        conversationId: currentConversationId
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
