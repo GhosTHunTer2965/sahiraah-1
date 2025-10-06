@@ -186,7 +186,7 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col gap-4">
+      <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
         {conversations.length > 0 && !conversationId && (
           <div className="bg-muted/50 rounded-lg p-3">
             <p className="text-sm font-medium mb-2">Recent Conversations:</p>
@@ -204,7 +204,7 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
           </div>
         )}
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 pr-4 min-h-0">
           <div className="space-y-4">
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
@@ -226,13 +226,13 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] p-3 rounded-lg ${
+                  className={`max-w-[80%] p-4 rounded-lg ${
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                      : 'bg-muted prose prose-sm max-w-none'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                  <div className="whitespace-pre-wrap leading-relaxed break-words">{message.content}</div>
                 </div>
               </div>
             ))}
@@ -249,7 +249,7 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
           <div ref={messagesEndRef} />
         </ScrollArea>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 pt-2 border-t">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}

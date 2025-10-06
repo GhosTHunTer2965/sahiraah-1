@@ -190,14 +190,14 @@ const Dashboard = () => {
         ) : (
           <>
             {/* Three-column Career Discovery Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="grid md:grid-cols-3 gap-6 mb-8 items-stretch">
               {/* Begin Your Career Discovery Card */}
-              <Card className="bg-white shadow-md">
+              <Card className="bg-white shadow-md flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-blue-900">Begin Your Career Discovery</CardTitle>
                   <CardDescription>Take our comprehensive AI-powered assessment to get personalized recommendations</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1">
                   <div className="flex flex-col space-y-4 mb-6">
                     <div className="flex items-center">
                       <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3">
@@ -239,7 +239,7 @@ const Dashboard = () => {
               </Card>
 
               {/* AI Career Guidance Card */}
-              <Card className="bg-white shadow-md">
+              <Card className="bg-white shadow-md flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-blue-900">Have Plans or Doubts? Ask AI to Clarify</CardTitle>
                   <CardDescription>Get instant career guidance with AI-powered chat advisor</CardDescription>
@@ -270,14 +270,14 @@ const Dashboard = () => {
               </Card>
 
               {/* Your Career Recommendations Card */}
-              <Card className="bg-white shadow-md">
+              <Card className="bg-white shadow-md flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-blue-900">Your Career Recommendations</CardTitle>
                   <CardDescription>
                     {hasExistingResults ? "View your personalized career analysis" : "Based on your profile and responses"}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1">
                   {hasExistingResults ? (
                     <div className="text-center py-6">
                       <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">

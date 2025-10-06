@@ -336,6 +336,14 @@ const GeminiCareerQuiz = ({ onComplete, onBack }: Props) => {
               placeholder="Type your answer here... Share your thoughts and preferences"
               value={currentAnswer}
               onChange={(e) => setCurrentAnswer(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Tab' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (currentAnswer.trim()) {
+                    handleAnswerSubmit();
+                  }
+                }
+              }}
               className="min-h-[120px]"
             />
           </div>
