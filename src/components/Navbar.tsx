@@ -17,7 +17,7 @@ const Navbar = () => {
     <div className="bg-background py-4 border-b">
       <div className="container flex items-center justify-between">
         <Link to="/" className="font-bold text-2xl">
-          Sahi<span className="text-yellow-500">Raah</span>
+          <span className="text-blue-900">Sahi</span><span className="text-yellow-500">Raah</span>
         </Link>
 
         <NavigationMenu>
