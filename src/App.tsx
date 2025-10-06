@@ -88,11 +88,9 @@ const App = () => {
             <Route
               path="/"
               element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </ProtectedRoute>
+                <Layout>
+                  <Index />
+                </Layout>
               }
             />
             <Route
