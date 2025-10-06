@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Download, MessageSquare, Loader2 } from 'lucide-react';
+import { Send, Download, MessageSquare, Loader2, Menu, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -24,6 +26,7 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<any[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -76,10 +79,19 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
 
       setMessages(loadedMessages);
       setConversationId(convId);
+      setIsSidebarOpen(false);
     } catch (error) {
       console.error('Error loading conversation:', error);
       toast.error('Failed to load conversation');
     }
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setConversationId(null);
+    setInput('');
+    setIsSidebarOpen(false);
+    toast.success('New conversation started');
   };
 
   const handleSendMessage = async () => {
@@ -167,10 +179,58 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
   return (
     <Card className="w-full h-[600px] flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          AI Career Advisor
-        </CardTitle>
+        <div className="flex items-center gap-3">
+          <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Menu className="h-4 w-4 mr-2" />
+                Chats
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80">
+              <SheetHeader>
+                <SheetTitle>Conversations</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-3">
+                <Button
+                  onClick={handleNewChat}
+                  className="w-full justify-start"
+                  variant="default"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Chat
+                </Button>
+                <Separator />
+                <ScrollArea className="h-[calc(100vh-200px)]">
+                  <div className="space-y-2">
+                    {conversations.length > 0 ? (
+                      conversations.map((conv) => (
+                        <Button
+                          key={conv.id}
+                          variant={conversationId === conv.id ? "secondary" : "ghost"}
+                          className="w-full justify-start text-left h-auto py-3"
+                          onClick={() => loadConversation(conv.id)}
+                        >
+                          <div className="truncate text-sm">
+                            {conv.title || `Chat ${conv.id.slice(0, 8)}`}
+                          </div>
+                        </Button>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No previous conversations
+                      </p>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            AI Career Advisor
+          </CardTitle>
+        </div>
         <div className="flex gap-2">
           {conversationId && (
             <Button variant="outline" size="sm" onClick={handleExportPDF}>
@@ -187,22 +247,6 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-        {conversations.length > 0 && !conversationId && (
-          <div className="bg-muted/50 rounded-lg p-3">
-            <p className="text-sm font-medium mb-2">Recent Conversations:</p>
-            <div className="space-y-1 max-h-24 overflow-y-auto">
-              {conversations.map((conv) => (
-                <button
-                  key={conv.id}
-                  onClick={() => loadConversation(conv.id)}
-                  className="w-full text-left text-sm p-2 rounded hover:bg-muted transition-colors truncate"
-                >
-                  {conv.title}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <ScrollArea className="flex-1 pr-4 min-h-0">
           <div className="space-y-4">
