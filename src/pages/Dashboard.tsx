@@ -251,14 +251,23 @@ const Dashboard = () => {
                   <CardDescription>Get instant career guidance with AI-powered chat advisor</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  <div className="text-center py-6">
+                  <div className="text-center py-4 mb-4">
                     <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
                       <MessageSquare className="w-8 h-8 text-purple-600" />
                     </div>
-                    <h4 className="text-lg font-medium text-blue-900 mb-2">AI Career Advisor</h4>
-                    <p className="text-blue-700">
-                      Chat with our AI to get personalized guidance on colleges, careers, exams, and more
-                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <h4 className="text-lg font-medium text-blue-900 mb-2">AI Career Advisor</h4>
+                      <p className="text-blue-700 mb-4">
+                        Chat with our AI to get personalized guidance on colleges, careers, exams, and more
+                      </p>
+                    </div>
+                    <div className="space-y-2 text-left px-2">
+                      <p className="text-sm text-blue-700">✓ Ask about career paths and opportunities</p>
+                      <p className="text-sm text-blue-700">✓ Get college and exam recommendations</p>
+                      <p className="text-sm text-blue-700">✓ Clarify doubts about your future plans</p>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter>
