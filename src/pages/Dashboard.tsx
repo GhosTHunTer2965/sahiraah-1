@@ -10,6 +10,7 @@ import CareerGuidanceChatbot from "@/components/CareerGuidanceChatbot";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ClipboardList, MessageSquare, CheckCircle2 } from "lucide-react";
 
 interface User {
   id: string;
@@ -198,9 +199,14 @@ const Dashboard = () => {
                   <CardDescription>Take our comprehensive AI-powered assessment to get personalized recommendations</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  <div className="flex flex-col space-y-4 mb-6">
+                  <div className="text-center py-4 mb-4">
+                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                      <ClipboardList className="w-8 h-8 text-blue-600" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col space-y-4">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3 flex-shrink-0">
                         1
                       </div>
                    <div>
@@ -209,7 +215,7 @@ const Dashboard = () => {
                    </div>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3 flex-shrink-0">
                         2
                       </div>
                       <div>
@@ -218,7 +224,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3 flex-shrink-0">
                         3
                       </div>
                       <div>
@@ -244,13 +250,13 @@ const Dashboard = () => {
                   <CardTitle className="text-blue-900">Have Plans or Doubts? Ask AI to Clarify</CardTitle>
                   <CardDescription>Get instant career guidance with AI-powered chat advisor</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1">
                   <div className="text-center py-6">
                     <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
-                      <span className="text-purple-600 text-xl">🤖</span>
+                      <MessageSquare className="w-8 h-8 text-purple-600" />
                     </div>
                     <h4 className="text-lg font-medium text-blue-900 mb-2">AI Career Advisor</h4>
-                    <p className="text-blue-700 mb-4">
+                    <p className="text-blue-700">
                       Chat with our AI to get personalized guidance on colleges, careers, exams, and more
                     </p>
                   </div>
@@ -262,7 +268,7 @@ const Dashboard = () => {
                         Chat with AI Advisor
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl h-[700px] p-0">
+                    <DialogContent className="max-w-6xl max-h-[90vh] h-[800px] p-0">
                       <CareerGuidanceChatbot onClose={() => setShowChatbot(false)} />
                     </DialogContent>
                   </Dialog>
@@ -281,20 +287,20 @@ const Dashboard = () => {
                   {hasExistingResults ? (
                     <div className="text-center py-6">
                       <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                        <span className="text-green-600 text-xl">✓</span>
+                        <CheckCircle2 className="w-8 h-8 text-green-600" />
                       </div>
                       <h4 className="text-lg font-medium text-blue-900 mb-2">Analysis Complete</h4>
-                      <p className="text-blue-700 mb-4">
+                      <p className="text-blue-700">
                         Your personalized career recommendations are ready to view
                       </p>
                     </div>
                   ) : (
-                    <div className="text-center py-10">
+                    <div className="text-center py-6">
                       <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
-                        <span className="text-blue-900 text-xl">🔎</span>
+                        <CheckCircle2 className="w-8 h-8 text-blue-400" />
                       </div>
                       <h4 className="text-lg font-medium text-blue-900 mb-2">No Recommendations Yet</h4>
-                      <p className="text-blue-700 mb-4">
+                      <p className="text-blue-700">
                         Take the career quiz to get AI-powered personalized recommendations
                       </p>
                     </div>

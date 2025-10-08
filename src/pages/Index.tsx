@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="relative bg-blue-50 min-h-[60vh] flex items-center">
         <div 

@@ -35,7 +35,7 @@ const PublicNavbar = () => {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <Link to="/login">
-                <Button variant="outline" className="border-white text-white hover:bg-white hover:text-blue-900">
+                <Button className="bg-white text-blue-900 hover:bg-gray-100">
                   Login
                 </Button>
               </Link>

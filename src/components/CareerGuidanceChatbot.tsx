@@ -177,8 +177,8 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
 
 
   return (
-    <Card className="w-full h-[600px] flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+    <div className="w-full h-full flex flex-col bg-background">
+      <div className="flex flex-row items-center justify-between p-4 border-b">
         <div className="flex items-center gap-3">
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
             <SheetTrigger asChild>
@@ -226,10 +226,10 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
               </div>
             </SheetContent>
           </Sheet>
-          <CardTitle className="flex items-center gap-2">
+          <h2 className="flex items-center gap-2 text-xl font-semibold">
             <MessageSquare className="h-5 w-5" />
             AI Career Advisor
-          </CardTitle>
+          </h2>
         </div>
         <div className="flex gap-2">
           {conversationId && (
@@ -244,9 +244,9 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
             </Button>
           )}
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
+      <div className="flex-1 flex flex-col gap-4 overflow-hidden p-4">
 
         <ScrollArea className="flex-1 pr-4 min-h-0">
           <div className="space-y-4">
@@ -310,8 +310,8 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
             <Send className="h-4 w-4" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
