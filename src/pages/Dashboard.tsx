@@ -294,25 +294,47 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent className="flex-1">
                   {hasExistingResults ? (
-                    <div className="text-center py-6">
-                      <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 className="w-8 h-8 text-green-600" />
+                    <>
+                      <div className="text-center py-4 mb-4">
+                        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                          <CheckCircle2 className="w-8 h-8 text-green-600" />
+                        </div>
                       </div>
-                      <h4 className="text-lg font-medium text-blue-900 mb-2">Analysis Complete</h4>
-                      <p className="text-blue-700">
-                        Your personalized career recommendations are ready to view
-                      </p>
-                    </div>
+                      <div className="space-y-3">
+                        <div className="text-center">
+                          <h4 className="text-lg font-medium text-blue-900 mb-2">Analysis Complete</h4>
+                          <p className="text-blue-700 mb-4">
+                            Your personalized career recommendations are ready to view
+                          </p>
+                        </div>
+                        <div className="space-y-2 text-left px-2">
+                          <p className="text-sm text-blue-700">✓ Detailed career path recommendations</p>
+                          <p className="text-sm text-blue-700">✓ Personalized learning roadmap</p>
+                          <p className="text-sm text-blue-700">✓ Skills assessment and growth areas</p>
+                        </div>
+                      </div>
+                    </>
                   ) : (
-                    <div className="text-center py-6">
-                      <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle2 className="w-8 h-8 text-blue-400" />
+                    <>
+                      <div className="text-center py-4 mb-4">
+                        <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                          <CheckCircle2 className="w-8 h-8 text-blue-400" />
+                        </div>
                       </div>
-                      <h4 className="text-lg font-medium text-blue-900 mb-2">No Recommendations Yet</h4>
-                      <p className="text-blue-700">
-                        Take the career quiz to get AI-powered personalized recommendations
-                      </p>
-                    </div>
+                      <div className="space-y-3">
+                        <div className="text-center">
+                          <h4 className="text-lg font-medium text-blue-900 mb-2">No Recommendations Yet</h4>
+                          <p className="text-blue-700 mb-4">
+                            Take the career quiz to get AI-powered personalized recommendations
+                          </p>
+                        </div>
+                        <div className="space-y-2 text-left px-2">
+                          <p className="text-sm text-blue-700">✓ Discover careers matching your interests</p>
+                          <p className="text-sm text-blue-700">✓ Get customized learning paths</p>
+                          <p className="text-sm text-blue-700">✓ Identify your unique strengths</p>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </CardContent>
                 <CardFooter>
