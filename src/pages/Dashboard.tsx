@@ -191,47 +191,29 @@ const Dashboard = () => {
         ) : (
           <>
             {/* Three-column Career Discovery Cards */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8 items-stretch">
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
               {/* Begin Your Career Discovery Card */}
-              <Card className="bg-white shadow-md flex flex-col">
+              <Card className="bg-white shadow-md flex flex-col h-full">
                 <CardHeader>
                   <CardTitle className="text-blue-900">Begin Your Career Discovery</CardTitle>
                   <CardDescription>Take our comprehensive AI-powered assessment to get personalized recommendations</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1">
-                  <div className="text-center py-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                <CardContent className="flex-1 flex flex-col">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto">
                       <ClipboardList className="w-8 h-8 text-blue-600" />
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3 flex-shrink-0">
-                        1
-                      </div>
-                   <div>
-                     <h4 className="font-medium text-blue-900">Take the Smart Tree Assessment</h4>
-                     <p className="text-sm text-blue-700">Short questions that adapt to your interests</p>
-                   </div>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3 flex-shrink-0">
-                        2
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-blue-900">Get AI Analysis</h4>
-                        <p className="text-sm text-blue-700">Advanced algorithms analyze your strengths</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-900 font-bold mr-3 flex-shrink-0">
-                        3
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-blue-900">Explore Career Paths</h4>
-                        <p className="text-sm text-blue-700">Get detailed roadmaps and learning resources</p>
-                      </div>
-                    </div>
+                  <div className="text-center mb-6">
+                    <h4 className="text-lg font-medium text-blue-900 mb-2">Smart Career Assessment</h4>
+                    <p className="text-blue-700">
+                      Take our AI-powered quiz to discover careers that match your unique strengths
+                    </p>
+                  </div>
+                  <div className="space-y-2 text-left flex-1">
+                    <p className="text-sm text-blue-700">✓ Adaptive questions based on your interests</p>
+                    <p className="text-sm text-blue-700">✓ Advanced AI analysis of your strengths</p>
+                    <p className="text-sm text-blue-700">✓ Detailed career roadmaps and resources</p>
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -245,29 +227,27 @@ const Dashboard = () => {
               </Card>
 
               {/* AI Career Guidance Card */}
-              <Card className="bg-white shadow-md flex flex-col">
+              <Card className="bg-white shadow-md flex flex-col h-full">
                 <CardHeader>
                   <CardTitle className="text-blue-900">Have Plans or Doubts? Ask AI to Clarify</CardTitle>
                   <CardDescription>Get instant career guidance with AI-powered chat advisor</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1">
-                  <div className="text-center py-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
+                <CardContent className="flex-1 flex flex-col">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto">
                       <MessageSquare className="w-8 h-8 text-purple-600" />
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="text-center">
-                      <h4 className="text-lg font-medium text-blue-900 mb-2">AI Career Advisor</h4>
-                      <p className="text-blue-700 mb-4">
-                        Chat with our AI to get personalized guidance on colleges, careers, exams, and more
-                      </p>
-                    </div>
-                    <div className="space-y-2 text-left px-2">
-                      <p className="text-sm text-blue-700">✓ Ask about career paths and opportunities</p>
-                      <p className="text-sm text-blue-700">✓ Get college and exam recommendations</p>
-                      <p className="text-sm text-blue-700">✓ Clarify doubts about your future plans</p>
-                    </div>
+                  <div className="text-center mb-6">
+                    <h4 className="text-lg font-medium text-blue-900 mb-2">AI Career Advisor</h4>
+                    <p className="text-blue-700">
+                      Chat with our AI to get personalized guidance on colleges, careers, exams, and more
+                    </p>
+                  </div>
+                  <div className="space-y-2 text-left flex-1">
+                    <p className="text-sm text-blue-700">✓ Ask about career paths and opportunities</p>
+                    <p className="text-sm text-blue-700">✓ Get college and exam recommendations</p>
+                    <p className="text-sm text-blue-700">✓ Clarify doubts about your future plans</p>
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -285,57 +265,44 @@ const Dashboard = () => {
               </Card>
 
               {/* Your Career Recommendations Card */}
-              <Card className="bg-white shadow-md flex flex-col">
+              <Card className="bg-white shadow-md flex flex-col h-full">
                 <CardHeader>
                   <CardTitle className="text-blue-900">Your Career Recommendations</CardTitle>
                   <CardDescription>
                     {hasExistingResults ? "View your personalized career analysis" : "Based on your profile and responses"}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1">
-                  {hasExistingResults ? (
-                    <>
-                      <div className="text-center py-4 mb-4">
-                        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                          <CheckCircle2 className="w-8 h-8 text-green-600" />
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="text-center">
-                          <h4 className="text-lg font-medium text-blue-900 mb-2">Analysis Complete</h4>
-                          <p className="text-blue-700 mb-4">
-                            Your personalized career recommendations are ready to view
-                          </p>
-                        </div>
-                        <div className="space-y-2 text-left px-2">
-                          <p className="text-sm text-blue-700">✓ Detailed career path recommendations</p>
-                          <p className="text-sm text-blue-700">✓ Personalized learning roadmap</p>
-                          <p className="text-sm text-blue-700">✓ Skills assessment and growth areas</p>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-center py-4 mb-4">
-                        <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
-                          <CheckCircle2 className="w-8 h-8 text-blue-400" />
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="text-center">
-                          <h4 className="text-lg font-medium text-blue-900 mb-2">No Recommendations Yet</h4>
-                          <p className="text-blue-700 mb-4">
-                            Take the career quiz to get AI-powered personalized recommendations
-                          </p>
-                        </div>
-                        <div className="space-y-2 text-left px-2">
-                          <p className="text-sm text-blue-700">✓ Discover careers matching your interests</p>
-                          <p className="text-sm text-blue-700">✓ Get customized learning paths</p>
-                          <p className="text-sm text-blue-700">✓ Identify your unique strengths</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                <CardContent className="flex-1 flex flex-col">
+                  <div className="text-center mb-6">
+                    <div className={`w-16 h-16 rounded-full ${hasExistingResults ? 'bg-green-100' : 'bg-blue-100'} flex items-center justify-center mx-auto`}>
+                      <CheckCircle2 className={`w-8 h-8 ${hasExistingResults ? 'text-green-600' : 'text-blue-400'}`} />
+                    </div>
+                  </div>
+                  <div className="text-center mb-6">
+                    <h4 className="text-lg font-medium text-blue-900 mb-2">
+                      {hasExistingResults ? "Analysis Complete" : "No Recommendations Yet"}
+                    </h4>
+                    <p className="text-blue-700">
+                      {hasExistingResults 
+                        ? "Your personalized career recommendations are ready to view" 
+                        : "Take the career quiz to get AI-powered personalized recommendations"}
+                    </p>
+                  </div>
+                  <div className="space-y-2 text-left flex-1">
+                    {hasExistingResults ? (
+                      <>
+                        <p className="text-sm text-blue-700">✓ Detailed career path recommendations</p>
+                        <p className="text-sm text-blue-700">✓ Personalized learning roadmap</p>
+                        <p className="text-sm text-blue-700">✓ Skills assessment and growth areas</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-blue-700">✓ Discover careers matching your interests</p>
+                        <p className="text-sm text-blue-700">✓ Get customized learning paths</p>
+                        <p className="text-sm text-blue-700">✓ Identify your unique strengths</p>
+                      </>
+                    )}
+                  </div>
                 </CardContent>
                 <CardFooter>
                   {hasExistingResults ? (
