@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import AICareerQuiz from "@/components/AICareerQuiz";
+import EnhancedCareerDiscoveryQuiz from "@/components/EnhancedCareerDiscoveryQuiz";
 import GeminiCareerReport from "@/components/GeminiCareerReport";
 import ExploreResources from "@/components/ExploreResources";
 import CareerGuidanceChatbot from "@/components/CareerGuidanceChatbot";
@@ -186,7 +186,7 @@ const Dashboard = () => {
         ) : quizStarted ? (
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-blue-900 mb-6">AI-Powered Career Assessment</h2>
-            <AICareerQuiz onComplete={(sessionId) => handleQuizComplete(sessionId)} />
+            <EnhancedCareerDiscoveryQuiz onComplete={(sessionId) => handleQuizComplete(sessionId)} />
           </div>
         ) : (
           <>

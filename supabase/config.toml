@@ -1,1 +1,19 @@
 project_id = "jcjlcswhgfkoxkowwmac"
+
+[functions.groq-career-analysis]
+verify_jwt = false
+
+[functions.career-guidance-chat]
+verify_jwt = false
+
+[functions.gemini-career-guidance]
+verify_jwt = false
+
+[functions.generate-adaptive-questions]
+verify_jwt = false
+
+[functions.analyze-career-guidance]
+verify_jwt = false
+
+[functions.export-chat-pdf]
+verify_jwt = false
