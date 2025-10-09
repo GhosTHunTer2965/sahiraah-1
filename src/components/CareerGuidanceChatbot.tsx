@@ -228,7 +228,7 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
           </Sheet>
           <h2 className="flex items-center gap-2 text-xl font-semibold">
             <MessageSquare className="h-5 w-5" />
-            AI Career Advisor
+            AI Advisor
           </h2>
         </div>
         <div className="flex gap-2">

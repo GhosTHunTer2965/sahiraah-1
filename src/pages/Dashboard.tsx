@@ -239,7 +239,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="text-center mb-6">
-                    <h4 className="text-lg font-medium text-blue-900 mb-2">AI Career Advisor</h4>
+                    <h4 className="text-lg font-medium text-blue-900 mb-2">AI Advisor</h4>
                     <p className="text-blue-700">
                       Chat with our AI to get personalized guidance on colleges, careers, exams, and more
                     </p>

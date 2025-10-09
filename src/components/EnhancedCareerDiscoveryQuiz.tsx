@@ -324,7 +324,14 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to analyze responses');
+      }
+
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'Failed to generate recommendations');
+      }
 
       if (data.success) {
         // Update session as completed
@@ -344,11 +351,11 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
 
         onComplete(sessionId);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating recommendations:', error);
       toast({
         title: "Error",
-        description: "Failed to generate recommendations. Please try again.",
+        description: error?.message || "Failed to generate recommendations. Please try again.",
         variant: "destructive"
       });
     } finally {

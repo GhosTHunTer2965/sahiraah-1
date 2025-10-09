@@ -20,6 +20,7 @@ serve(async (req) => {
 
     const groqApiKey = Deno.env.get('GROQ_API_KEY');
     if (!groqApiKey) {
+      console.error('GROQ_API_KEY not found, please update the secret');
       throw new Error('GROQ_API_KEY not configured');
     }
 

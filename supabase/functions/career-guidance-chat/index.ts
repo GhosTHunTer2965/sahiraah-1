@@ -144,11 +144,11 @@ Remember: Write like a helpful mentor, not like a formal report. Be conversation
       { role: 'user', content: message }
     ];
 
-    // Call Groq API instead of OpenAI
-    const groqApiKey = Deno.env.get('GROQ_API_KEY');
+    // Call Groq API for chat
+    const groqApiKey = Deno.env.get('GROQ_CHAT_API_KEY');
     
     if (!groqApiKey) {
-      console.error('GROQ_API_KEY not configured');
+      console.error('GROQ_CHAT_API_KEY not configured');
       throw new Error('AI service not configured');
     }
 
