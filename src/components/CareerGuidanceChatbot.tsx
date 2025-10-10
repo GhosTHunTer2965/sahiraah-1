@@ -97,26 +97,31 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
+    const currentInput = input.trim();
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: input,
+      content: currentInput,
       role: 'user',
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Clear input and add user message immediately
     setInput('');
+    setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('career-guidance-chat', {
         body: {
-          message: input,
+          message: currentInput,
           conversationId: conversationId,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -132,6 +137,7 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
       console.error('Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
     } finally {
+      // Ensure loading is always set to false
       setIsLoading(false);
     }
   };
@@ -246,49 +252,49 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
         </div>
       </div>
 
-      <ScrollArea className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-4">
-            {messages.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">Welcome to AI Career Guidance!</p>
-                <p className="text-sm">
-                  Ask me about your career goals, college choices, entrance exams, or any career-related doubts.
-                  I'll provide comprehensive guidance in a conversational way.
-                </p>
-                <p className="text-sm mt-2 font-medium">
-                  Example: "What are the best colleges for M.Sc Mathematics in India?"
-                </p>
-              </div>
-            )}
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4 pb-4">
+          {messages.length === 0 && (
+            <div className="text-center text-muted-foreground py-8">
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">Welcome to AI Career Guidance!</p>
+              <p className="text-sm">
+                Ask me about your career goals, college choices, entrance exams, or any career-related doubts.
+                I'll provide comprehensive guidance in a conversational way.
+              </p>
+              <p className="text-sm mt-2 font-medium">
+                Example: "What are the best colleges for M.Sc Mathematics in India?"
+              </p>
+            </div>
+          )}
 
-            {messages.map((message) => (
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
               <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`max-w-[80%] p-4 rounded-lg ${
+                  message.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted prose prose-sm max-w-none'
+                }`}
               >
-                <div
-                  className={`max-w-[80%] p-4 rounded-lg ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted prose prose-sm max-w-none'
-                  }`}
-                >
-                  <div className="whitespace-pre-wrap leading-relaxed break-words">{message.content}</div>
-                </div>
+                <div className="whitespace-pre-wrap leading-relaxed break-words">{message.content}</div>
               </div>
-            ))}
+            </div>
+          ))}
 
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-muted p-3 rounded-lg flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>AI is thinking...</span>
-                </div>
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-muted p-3 rounded-lg flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>AI is thinking...</span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
+        </div>
       </ScrollArea>
 
       <div className="flex gap-2 p-4 border-t flex-shrink-0 bg-background">
