@@ -7,15 +7,94 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function generateAdaptiveQuestions(educationLevel: string) {
+  const groqApiKey = Deno.env.get('GROQ_API_KEY');
+  if (!groqApiKey) {
+    throw new Error('GROQ_API_KEY not configured');
+  }
+
+  const questionPrompt = `Generate 20 personalized career discovery questions for a student at: ${educationLevel}
+
+REQUIREMENTS:
+- First 15 questions: Multiple-choice with 4 options (A, B, C, D)
+- Last 5 questions: Open-ended text questions
+- Tailor question complexity to education level
+- For 10th/12th standard: Focus on interests, subjects, basic career awareness
+- For Undergraduate: Focus on specialization, skills, career goals
+- For Postgraduate: Focus on advanced specialization, research, industry experience
+
+Return EXACTLY this JSON format:
+{
+  "questions": [
+    {
+      "id": 1,
+      "question": "Question text",
+      "type": "multiple-choice",
+      "category": "personality/interests/skills/goals",
+      "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"]
+    }
+  ]
+}
+
+Generate all 20 questions (15 MCQ + 5 text) tailored to ${educationLevel}.`;
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${groqApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert career counselor creating personalized assessment questions for Indian students.'
+        },
+        {
+          role: 'user',
+          content: questionPrompt
+        }
+      ],
+      temperature: 0.8,
+      max_tokens: 4000,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Groq API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content;
+  const jsonMatch = content.match(/\{[\s\S]*\}/);
+  
+  if (!jsonMatch) {
+    throw new Error('Invalid response format');
+  }
+
+  const result = JSON.parse(jsonMatch[0]);
+
+  return new Response(JSON.stringify(result), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { sessionId, answers } = await req.json();
+    const { sessionId, answers, action, educationLevel } = await req.json();
+    
+    // Handle question generation
+    if (action === 'generate_questions') {
+      return await generateAdaptiveQuestions(educationLevel);
+    }
     
     console.log('Processing career analysis for session:', sessionId);
+    console.log('Education level:', educationLevel);
     console.log('Total answers received:', answers?.length);
 
     const groqApiKey = Deno.env.get('GROQ_API_KEY');
@@ -31,10 +110,13 @@ serve(async (req) => {
 
     const analysisPrompt = `You are an expert career counselor analyzing a student's comprehensive career assessment.
 
+STUDENT PROFILE:
+Education Level: ${educationLevel}
+
 ASSESSMENT RESPONSES:
 ${answersText}
 
-TASK: Generate exactly 5 career recommendations with detailed analysis and learning resources.
+TASK: Generate exactly 5 career recommendations with detailed step-by-step roadmaps and learning resources.
 
 CRITICAL REQUIREMENTS:
 1. Each career MUST include exactly 3 courses at each level (Beginner, Intermediate, Advanced)
@@ -60,7 +142,19 @@ Return EXACTLY this JSON structure:
       "growthPotential": "Specific growth opportunities in India",
       "salaryRange": "₹X-Y LPA",
       "keySkills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4"],
-      "educationPath": "Specific education recommendations for Indian students",
+      "roadmap": {
+        "currentStage": "Based on education level: ${educationLevel}",
+        "steps": [
+          {
+            "stage": "Stage name (e.g., Complete 12th Standard)",
+            "duration": "Time estimate",
+            "actions": ["Action 1", "Action 2", "Action 3"],
+            "milestones": ["Milestone 1", "Milestone 2"]
+          }
+        ],
+        "timeline": "Total estimated time from current level to career",
+        "criticalDecisions": ["Decision 1", "Decision 2"]
+      },
       "freeResources": {
         "beginner": [
           {

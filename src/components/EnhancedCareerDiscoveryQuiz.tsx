@@ -18,6 +18,7 @@ interface Question {
   question: string;
   type: "multiple-choice" | "text";
   options?: string[];
+  category?: string;
 }
 
 const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
@@ -27,189 +28,27 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
   const [timeLeft, setTimeLeft] = useState(60);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [educationLevel, setEducationLevel] = useState<string>("");
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const { toast } = useToast();
 
-  // 15 Multiple Choice Questions
-  const multipleChoiceQuestions: Question[] = [
-    {
-      id: 1,
-      question: "Which word best describes your personality?",
-      type: "multiple-choice",
-      options: ["A. Imaginative", "B. Analytical", "C. Empathetic", "D. Organized"]
-    },
-    {
-      id: 2,
-      question: "What type of problems in the world interest you most?",
-      type: "multiple-choice",
-      options: [
-        "A. Environmental or design challenges",
-        "B. Technological or scientific problems",
-        "C. Social issues like education or equality",
-        "D. Economic or organizational challenges"
-      ]
-    },
-    {
-      id: 3,
-      question: "What motivates you to work hard?",
-      type: "multiple-choice",
-      options: [
-        "A. Achieving goals and measurable success",
-        "B. Bringing creative ideas to life",
-        "C. Making a difference for others",
-        "D. Solving complex or technical problems"
-      ]
-    },
-    {
-      id: 4,
-      question: "How do you like to learn new things?",
-      type: "multiple-choice",
-      options: [
-        "A. By experimenting and hands-on practice",
-        "B. By observing or visualizing",
-        "C. By discussing or teaching others",
-        "D. By reading, researching, and analyzing"
-      ]
-    },
-    {
-      id: 5,
-      question: "What kind of activities make you lose track of time?",
-      type: "multiple-choice",
-      options: [
-        "A. Creating, designing, or imagining new things",
-        "B. Solving puzzles or analyzing how things work",
-        "C. Talking to people or helping others",
-        "D. Organizing, planning, or managing tasks"
-      ]
-    },
-    {
-      id: 6,
-      question: "What do you enjoy learning about the most?",
-      type: "multiple-choice",
-      options: [
-        "A. Art, creativity, and human expression",
-        "B. Technology, science, and systems",
-        "C. Psychology, education, and people",
-        "D. Business, organization, and strategy"
-      ]
-    },
-    {
-      id: 7,
-      question: "How do you usually handle deadlines?",
-      type: "multiple-choice",
-      options: [
-        "A. I stay calm and use creativity to find shortcuts",
-        "B. I plan systematically and finish ahead of time",
-        "C. I rely on collaboration to stay on track",
-        "D. I create structure and check progress regularly"
-      ]
-    },
-    {
-      id: 8,
-      question: "When faced with failure, what do you usually do first?",
-      type: "multiple-choice",
-      options: [
-        "A. Reflect and find creative alternatives",
-        "B. Analyze the mistake and learn from it",
-        "C. Talk it out and seek feedback",
-        "D. Regroup and make a structured new plan"
-      ]
-    },
-    {
-      id: 9,
-      question: "How do you approach decision-making?",
-      type: "multiple-choice",
-      options: [
-        "A. Based on logic and data",
-        "B. Based on intuition and creativity",
-        "C. Based on how it impacts others",
-        "D. Based on practicality and efficiency"
-      ]
-    },
-    {
-      id: 10,
-      question: "What motivates you most when you wake up to work/study?",
-      type: "multiple-choice",
-      options: [
-        "A. The desire to create something original and new",
-        "B. The goal of helping people directly and making a difference",
-        "C. The pursuit of mastery and being the best in a field",
-        "D. The opportunity to earn a good income and achieve financial stability"
-      ]
-    },
-    {
-      id: 11,
-      question: "Which word describes you best?",
-      type: "multiple-choice",
-      options: ["A. Imaginative", "B. Curious", "C. Caring", "D. Organized"]
-    },
-    {
-      id: 12,
-      question: "Your best friend is upset because they got fewer marks than expected. What will you do?",
-      type: "multiple-choice",
-      options: [
-        "A. Tell them not to cry and move on",
-        "B. Listen to them and make them feel better",
-        "C. Compare your marks with theirs",
-        "D. Avoid talking about it"
-      ]
-    },
-    {
-      id: 13,
-      question: "You're part of a group project, and one teammate isn't doing their share of work. How will you handle it?",
-      type: "multiple-choice",
-      options: [
-        "A. Do their part quietly to finish the project",
-        "B. Get angry and complain to the teacher",
-        "C. Talk calmly to them and understand what's wrong",
-        "D. Ignore it and focus only on your part"
-      ]
-    },
-    {
-      id: 14,
-      question: "If 5 pencils cost ₹25, how many pencils can you buy for ₹100?",
-      type: "multiple-choice",
-      options: ["A. 15", "B. 20", "C. 25", "D. 30"]
-    },
-    {
-      id: 15,
-      question: "A train leaves Mangaluru at 6:30 AM and reaches Udupi at 8:00 AM. Another train leaves Udupi at 7:15 AM and reaches Mangaluru at 8:45 AM. At what time do the two trains meet if they travel at the same speed?",
-      type: "multiple-choice",
-      options: ["A. 7:30 AM", "B. 7:37 AM", "C. 7:45 AM", "D. 7:50 AM"]
-    }
-  ];
+  // Initial education level question
+  const educationLevelQuestion: Question = {
+    id: 0,
+    question: "What is your current education level?",
+    type: "multiple-choice",
+    category: "education_level",
+    options: [
+      "A. 10th Standard (Secondary School)",
+      "B. 12th Standard (Higher Secondary)",
+      "C. Undergraduate (Bachelor's Degree)",
+      "D. Postgraduate (Master's/PhD)"
+    ]
+  };
 
-  // 5 Open-ended Text Questions
-  const textQuestions: Question[] = [
-    {
-      id: 16,
-      question: "Describe what your ideal work or study environment looks like, including the pace, people, and setting you prefer.",
-      type: "text"
-    },
-    {
-      id: 17,
-      question: "If you were leading a group project, how would you ensure it is completed successfully? Mention your steps or strategies.",
-      type: "text"
-    },
-    {
-      id: 18,
-      question: "Tell me about a time you were offered something new outside your comfort zone. How did you respond and why?",
-      type: "text"
-    },
-    {
-      id: 19,
-      question: "What kind of challenges or problems excite you the most, and can you give an example from your experience?",
-      type: "text"
-    },
-    {
-      id: 20,
-      question: "Where do you see yourself in 10 years, and what kind of work or impact do you want to have then?",
-      type: "text"
-    }
-  ];
-
-  const allQuestions = [...multipleChoiceQuestions, ...textQuestions];
-  const currentQuestion = allQuestions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / allQuestions.length) * 100;
+  const currentQuestion = allQuestions.length > 0 ? allQuestions[currentQuestionIndex] : educationLevelQuestion;
+  const progress = allQuestions.length > 0 ? ((currentQuestionIndex + 1) / allQuestions.length) * 100 : 0;
 
   // Timer for multiple-choice questions
   useEffect(() => {
@@ -278,6 +117,14 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
     const newAnswers = { ...answers, [currentQuestion.id]: answerValue };
     setAnswers(newAnswers);
 
+    // If this is the education level question, generate adaptive questions
+    if (currentQuestion.category === "education_level" && !educationLevel) {
+      setEducationLevel(answerValue);
+      await generateAdaptiveQuestions(answerValue);
+      setCurrentAnswer("");
+      return;
+    }
+
     // Store in database
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -287,7 +134,7 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
         session_id: sessionId,
         user_id: user.id,
         question_number: currentQuestion.id,
-        question_category: currentQuestion.type,
+        question_category: currentQuestion.category || currentQuestion.type,
         question_text: currentQuestion.question,
         answer_text: answerValue
       });
@@ -305,6 +152,34 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
     }
   };
 
+  const generateAdaptiveQuestions = async (eduLevel: string) => {
+    setIsGeneratingQuestions(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('groq-career-analysis', {
+        body: {
+          action: 'generate_questions',
+          educationLevel: eduLevel
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.questions && Array.isArray(data.questions)) {
+        setAllQuestions(data.questions);
+        setCurrentQuestionIndex(0);
+      }
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate questions. Using default questions.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingQuestions(false);
+    }
+  };
+
   const generateRecommendations = async () => {
     if (!sessionId) return;
     setIsProcessing(true);
@@ -317,8 +192,9 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
       const { data, error } = await supabase.functions.invoke('groq-career-analysis', {
         body: {
           sessionId,
+          educationLevel,
           answers: Object.entries(answers).map(([qId, answer]) => ({
-            question: allQuestions.find(q => q.id === parseInt(qId))?.question,
+            question: allQuestions.find(q => q.id === parseInt(qId))?.question || educationLevelQuestion.question,
             answer
           }))
         }
@@ -363,14 +239,20 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
     }
   };
 
-  if (isProcessing) {
+  if (isProcessing || isGeneratingQuestions) {
     return (
       <Card className="max-w-4xl mx-auto">
         <CardContent className="pt-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h3 className="text-xl font-semibold text-blue-900 mb-2">Analyzing Your Responses</h3>
-            <p className="text-blue-700">Our AI is generating your personalized career recommendations...</p>
+            <h3 className="text-xl font-semibold text-blue-900 mb-2">
+              {isGeneratingQuestions ? "Generating Personalized Questions" : "Analyzing Your Responses"}
+            </h3>
+            <p className="text-blue-700">
+              {isGeneratingQuestions 
+                ? "Creating questions tailored to your education level..." 
+                : "Our AI is generating your personalized career recommendations..."}
+            </p>
             <p className="text-sm text-blue-600 mt-4">This may take a moment</p>
           </div>
         </CardContent>
@@ -392,13 +274,15 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
             </div>
           )}
         </div>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-blue-700">
-            <span>Question {currentQuestionIndex + 1} of {allQuestions.length}</span>
-            <span>{Math.round(progress)}% Complete</span>
+        {allQuestions.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-blue-700">
+              <span>Question {currentQuestionIndex + 1} of {allQuestions.length}</span>
+              <span>{Math.round(progress)}% Complete</span>
+            </div>
+            <Progress value={progress} className="h-2" />
           </div>
-          <Progress value={progress} className="h-2" />
-        </div>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -449,7 +333,7 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
             disabled={!currentAnswer}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            {currentQuestionIndex < allQuestions.length - 1 ? "Next Question" : "Get My Results"}
+            {!educationLevel ? "Continue" : currentQuestionIndex < allQuestions.length - 1 ? "Next Question" : "Get My Results"}
           </Button>
         </div>
       </CardContent>
