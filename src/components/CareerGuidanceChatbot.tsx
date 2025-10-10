@@ -178,7 +178,7 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
-      <div className="flex flex-row items-center justify-between p-4 border-b">
+      <div className="flex flex-row items-center justify-between p-4 border-b flex-shrink-0">
         <div className="flex items-center gap-3">
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
             <SheetTrigger asChild>
@@ -246,9 +246,7 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col gap-4 overflow-hidden p-4">
-
-        <ScrollArea className="flex-1 pr-4 min-h-0">
+      <ScrollArea className="flex-1 overflow-y-auto p-4">
           <div className="space-y-4">
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
@@ -291,25 +289,24 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
             )}
           </div>
           <div ref={messagesEndRef} />
-        </ScrollArea>
+      </ScrollArea>
 
-        <div className="flex gap-2 pt-2 border-t">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask about your career goals, colleges, exams, or any doubts..."
-            disabled={isLoading}
-            className="flex-1"
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!input.trim() || isLoading}
-            size="icon"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+      <div className="flex gap-2 p-4 border-t flex-shrink-0 bg-background">
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Ask about your career goals, colleges, exams, or any doubts..."
+          disabled={isLoading}
+          className="flex-1"
+        />
+        <Button
+          onClick={handleSendMessage}
+          disabled={!input.trim() || isLoading}
+          size="icon"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
