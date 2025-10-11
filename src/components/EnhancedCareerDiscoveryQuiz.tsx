@@ -303,11 +303,7 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
           {currentQuestion?.type === "multiple-choice" ? (
             <RadioGroup
               value={currentAnswer}
-              onValueChange={(val) => {
-                setCurrentAnswer(val);
-                // Auto-advance immediately when an option is selected
-                setTimeout(() => handleNext(false), 100);
-              }}
+              onValueChange={setCurrentAnswer}
               className="space-y-3"
             >
               {currentQuestion.options?.map((option, index) => (
@@ -334,15 +330,13 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
             {currentQuestion?.type === "text" && "Take your time to write a detailed response"}
             {currentQuestion?.type === "multiple-choice" && "Select one option to continue"}
           </div>
-          {currentQuestion?.type === "text" && (
-            <Button
-              onClick={() => handleNext(false)}
-              disabled={!currentAnswer}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {!educationLevel ? "Continue" : currentQuestionIndex < allQuestions.length - 1 ? "Next" : "Get My Results"}
-            </Button>
-          )}
+          <Button
+            onClick={() => handleNext(false)}
+            disabled={!currentAnswer}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {!educationLevel ? "Continue" : currentQuestionIndex < allQuestions.length - 1 ? "Next Question" : "Get My Results"}
+          </Button>
         </div>
       </CardContent>
     </Card>
