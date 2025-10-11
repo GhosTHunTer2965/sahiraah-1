@@ -127,6 +127,75 @@ const GeminiCareerReport = ({ sessionId, onRetake }: Props) => {
   const fetchAnalysisData = async () => {
     try {
       setError(null);
+
+      // Ensure user is signed in
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('You must be signed in to view results.');
+      }
+
+      // 1) Prefer loading the exact report saved in History for this session
+      const { data: historyRows, error: historyError } = await supabase
+        .from('user_career_history')
+        .select('report_data')
+        .eq('user_id', user.id)
+        .eq('session_id', sessionId);
+
+      if (!historyError && historyRows && historyRows.length > 0) {
+        const reportData: any = historyRows[0]?.report_data || {};
+
+        // Build career recommendations from saved report
+        let careerRecommendations: CareerRecommendation[] = [];
+        if (Array.isArray(reportData?.career_recommendations) && reportData.career_recommendations.length > 0) {
+          careerRecommendations = reportData.career_recommendations.map((rec: any) => ({
+            title: rec.title || 'Career Option',
+            description: rec.description || 'Career description not available',
+            matchScore: typeof rec.matchScore === 'number' ? rec.matchScore : 85,
+            growthPotential: rec.growthPotential || 'High growth potential',
+            salaryRange: rec.salaryRange || 'Competitive salary',
+            keySkills: Array.isArray(rec.keySkills) ? rec.keySkills : ['Communication', 'Problem Solving'],
+            educationPath: rec.educationPath || 'Relevant education required',
+            freeResources: rec.freeResources || { beginner: [], intermediate: [], advanced: [] }
+          }));
+        } else {
+          const details = historyRows
+            .map((r: any) => r?.report_data?.recommendation_details)
+            .filter((d: any) => d && typeof d === 'object');
+          careerRecommendations = details.map((rec: any) => ({
+            title: rec.title || 'Career Option',
+            description: rec.description || 'Career description not available',
+            matchScore: typeof rec.matchScore === 'number' ? rec.matchScore : 85,
+            growthPotential: rec.growthPotential || 'High growth potential',
+            salaryRange: rec.salaryRange || 'Competitive salary',
+            keySkills: Array.isArray(rec.keySkills) ? rec.keySkills : ['Communication', 'Problem Solving'],
+            educationPath: rec.educationPath || 'Relevant education required',
+            freeResources: rec.freeResources || { beginner: [], intermediate: [], advanced: [] }
+          }));
+        }
+
+        const strengths = Array.isArray(reportData?.strengths)
+          ? reportData.strengths.filter((s: any) => typeof s === 'string')
+          : [];
+        const weaknesses = Array.isArray(reportData?.weaknesses)
+          ? reportData.weaknesses.filter((w: any) => typeof w === 'string')
+          : [];
+
+        setStudentName(reportData?.student_name || '');
+        setEducationLevel(reportData?.education_level || '');
+
+        const analysis: AnalysisData = {
+          strengths: strengths.length > 0 ? strengths : ["Problem-solving", "Communication", "Adaptability"],
+          areasForImprovement: weaknesses.length > 0 ? weaknesses : ["Technical skills", "Leadership development"],
+          careerRecommendations,
+          personalityInsights: reportData?.personality_insights || "Based on your responses, you demonstrate strong analytical thinking and a systematic approach to problem-solving.",
+          recommendedNextSteps: reportData?.next_steps || ["Start with beginner-level courses", "Build a portfolio of projects", "Network with industry professionals"]
+        };
+
+        setAnalysisData(analysis);
+        return; // Already loaded from history; skip session fallback
+      }
+
+      // 2) Fallback: load from the quiz session and then store to history
       const { data: sessionData, error } = await supabase
         .from('user_quiz_sessions')
         .select('*')
@@ -148,9 +217,6 @@ const GeminiCareerReport = ({ sessionId, onRetake }: Props) => {
           : [];
         
         let careerRecommendations: CareerRecommendation[] = [];
-        
-        // Store in history when report is viewed
-        await storeReportInHistory(sessionData);
         
         if (Array.isArray(sessionData.career_recommendations)) {
           careerRecommendations = sessionData.career_recommendations
@@ -210,6 +276,9 @@ const GeminiCareerReport = ({ sessionId, onRetake }: Props) => {
         };
         
         setAnalysisData(analysis);
+        
+        // Store comprehensive report in history for consistency across app
+        await storeReportInHistory(sessionData);
       }
     } catch (error) {
       console.error('Error fetching analysis data:', error);
