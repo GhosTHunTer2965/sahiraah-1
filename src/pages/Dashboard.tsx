@@ -127,9 +127,13 @@ const Dashboard = () => {
     setQuizCompleted(true);
     setQuizStarted(false);
     setHasExistingResults(true);
+    
+    // Scroll to top to show the results
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     toast({
       title: "Analysis Complete!",
-      description: "Your personalized career recommendations are ready."
+      description: "Your personalized career recommendations are ready. Scroll up to view them."
     });
   };
 
@@ -150,6 +154,9 @@ const Dashboard = () => {
       setCompletedSessionId(lastSessionId);
       setQuizCompleted(true);
       setQuizStarted(false);
+      
+      // Scroll to top to show the results
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
