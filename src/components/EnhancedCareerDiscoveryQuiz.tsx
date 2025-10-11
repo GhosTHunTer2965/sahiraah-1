@@ -52,14 +52,16 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
 
   // Timer for multiple-choice questions
   useEffect(() => {
-    if (currentQuestion?.type === "multiple-choice" && timeLeft > 0) {
+    if (currentQuestion?.type !== "multiple-choice") return;
+    
+    if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && currentQuestion?.type === "multiple-choice") {
-      // Auto-advance when time runs out
+    } else if (timeLeft === 0 && !currentAnswer) {
+      // Auto-advance when time runs out only if no answer is selected
       handleNext(true);
     }
-  }, [timeLeft, currentQuestion]);
+  }, [timeLeft, currentQuestion?.type]);
 
   // Reset timer when question changes
   useEffect(() => {

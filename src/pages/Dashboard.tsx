@@ -257,7 +257,7 @@ const Dashboard = () => {
                         Chat with AI Advisor
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-6xl max-h-[90vh] h-[800px] p-0">
+                    <DialogContent className="max-w-6xl h-[85vh] p-0 flex flex-col">
                       <CareerGuidanceChatbot onClose={() => setShowChatbot(false)} />
                     </DialogContent>
                   </Dialog>
