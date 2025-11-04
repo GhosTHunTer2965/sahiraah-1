@@ -71,28 +71,21 @@ const GeminiCareerReport = ({ sessionId, onRetake }: Props) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Extract all courses from career recommendations
-      const allCourses: any[] = [];
-      if (Array.isArray(sessionData.career_recommendations)) {
-        sessionData.career_recommendations.forEach((rec: any) => {
-          if (rec.freeResources) {
-            ['beginner', 'intermediate', 'advanced'].forEach(level => {
-              if (Array.isArray(rec.freeResources[level])) {
-                rec.freeResources[level].forEach((course: any) => {
-                  allCourses.push({
-                    ...course,
-                    level,
-                    careerPath: rec.title
-                  });
-                });
-              }
-            });
-          }
-        });
+      // Check if history already exists for this session to prevent duplicates
+      const { data: existingHistory } = await supabase
+        .from('user_career_history')
+        .select('id')
+        .eq('session_id', sessionId)
+        .limit(1);
+
+      if (existingHistory && existingHistory.length > 0) {
+        console.log('History already exists for this session, skipping insertion');
+        return;
       }
 
       // Store comprehensive data in user_career_history for each career recommendation
-      for (const recommendation of sessionData.career_recommendations || []) {
+      const recommendations = sessionData.career_recommendations || [];
+      for (const recommendation of recommendations) {
         await supabase.from('user_career_history').insert({
           user_id: user.id,
           session_id: sessionId,
@@ -127,6 +120,77 @@ const GeminiCareerReport = ({ sessionId, onRetake }: Props) => {
   const fetchAnalysisData = async () => {
     try {
       setError(null);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      // First, try to load from user_career_history
+      const { data: historyData } = await supabase
+        .from('user_career_history')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('timestamp', { ascending: false });
+
+      if (historyData && historyData.length > 0) {
+        // Build analysis from history
+        const firstRecord = historyData[0];
+        const reportData = firstRecord.report_data as any;
+        setStudentName(reportData?.student_name || "");
+        setEducationLevel(reportData?.education_level || "");
+
+        const strengths: string[] = Array.isArray(firstRecord.strengths) 
+          ? firstRecord.strengths.filter(s => typeof s === 'string')
+          : [];
+        
+        const weaknesses: string[] = Array.isArray(firstRecord.weaknesses) 
+          ? firstRecord.weaknesses.filter(w => typeof w === 'string')
+          : [];
+
+        // Build career recommendations from history records
+        const careerRecommendations: CareerRecommendation[] = historyData.map((record: any) => {
+          const recordReportData = record.report_data as any;
+          const recDetails = recordReportData?.recommendation_details || {};
+          
+          // Handle courses - group by level if they're flattened
+          let freeResources = { beginner: [], intermediate: [], advanced: [] };
+          if (Array.isArray(record.courses)) {
+            const grouped: any = { beginner: [], intermediate: [], advanced: [] };
+            record.courses.forEach((course: any) => {
+              const level = course.level || 'beginner';
+              if (grouped[level]) {
+                grouped[level].push(course);
+              }
+            });
+            freeResources = grouped;
+          } else if (record.courses && typeof record.courses === 'object') {
+            freeResources = record.courses as any;
+          }
+
+          return {
+            title: record.career || recDetails.title || 'Career Option',
+            description: record.reason || recDetails.description || 'Career description',
+            matchScore: recDetails.matchScore || 85,
+            growthPotential: recDetails.growthPotential || 'High growth potential',
+            salaryRange: recDetails.salaryRange || 'Competitive salary',
+            keySkills: recDetails.keySkills || [],
+            educationPath: recDetails.educationPath || 'Relevant education required',
+            freeResources
+          };
+        });
+
+        const analysis: AnalysisData = {
+          strengths: strengths.length > 0 ? strengths : ["Problem-solving", "Communication", "Adaptability"],
+          areasForImprovement: weaknesses.length > 0 ? weaknesses : ["Technical skills", "Leadership development"],
+          careerRecommendations,
+          personalityInsights: reportData?.personality_insights || "Based on your responses, you demonstrate strong analytical thinking and a systematic approach to problem-solving.",
+          recommendedNextSteps: reportData?.next_steps || ["Start with beginner-level courses", "Build a portfolio of projects", "Network with industry professionals"]
+        };
+        
+        setAnalysisData(analysis);
+        setLoading(false);
+        return;
+      }
+
+      // Fallback to session data if no history
       const { data: sessionData, error } = await supabase
         .from('user_quiz_sessions')
         .select('*')
@@ -152,8 +216,14 @@ const GeminiCareerReport = ({ sessionId, onRetake }: Props) => {
         // Store in history when report is viewed
         await storeReportInHistory(sessionData);
         
-        if (Array.isArray(sessionData.career_recommendations)) {
-          careerRecommendations = sessionData.career_recommendations
+        // Handle both array and object formats
+        const careerRecs = sessionData.career_recommendations as any;
+        const recommendations = Array.isArray(careerRecs) 
+          ? careerRecs 
+          : careerRecs?.careerRecommendations || [];
+        
+        if (Array.isArray(recommendations)) {
+          careerRecommendations = recommendations
             .map((rec: any) => {
               if (typeof rec === 'object' && rec !== null) {
                 return {

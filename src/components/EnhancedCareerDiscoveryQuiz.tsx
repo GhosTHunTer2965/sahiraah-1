@@ -59,7 +59,7 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
       return () => clearTimeout(timer);
     } else if (timeLeft === 0 && !currentAnswer) {
       // Auto-advance when time runs out only if no answer is selected
-      handleNext(true);
+      handleNext({ autoAdvance: true });
     }
   }, [timeLeft, currentQuestion?.type]);
 
@@ -101,11 +101,14 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
     createSession();
   }, []);
 
-  const handleNext = async (autoAdvance = false) => {
+  const handleNext = async ({ autoAdvance = false, selectedValue }: { autoAdvance?: boolean; selectedValue?: string } = {}) => {
     if (!sessionId) return;
 
+    // Use selectedValue if provided, otherwise fall back to currentAnswer
+    const effectiveAnswer = selectedValue || currentAnswer;
+
     // Validate answer for text questions
-    if (currentQuestion.type === "text" && !currentAnswer.trim() && !autoAdvance) {
+    if (currentQuestion.type === "text" && !effectiveAnswer.trim() && !autoAdvance) {
       toast({
         title: "Answer Required",
         description: "Please provide your answer before continuing",
@@ -115,7 +118,7 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
     }
 
     // Save answer
-    const answerValue = currentAnswer || (autoAdvance ? "No answer (time expired)" : "");
+    const answerValue = effectiveAnswer || (autoAdvance ? "No answer (time expired)" : "");
     const newAnswers = { ...answers, [currentQuestion.id]: answerValue };
     setAnswers(newAnswers);
 
@@ -212,13 +215,18 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
       }
 
       if (data.success) {
-        // Update session as completed
+        const analysis = data.recommendations;
+        
+        // Update session as completed with proper data structure
         await supabase
           .from('user_quiz_sessions')
           .update({
             is_completed: true,
             session_completed_at: new Date().toISOString(),
-            career_recommendations: data.recommendations
+            career_recommendations: analysis.careerRecommendations || [],
+            strengths: analysis.strengths || [],
+            weaknesses: analysis.areasForImprovement || [],
+            education_level: educationLevel
           })
           .eq('id', sessionId);
 
@@ -303,7 +311,11 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
           {currentQuestion?.type === "multiple-choice" ? (
             <RadioGroup
               value={currentAnswer}
-              onValueChange={setCurrentAnswer}
+              onValueChange={(value) => {
+                setCurrentAnswer(value);
+                // Auto-advance immediately when option is selected
+                setTimeout(() => handleNext({ selectedValue: value }), 300);
+              }}
               className="space-y-3"
             >
               {currentQuestion.options?.map((option, index) => (
@@ -328,15 +340,17 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
         <div className="flex justify-between items-center pt-4">
           <div className="text-sm text-blue-600">
             {currentQuestion?.type === "text" && "Take your time to write a detailed response"}
-            {currentQuestion?.type === "multiple-choice" && "Select one option to continue"}
+            {currentQuestion?.type === "multiple-choice" && "Your selection will automatically continue to the next question"}
           </div>
-          <Button
-            onClick={() => handleNext(false)}
-            disabled={!currentAnswer}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {!educationLevel ? "Continue" : currentQuestionIndex < allQuestions.length - 1 ? "Next Question" : "Get My Results"}
-          </Button>
+          {currentQuestion?.type === "text" && (
+            <Button
+              onClick={() => handleNext()}
+              disabled={!currentAnswer}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {!educationLevel ? "Continue" : currentQuestionIndex < allQuestions.length - 1 ? "Continue" : "Get My Results"}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
