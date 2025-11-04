@@ -338,7 +338,7 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
         </div>
 
         <div className="flex justify-between items-center pt-4">
-          {currentQuestion?.type === "text" ? (
+          {currentQuestion && currentQuestion.type !== "multiple-choice" ? (
             <>
               <div className="text-sm text-blue-600">
                 Take your time to write a detailed response
