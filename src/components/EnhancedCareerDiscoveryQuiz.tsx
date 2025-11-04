@@ -338,18 +338,23 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
         </div>
 
         <div className="flex justify-between items-center pt-4">
-          <div className="text-sm text-blue-600">
-            {currentQuestion?.type === "text" && "Take your time to write a detailed response"}
-            {currentQuestion?.type === "multiple-choice" && "Your selection will automatically continue to the next question"}
-          </div>
-          {currentQuestion?.type === "text" && (
-            <Button
-              onClick={() => handleNext()}
-              disabled={!currentAnswer}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {!educationLevel ? "Continue" : currentQuestionIndex < allQuestions.length - 1 ? "Continue" : "Get My Results"}
-            </Button>
+          {currentQuestion?.type === "text" ? (
+            <>
+              <div className="text-sm text-blue-600">
+                Take your time to write a detailed response
+              </div>
+              <Button
+                onClick={() => handleNext()}
+                disabled={!currentAnswer.trim()}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {!educationLevel ? "Continue" : currentQuestionIndex < allQuestions.length - 1 ? "Next Question" : "Get My Results"}
+              </Button>
+            </>
+          ) : (
+            <div className="text-sm text-blue-600 text-center w-full">
+              Your selection will automatically continue to the next question
+            </div>
           )}
         </div>
       </CardContent>
