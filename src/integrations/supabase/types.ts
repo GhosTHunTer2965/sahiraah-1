@@ -600,6 +600,7 @@ export type Database = {
           payment_status: string | null
           session_date: string
           session_status: string | null
+          stripe_session_id: string | null
           updated_at: string | null
           user_id: string
         }
@@ -614,6 +615,7 @@ export type Database = {
           payment_status?: string | null
           session_date: string
           session_status?: string | null
+          stripe_session_id?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -628,6 +630,7 @@ export type Database = {
           payment_status?: string | null
           session_date?: string
           session_status?: string | null
+          stripe_session_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
