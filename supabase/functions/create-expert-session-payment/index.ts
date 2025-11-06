@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -35,49 +34,58 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-08-27.basil",
-    });
-
-    // Check if customer exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    // Initialize Razorpay
+    const razorpayKeyId = Deno.env.get("RAZORPAY_KEY_ID") || "";
+    const razorpayKeySecret = Deno.env.get("RAZORPAY_KEY_SECRET") || "";
+    
+    if (!razorpayKeyId || !razorpayKeySecret) {
+      throw new Error("Razorpay credentials not configured");
     }
 
-    // Create checkout session with dynamic pricing
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price_data: {
-            currency: "inr",
-            product_data: {
-              name: `Career Guidance Session with ${expertName}`,
-              description: "One-on-one career guidance session (60 minutes)",
-            },
-            unit_amount: Math.round(hourlyRate * 100), // Convert to paise
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}&expert_id=${expertId}`,
-      cancel_url: `${req.headers.get("origin")}/dashboard?payment=cancelled`,
-      metadata: {
+    // Create Razorpay order
+    const amount = Math.round(hourlyRate * 100); // Convert to paise
+    const orderData = {
+      amount,
+      currency: "INR",
+      receipt: `expert_${expertId}_${Date.now()}`,
+      notes: {
         user_id: user.id,
         expert_id: expertId,
+        expert_name: expertName,
         hourly_rate: hourlyRate.toString(),
       },
+    };
+
+    const razorpayAuthHeader = "Basic " + btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
+    
+    const razorpayResponse = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": razorpayAuthHeader,
+      },
+      body: JSON.stringify(orderData),
     });
 
-    console.log("Checkout session created:", session.id);
+    if (!razorpayResponse.ok) {
+      const errorData = await razorpayResponse.text();
+      console.error("Razorpay error:", errorData);
+      throw new Error("Failed to create Razorpay order");
+    }
+
+    const razorpayOrder = await razorpayResponse.json();
+    
+    console.log("Razorpay order created:", razorpayOrder.id);
 
     return new Response(
-      JSON.stringify({ url: session.url, sessionId: session.id }),
+      JSON.stringify({ 
+        orderId: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        keyId: razorpayKeyId,
+        expertName,
+        userEmail: user.email,
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

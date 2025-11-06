@@ -31,38 +31,8 @@ const ExpertBooking = () => {
   }, []);
 
   const checkPaymentStatus = async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentStatus = urlParams.get('payment');
-    const sessionId = urlParams.get('session_id');
-    const expertId = urlParams.get('expert_id');
-
-    if (paymentStatus === 'success' && sessionId) {
-      try {
-        const { data, error } = await supabase.functions.invoke('verify-expert-payment', {
-          body: { sessionId },
-        });
-
-        if (error) throw error;
-
-        if (data?.success) {
-          setBookingSuccess(true);
-          toast.success('Payment successful! Your session has been booked.');
-          
-          // Clean up URL
-          window.history.replaceState({}, '', '/dashboard');
-          
-          setTimeout(() => {
-            setBookingSuccess(false);
-          }, 5000);
-        }
-      } catch (error) {
-        console.error('Error verifying payment:', error);
-        toast.error('Payment verification failed. Please contact support.');
-      }
-    } else if (paymentStatus === 'cancelled') {
-      toast.error('Payment was cancelled');
-      window.history.replaceState({}, '', '/dashboard');
-    }
+    // Razorpay handles payment verification in the handler callback
+    // No need for URL parameter checking
   };
 
   const loadExperts = async () => {
@@ -105,7 +75,7 @@ const ExpertBooking = () => {
 
       setIsBooking(true);
 
-      // Create Stripe checkout session
+      // Create Razorpay order
       const { data, error } = await supabase.functions.invoke('create-expert-session-payment', {
         body: {
           expertId: selectedExpert.id,
@@ -116,16 +86,72 @@ const ExpertBooking = () => {
 
       if (error) throw error;
 
-      if (data?.url) {
-        // Redirect to Stripe checkout
-        window.open(data.url, '_blank');
-        toast.success('Redirecting to secure payment...');
-        setSelectedExpert(null);
+      // Load Razorpay script if not already loaded
+      if (!(window as any).Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
       }
+
+      // Configure Razorpay options
+      const options = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'Expert Career Guidance',
+        description: `Session with ${data.expertName}`,
+        order_id: data.orderId,
+        prefill: {
+          email: data.userEmail,
+        },
+        handler: async function (response: any) {
+          try {
+            const { error: verifyError } = await supabase.functions.invoke('verify-expert-payment', {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                expertId: selectedExpert.id,
+                hourlyRate: selectedExpert.hourly_rate,
+              },
+            });
+
+            if (verifyError) throw verifyError;
+
+            setBookingSuccess(true);
+            toast.success('Payment successful! Your session has been booked.');
+            setSelectedExpert(null);
+            
+            setTimeout(() => {
+              setBookingSuccess(false);
+            }, 5000);
+          } catch (err) {
+            console.error('Payment verification error:', err);
+            toast.error('Payment received but booking failed. Please contact support.');
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsBooking(false);
+            toast.error('Payment was cancelled');
+          },
+        },
+        theme: {
+          color: '#3b82f6',
+        },
+      };
+
+      const razorpay = new (window as any).Razorpay(options);
+      razorpay.open();
     } catch (error) {
       console.error('Error initiating payment:', error);
       toast.error('Failed to initiate payment. Please try again.');
-    } finally {
       setIsBooking(false);
     }
   };

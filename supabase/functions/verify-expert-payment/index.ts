@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -28,36 +27,57 @@ serve(async (req) => {
       throw new Error("User not authenticated");
     }
 
-    const { sessionId } = await req.json();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, expertId, hourlyRate } = await req.json();
     
-    if (!sessionId) {
-      throw new Error("Session ID is required");
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      throw new Error("Missing payment verification data");
     }
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-08-27.basil",
-    });
-
-    // Retrieve the session
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    if (session.payment_status !== "paid") {
-      throw new Error("Payment not completed");
+    // Verify Razorpay signature
+    const razorpayKeySecret = Deno.env.get("RAZORPAY_KEY_SECRET") || "";
+    
+    const expectedSignature = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(`${razorpay_order_id}|${razorpay_payment_id}`)
+    );
+    
+    // Create HMAC with secret
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(razorpayKeySecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    
+    const signature = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(`${razorpay_order_id}|${razorpay_payment_id}`)
+    );
+    
+    const signatureHex = Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    if (signatureHex !== razorpay_signature) {
+      throw new Error("Payment verification failed - invalid signature");
     }
+
+    console.log("Payment verified successfully");
 
     // Create booking record
     const { error: bookingError } = await supabaseClient
       .from("expert_sessions")
       .insert({
         user_id: user.id,
-        expert_id: session.metadata?.expert_id,
+        expert_id: expertId,
         session_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         duration_minutes: 60,
-        amount_paid: parseFloat(session.metadata?.hourly_rate || "0"),
+        amount_paid: parseFloat(hourlyRate || "0"),
         payment_status: "completed",
         session_status: "scheduled",
-        stripe_session_id: sessionId,
+        stripe_session_id: razorpay_payment_id,
       });
 
     if (bookingError) {
@@ -68,7 +88,7 @@ serve(async (req) => {
     console.log("Booking created successfully for user:", user.id);
 
     return new Response(
-      JSON.stringify({ success: true, sessionStatus: session.payment_status }),
+      JSON.stringify({ success: true, verified: true }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
