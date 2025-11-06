@@ -27,7 +27,43 @@ const ExpertBooking = () => {
 
   useEffect(() => {
     loadExperts();
+    checkPaymentStatus();
   }, []);
+
+  const checkPaymentStatus = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const sessionId = urlParams.get('session_id');
+    const expertId = urlParams.get('expert_id');
+
+    if (paymentStatus === 'success' && sessionId) {
+      try {
+        const { data, error } = await supabase.functions.invoke('verify-expert-payment', {
+          body: { sessionId },
+        });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          setBookingSuccess(true);
+          toast.success('Payment successful! Your session has been booked.');
+          
+          // Clean up URL
+          window.history.replaceState({}, '', '/dashboard');
+          
+          setTimeout(() => {
+            setBookingSuccess(false);
+          }, 5000);
+        }
+      } catch (error) {
+        console.error('Error verifying payment:', error);
+        toast.error('Payment verification failed. Please contact support.');
+      }
+    } else if (paymentStatus === 'cancelled') {
+      toast.error('Payment was cancelled');
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  };
 
   const loadExperts = async () => {
     try {
@@ -69,31 +105,26 @@ const ExpertBooking = () => {
 
       setIsBooking(true);
 
-      // Create a booking record
-      const { error } = await supabase
-        .from('expert_sessions')
-        .insert({
-          user_id: user.id,
-          expert_id: selectedExpert.id,
-          session_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Next day
-          duration_minutes: 60,
-          amount_paid: selectedExpert.hourly_rate,
-          payment_status: 'completed', // MVP: Auto-complete for demo
-          session_status: 'scheduled',
-        });
+      // Create Stripe checkout session
+      const { data, error } = await supabase.functions.invoke('create-expert-session-payment', {
+        body: {
+          expertId: selectedExpert.id,
+          expertName: selectedExpert.name,
+          hourlyRate: selectedExpert.hourly_rate,
+        },
+      });
 
       if (error) throw error;
 
-      setBookingSuccess(true);
-      toast.success('Session booked successfully!');
-      
-      setTimeout(() => {
+      if (data?.url) {
+        // Redirect to Stripe checkout
+        window.open(data.url, '_blank');
+        toast.success('Redirecting to secure payment...');
         setSelectedExpert(null);
-        setBookingSuccess(false);
-      }, 3000);
+      }
     } catch (error) {
-      console.error('Error booking session:', error);
-      toast.error('Failed to book session. Please try again.');
+      console.error('Error initiating payment:', error);
+      toast.error('Failed to initiate payment. Please try again.');
     } finally {
       setIsBooking(false);
     }
