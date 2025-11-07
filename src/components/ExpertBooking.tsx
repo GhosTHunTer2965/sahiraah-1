@@ -23,6 +23,7 @@ const ExpertBooking = () => {
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [razorpayOpen, setRazorpayOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -112,6 +113,7 @@ const ExpertBooking = () => {
         },
         handler: async function (response: any) {
           try {
+            setRazorpayOpen(false);
             const { error: verifyError } = await supabase.functions.invoke('verify-expert-payment', {
               body: {
                 razorpay_order_id: response.razorpay_order_id,
@@ -138,6 +140,7 @@ const ExpertBooking = () => {
         },
         modal: {
           ondismiss: function () {
+            setRazorpayOpen(false);
             setIsBooking(false);
             toast.error('Payment was cancelled');
           },
@@ -147,6 +150,8 @@ const ExpertBooking = () => {
         },
       };
 
+      // Close dialog before opening Razorpay to prevent modal conflicts
+      setRazorpayOpen(true);
       const razorpay = new (window as any).Razorpay(options);
       razorpay.open();
     } catch (error) {
@@ -197,7 +202,7 @@ const ExpertBooking = () => {
         ))}
       </div>
 
-      <Dialog open={!!selectedExpert && !bookingSuccess} onOpenChange={() => setSelectedExpert(null)}>
+      <Dialog open={!!selectedExpert && !bookingSuccess && !razorpayOpen} onOpenChange={() => setSelectedExpert(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Book Session with {selectedExpert?.name}</DialogTitle>
