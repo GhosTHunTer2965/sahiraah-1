@@ -183,7 +183,7 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
 
 
   return (
-    <div className="w-full h-full flex flex-col bg-background overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
       <div className="flex flex-row items-center justify-between p-4 border-b flex-shrink-0">
         <div className="flex items-center gap-3">
           <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
@@ -245,8 +245,11 @@ const CareerGuidanceChatbot: React.FC<CareerGuidanceChatbotProps> = ({ onClose }
             </Button>
           )}
           {onClose && (
-            <Button variant="outline" size="sm" onClick={onClose}>
-              Close
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <span className="sr-only">Close</span>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </Button>
           )}
         </div>

@@ -7,7 +7,6 @@ import EnhancedCareerDiscoveryQuiz from "@/components/EnhancedCareerDiscoveryQui
 import GeminiCareerReport from "@/components/GeminiCareerReport";
 import ExploreResources from "@/components/ExploreResources";
 import CareerGuidanceChatbot from "@/components/CareerGuidanceChatbot";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, MessageSquare, CheckCircle2 } from "lucide-react";
@@ -258,16 +257,12 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Dialog open={showChatbot} onOpenChange={setShowChatbot}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-purple-600 hover:bg-purple-700 text-white w-full">
-                        Chat with AI Advisor
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-6xl h-[85vh] p-0 flex flex-col">
-                      <CareerGuidanceChatbot onClose={() => setShowChatbot(false)} />
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700 text-white w-full"
+                    onClick={() => setShowChatbot(true)}
+                  >
+                    Chat with AI Advisor
+                  </Button>
                 </CardFooter>
               </Card>
 
@@ -339,6 +334,11 @@ const Dashboard = () => {
         <ExploreResources />
         
       </div>
+
+      {/* Fullscreen AI Advisor */}
+      {showChatbot && (
+        <CareerGuidanceChatbot onClose={() => setShowChatbot(false)} />
+      )}
     </div>
   );
 };
