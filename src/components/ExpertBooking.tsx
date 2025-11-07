@@ -101,6 +101,7 @@ const ExpertBooking = () => {
       }
 
       // Configure Razorpay options
+      const inIframe = window.self !== window.top;
       const options = {
         key: data.keyId,
         amount: data.amount,
@@ -108,6 +109,7 @@ const ExpertBooking = () => {
         name: 'Expert Career Guidance',
         description: `Session with ${data.expertName}`,
         order_id: data.orderId,
+        redirect: inIframe,
         prefill: {
           email: data.userEmail,
         },
@@ -144,6 +146,8 @@ const ExpertBooking = () => {
             setIsBooking(false);
             toast.error('Payment was cancelled');
           },
+          escape: true,
+          backdropclose: true,
         },
         theme: {
           color: '#3b82f6',
@@ -152,12 +156,19 @@ const ExpertBooking = () => {
 
       // Close dialog before opening Razorpay to prevent modal conflicts
       setRazorpayOpen(true);
+      // Unmount dialog immediately to remove any overlays/focus traps
+      setSelectedExpert(null);
+      // Ensure no element retains focus or pointer event blocks
+      (document.activeElement as HTMLElement | null)?.blur?.();
+      document.body.style.pointerEvents = 'auto';
       
-      // Wait for dialog to fully close before opening Razorpay
+      // Wait for dialog to fully close before opening Razorpay (handles exit animations)
       setTimeout(() => {
-        const razorpay = new (window as any).Razorpay(options);
-        razorpay.open();
-      }, 100);
+        requestAnimationFrame(() => {
+          const razorpay = new (window as any).Razorpay(options);
+          razorpay.open();
+        });
+      }, 400);
     } catch (error) {
       console.error('Error initiating payment:', error);
       toast.error('Failed to initiate payment. Please try again.');
