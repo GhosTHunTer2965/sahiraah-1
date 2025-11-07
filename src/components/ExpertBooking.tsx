@@ -152,8 +152,12 @@ const ExpertBooking = () => {
 
       // Close dialog before opening Razorpay to prevent modal conflicts
       setRazorpayOpen(true);
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.open();
+      
+      // Wait for dialog to fully close before opening Razorpay
+      setTimeout(() => {
+        const razorpay = new (window as any).Razorpay(options);
+        razorpay.open();
+      }, 100);
     } catch (error) {
       console.error('Error initiating payment:', error);
       toast.error('Failed to initiate payment. Please try again.');
