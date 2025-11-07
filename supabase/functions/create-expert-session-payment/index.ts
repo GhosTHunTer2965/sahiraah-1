@@ -47,7 +47,7 @@ serve(async (req) => {
     const orderData = {
       amount,
       currency: "INR",
-      receipt: `expert_${expertId}_${Date.now()}`,
+      receipt: `exp_${Date.now()}`, // Keep under 40 chars
       notes: {
         user_id: user.id,
         expert_id: expertId,
