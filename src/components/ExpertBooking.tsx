@@ -100,8 +100,7 @@ const ExpertBooking = () => {
         });
       }
 
-      // Configure Razorpay options
-      const inIframe = window.self !== window.top;
+      // Configure Razorpay options for fullscreen redirect mode
       const options = {
         key: data.keyId,
         amount: data.amount,
@@ -109,7 +108,7 @@ const ExpertBooking = () => {
         name: 'Expert Career Guidance',
         description: `Session with ${data.expertName}`,
         order_id: data.orderId,
-        redirect: inIframe,
+        redirect: true,
         prefill: {
           email: data.userEmail,
         },
