@@ -107,7 +107,7 @@ const Login = () => {
         // Store user data in localStorage for app-level access
         localStorage.setItem("sahiraah_user", JSON.stringify(data.user));
         
-        toast.success("Login successful! Welcome back!");
+        toast.success("Login successful!");
         
         // Force a full page refresh and redirect to dashboard
         window.location.href = "/dashboard";
