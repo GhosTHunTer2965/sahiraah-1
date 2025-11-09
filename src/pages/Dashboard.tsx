@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import EnhancedCareerDiscoveryQuiz from "@/components/EnhancedCareerDiscoveryQuiz";
@@ -19,6 +19,7 @@ interface User {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [quizStarted, setQuizStarted] = useState(false);
@@ -110,6 +111,18 @@ const Dashboard = () => {
       subscription.unsubscribe();
     };
   }, [navigate]);
+
+  // Reset quiz state when navigating to dashboard root
+  useEffect(() => {
+    if (location.pathname === '/dashboard' && !location.hash && !location.search) {
+      // Only reset if coming from elsewhere, not on initial load
+      if (quizCompleted || quizStarted) {
+        setQuizStarted(false);
+        setQuizCompleted(false);
+        setCompletedSessionId(null);
+      }
+    }
+  }, [location.pathname, location.hash, location.search]);
 
   const handleStartQuiz = () => {
     setQuizStarted(true);
