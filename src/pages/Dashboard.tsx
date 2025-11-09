@@ -112,17 +112,21 @@ const Dashboard = () => {
     };
   }, [navigate]);
 
-  // Reset quiz state when navigating to dashboard root
+  // Reset quiz state when navigating to dashboard root or when reset state is passed
   useEffect(() => {
     if (location.pathname === '/dashboard' && !location.hash && !location.search) {
-      // Only reset if coming from elsewhere, not on initial load
-      if (quizCompleted || quizStarted) {
+      // Reset if coming from elsewhere or if reset state is passed
+      if (location.state?.reset || quizCompleted || quizStarted) {
         setQuizStarted(false);
         setQuizCompleted(false);
         setCompletedSessionId(null);
+        // Clear the state to prevent repeated resets
+        if (location.state?.reset) {
+          navigate('/dashboard', { replace: true, state: {} });
+        }
       }
     }
-  }, [location.pathname, location.hash, location.search]);
+  }, [location.pathname, location.hash, location.search, location.state]);
 
   const handleStartQuiz = () => {
     setQuizStarted(true);

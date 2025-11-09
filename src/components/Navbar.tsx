@@ -8,11 +8,24 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/components/ui/navigation-menu"
-import { Link } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { AlignJustify } from "lucide-react"
 import LogoutButton from "@/components/LogoutButton";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleDashboardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === '/dashboard') {
+      // Force a navigation with state to trigger reset
+      navigate('/dashboard', { replace: true, state: { reset: true } });
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   return (
     <div className="bg-background py-4 border-b">
       <div className="container flex items-center justify-between">
@@ -23,7 +36,7 @@ const Navbar = () => {
         <NavigationMenu>
           <NavigationMenuList className="hidden md:flex items-center gap-4">
             <NavigationMenuItem>
-              <Link to="/dashboard">Dashboard</Link>
+              <a href="/dashboard" onClick={handleDashboardClick} className="cursor-pointer">Dashboard</a>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <Link to="/about">About</Link>
@@ -52,7 +65,7 @@ const Navbar = () => {
               </SheetDescription>
             </SheetHeader>
             <div className="grid gap-4">
-              <Link to="/dashboard">Dashboard</Link>
+              <a href="/dashboard" onClick={handleDashboardClick} className="cursor-pointer">Dashboard</a>
               <Link to="/about">About</Link>
               <Link to="/contact">Contact</Link>
               <Link to="/settings">Settings</Link>
