@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpenIcon, ExternalLinkIcon, ClockIcon, TagIcon, TrendingUpIcon, FileTextIcon } from "lucide-react";
 import { generateCareerReport } from "@/utils/reportGenerator";
-import { CareerReport } from "../CareerReport";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface HistoryDetailModalProps {
   isOpen: boolean;
@@ -31,8 +30,7 @@ interface HistoryDetailModalProps {
 }
 
 export const HistoryDetailModal = ({ isOpen, onClose, item }: HistoryDetailModalProps) => {
-  const [showReport, setShowReport] = useState(false);
-  const [reportData, setReportData] = useState<any>(null);
+  const navigate = useNavigate();
 
   const handleLinkClick = (url: string, title: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -82,8 +80,9 @@ export const HistoryDetailModal = ({ isOpen, onClose, item }: HistoryDetailModal
           userAnswers["What's your name?"] || "Student"
         );
         
-        setReportData(report);
-        setShowReport(true);
+        // Navigate to report page with data
+        navigate("/report", { state: { reportData: report } });
+        onClose(); // Close the modal
       }
     } catch (error) {
       console.error("Error generating report:", error);
@@ -143,16 +142,6 @@ export const HistoryDetailModal = ({ isOpen, onClose, item }: HistoryDetailModal
       </div>
     );
   };
-
-  if (showReport && reportData) {
-    return (
-      <CareerReport
-        reportData={reportData}
-        onClose={() => setShowReport(false)}
-        onDownloadPDF={() => {}}
-      />
-    );
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

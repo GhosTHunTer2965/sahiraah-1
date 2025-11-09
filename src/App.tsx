@@ -21,6 +21,7 @@ import NSQFExplorer from "./pages/NSQFExplorer";
 import CollegeExplorerPage from "./pages/CollegeExplorerPage";
 import EducationalPathwaysPage from "./pages/EducationalPathwaysPage";
 import EntranceExamGuidePage from "./pages/EntranceExamGuidePage";
+import ReportView from "./pages/ReportView";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
@@ -136,6 +137,14 @@ const App = () => {
                   <Layout>
                     <Courses />
                   </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/report"
+              element={
+                <ProtectedRoute>
+                  <ReportView />
                 </ProtectedRoute>
               }
             />
