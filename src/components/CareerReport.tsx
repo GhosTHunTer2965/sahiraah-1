@@ -142,10 +142,10 @@ export const CareerReport = ({ reportData, onClose, onDownloadPDF }: CareerRepor
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 py-6">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <div className="min-h-screen bg-blue-50">
+      <div className="container mx-auto max-w-full">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 px-4 pt-4">
           <div className="flex items-center space-x-3">
             <div className="text-3xl">🎯</div>
             <div>
@@ -175,7 +175,7 @@ export const CareerReport = ({ reportData, onClose, onDownloadPDF }: CareerRepor
         </div>
 
         {/* Report Content */}
-        <div id="career-report-content" className="bg-white rounded-xl shadow-lg p-8">
+        <div id="career-report-content" className="bg-white shadow-lg p-4 md:p-6">
           {/* Student Info Header */}
           <div className="text-center mb-8 border-b border-gray-200 pb-6">
             <h2 className="text-2xl font-bold text-blue-900 mb-2">

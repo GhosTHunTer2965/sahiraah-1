@@ -25,11 +25,11 @@ const ReportView = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto max-w-full">
         <Button
           variant="ghost"
           onClick={() => navigate("/settings")}
-          className="mb-2"
+          className="mb-2 ml-4 mt-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Settings
