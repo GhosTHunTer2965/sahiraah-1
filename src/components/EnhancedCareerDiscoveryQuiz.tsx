@@ -319,7 +319,7 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
               className="space-y-3"
             >
               {currentQuestion.options?.map((option, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-blue-50 transition">
+                <div key={index} className="flex items-center space-x-3 p-4 rounded-lg border border-border hover:bg-accent hover:border-primary transition-all cursor-pointer">
                   <RadioGroupItem value={option} id={`option-${index}`} />
                   <Label htmlFor={`option-${index}`} className="cursor-pointer flex-1">
                     {option}

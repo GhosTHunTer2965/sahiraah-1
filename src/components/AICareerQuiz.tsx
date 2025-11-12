@@ -353,9 +353,9 @@ Make options realistic and relevant for Indian students.`
                 onValueChange={(value) => handleAnswerChange(currentQ.id, value)}
               >
                 {currentQ.options.map((option, index) => (
-                  <div key={index} className="flex items-center space-x-2">
+                  <div key={index} className="flex items-center space-x-3 p-4 rounded-lg border border-border hover:bg-accent hover:border-primary transition-all cursor-pointer">
                     <RadioGroupItem value={option} id={`${currentQ.id}-${index}`} />
-                    <Label htmlFor={`${currentQ.id}-${index}`}>{option}</Label>
+                    <Label htmlFor={`${currentQ.id}-${index}`} className="flex-1 cursor-pointer">{option}</Label>
                   </div>
                 ))}
               </RadioGroup>

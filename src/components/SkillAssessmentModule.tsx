@@ -402,9 +402,9 @@ export default function SkillAssessmentModule({
           {currentQ.type === 'multiple_choice' && currentQ.options && (
             <RadioGroup value={currentAnswer} onValueChange={setCurrentAnswer}>
               {currentQ.options.map((option, index) => (
-                <div key={index} className="flex items-center space-x-2">
+                <div key={index} className="flex items-center space-x-3 p-4 rounded-lg border border-border hover:bg-accent hover:border-primary transition-all cursor-pointer">
                   <RadioGroupItem value={option} id={`option-${index}`} />
-                  <Label htmlFor={`option-${index}`} className="flex-1">
+                  <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
                     {option}
                   </Label>
                 </div>

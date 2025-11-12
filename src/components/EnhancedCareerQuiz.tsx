@@ -376,7 +376,7 @@ export const EnhancedCareerQuiz: React.FC<EnhancedCareerQuizProps> = ({ onComple
             className="space-y-3"
           >
             {currentQuestion.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
+              <div key={index} className="flex items-center space-x-3 p-4 rounded-lg border border-border hover:bg-accent hover:border-primary transition-all cursor-pointer">
                 <RadioGroupItem value={option} id={`option-${index}`} />
                 <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
                   {option}
