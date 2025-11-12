@@ -75,7 +75,7 @@ const ExploreResources = () => {
       </div>
 
       <Dialog open={showExpertDialog} onOpenChange={setShowExpertDialog}>
-        <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-[100vw] w-screen h-screen max-h-screen overflow-y-auto p-6">
           <DialogHeader>
             <DialogTitle className="text-2xl">Book a Session with Industry Experts</DialogTitle>
             <p className="text-muted-foreground">Choose an expert to guide your career journey</p>
