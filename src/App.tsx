@@ -22,6 +22,7 @@ import CollegeExplorerPage from "./pages/CollegeExplorerPage";
 import EducationalPathwaysPage from "./pages/EducationalPathwaysPage";
 import EntranceExamGuidePage from "./pages/EntranceExamGuidePage";
 import ReportView from "./pages/ReportView";
+import BookExpertSession from "./pages/BookExpertSession";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
@@ -145,6 +146,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <ReportView />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/book-expert"
+              element={
+                <ProtectedRoute>
+                  <BookExpertSession />
                 </ProtectedRoute>
               }
             />

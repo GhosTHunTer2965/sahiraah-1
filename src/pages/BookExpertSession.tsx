@@ -1,0 +1,528 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import { Badge } from '@/components/ui/badge';
+import { Calendar as CalendarIcon, Clock, IndianRupee, Video, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+
+interface Expert {
+  id: string;
+  name: string;
+  title: string;
+  bio: string;
+  expertise: string[];
+  hourly_rate: number;
+  image_url: string | null;
+}
+
+interface TimeSlot {
+  id: string;
+  time: string;
+  available: boolean;
+}
+
+const BookExpertSession = () => {
+  const navigate = useNavigate();
+  const [experts, setExperts] = useState<Expert[]>([]);
+  const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
+  const [isBooking, setIsBooking] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [step, setStep] = useState<'expert' | 'details' | 'confirm'>('expert');
+
+  // Form fields
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    loadExperts();
+    loadUserDetails();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDate) {
+      generateTimeSlots();
+    }
+  }, [selectedDate]);
+
+  const loadUserDetails = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setEmail(user.email || '');
+      setName(user.user_metadata?.full_name || '');
+    }
+  };
+
+  const loadExperts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('experts')
+        .select('*')
+        .eq('is_available', true);
+
+      if (error) throw error;
+      
+      const formattedExperts: Expert[] = (data || []).map(expert => ({
+        id: expert.id,
+        name: expert.name,
+        title: expert.title,
+        bio: expert.bio || '',
+        expertise: Array.isArray(expert.expertise) ? expert.expertise as string[] : [],
+        hourly_rate: Number(expert.hourly_rate),
+        image_url: expert.image_url,
+      }));
+      
+      setExperts(formattedExperts);
+    } catch (error) {
+      console.error('Error loading experts:', error);
+      toast.error('Failed to load experts');
+    }
+  };
+
+  const generateTimeSlots = () => {
+    const slots: TimeSlot[] = [
+      { id: '09:00', time: '09:00 AM', available: true },
+      { id: '10:00', time: '10:00 AM', available: true },
+      { id: '11:00', time: '11:00 AM', available: true },
+      { id: '12:00', time: '12:00 PM', available: true },
+      { id: '14:00', time: '02:00 PM', available: true },
+      { id: '15:00', time: '03:00 PM', available: true },
+      { id: '16:00', time: '04:00 PM', available: true },
+      { id: '17:00', time: '05:00 PM', available: true },
+      { id: '18:00', time: '06:00 PM', available: true },
+    ];
+    setAvailableTimeSlots(slots);
+  };
+
+  const handleExpertSelect = (expert: Expert) => {
+    setSelectedExpert(expert);
+    setStep('details');
+  };
+
+  const handleDetailsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedDate) {
+      toast.error('Please select a date');
+      return;
+    }
+    
+    if (!selectedTimeSlot) {
+      toast.error('Please select a time slot');
+      return;
+    }
+
+    if (!name || !email || !phone) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setStep('confirm');
+  };
+
+  const handleBookSession = async () => {
+    if (!selectedExpert || !selectedDate || !selectedTimeSlot) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Please login to book a session');
+        navigate('/login');
+        return;
+      }
+
+      setIsBooking(true);
+
+      const { data, error } = await supabase.functions.invoke('create-expert-session-payment', {
+        body: {
+          expertId: selectedExpert.id,
+          expertName: selectedExpert.name,
+          hourlyRate: selectedExpert.hourly_rate,
+        },
+      });
+
+      if (error) throw error;
+
+      if (!(window as any).Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
+      }
+
+      const options = {
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'Expert Career Guidance',
+        description: `Session with ${data.expertName}`,
+        order_id: data.orderId,
+        redirect: true,
+        prefill: {
+          name: name,
+          email: email,
+          contact: phone,
+        },
+        handler: async function (response: any) {
+          try {
+            const { error: verifyError } = await supabase.functions.invoke('verify-expert-payment', {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                expertId: selectedExpert.id,
+                hourlyRate: selectedExpert.hourly_rate,
+              },
+            });
+
+            if (verifyError) throw verifyError;
+
+            setBookingSuccess(true);
+            toast.success('Payment successful! Your session has been booked.');
+            
+            setTimeout(() => {
+              navigate('/dashboard');
+            }, 3000);
+          } catch (err) {
+            console.error('Payment verification error:', err);
+            toast.error('Payment received but booking failed. Please contact support.');
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsBooking(false);
+            toast.error('Payment was cancelled');
+          },
+          escape: true,
+          backdropclose: true,
+        },
+        theme: {
+          color: '#3b82f6',
+        },
+      };
+
+      (document.activeElement as HTMLElement | null)?.blur?.();
+      document.body.style.pointerEvents = 'auto';
+      
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          const razorpay = new (window as any).Razorpay(options);
+          razorpay.open();
+        });
+      }, 100);
+    } catch (error) {
+      console.error('Error initiating payment:', error);
+      toast.error('Failed to initiate payment. Please try again.');
+      setIsBooking(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 px-4 max-w-6xl">
+        <Button
+          variant="ghost"
+          onClick={() => step === 'expert' ? navigate(-1) : setStep(step === 'confirm' ? 'details' : 'expert')}
+          className="mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Book Expert Session</h1>
+          <p className="text-muted-foreground">Schedule a personalized career guidance session with industry experts</p>
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="flex items-center justify-center mb-8 gap-2">
+          <div className={cn("flex items-center gap-2", step === 'expert' && "text-primary font-semibold")}>
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center border-2", 
+              step === 'expert' ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground")}>
+              1
+            </div>
+            <span className="hidden sm:inline">Select Expert</span>
+          </div>
+          <div className="w-12 h-0.5 bg-muted-foreground" />
+          <div className={cn("flex items-center gap-2", step === 'details' && "text-primary font-semibold")}>
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center border-2",
+              step === 'details' ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground")}>
+              2
+            </div>
+            <span className="hidden sm:inline">Details</span>
+          </div>
+          <div className="w-12 h-0.5 bg-muted-foreground" />
+          <div className={cn("flex items-center gap-2", step === 'confirm' && "text-primary font-semibold")}>
+            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center border-2",
+              step === 'confirm' ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground")}>
+              3
+            </div>
+            <span className="hidden sm:inline">Confirm</span>
+          </div>
+        </div>
+
+        {/* Step 1: Select Expert */}
+        {step === 'expert' && (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {experts.map((expert) => (
+              <Card key={expert.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleExpertSelect(expert)}>
+                <CardHeader className="pb-3">
+                  <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-3 mx-auto">
+                    <span className="text-3xl font-bold text-primary">
+                      {expert.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <CardTitle className="text-center">{expert.name}</CardTitle>
+                  <CardDescription className="text-center">{expert.title}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground line-clamp-3">{expert.bio}</p>
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {expert.expertise.slice(0, 3).map((skill, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <IndianRupee className="h-4 w-4 text-primary" />
+                    <span className="font-bold text-lg">₹{expert.hourly_rate}</span>
+                    <span className="text-sm text-muted-foreground">/hour</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Step 2: Enter Details & Select Date/Time */}
+        {step === 'details' && selectedExpert && (
+          <Card className="max-w-3xl mx-auto">
+            <CardHeader>
+              <CardTitle>Session with {selectedExpert.name}</CardTitle>
+              <CardDescription>Fill in your details and select your preferred date and time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleDetailsSubmit} className="space-y-6">
+                {/* Personal Details */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Personal Information</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter your name"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Notes (Optional)</Label>
+                    <Textarea
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Any specific topics or questions you'd like to discuss..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                {/* Date Selection */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Select Preferred Date</h3>
+                  <div className="flex justify-center">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      disabled={(date) => date < new Date() || date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      className="rounded-md border"
+                    />
+                  </div>
+                  {selectedDate && (
+                    <p className="text-sm text-center text-muted-foreground">
+                      Selected: {format(selectedDate, 'PPP')}
+                    </p>
+                  )}
+                </div>
+
+                {/* Time Slot Selection */}
+                {selectedDate && availableTimeSlots.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Available Time Slots</h3>
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                      {availableTimeSlots.map((slot) => (
+                        <Button
+                          key={slot.id}
+                          type="button"
+                          variant={selectedTimeSlot === slot.id ? 'default' : 'outline'}
+                          disabled={!slot.available}
+                          onClick={() => setSelectedTimeSlot(slot.id)}
+                          className="h-auto py-3"
+                        >
+                          <Clock className="h-4 w-4 mr-2" />
+                          {slot.time}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full" size="lg">
+                  Continue to Confirmation
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 3: Confirmation */}
+        {step === 'confirm' && selectedExpert && selectedDate && (
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle>Confirm Your Booking</CardTitle>
+              <CardDescription>Review your session details before proceeding to payment</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Expert Details */}
+              <div className="space-y-2">
+                <h3 className="font-semibold">Expert</h3>
+                <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-2xl font-bold text-primary">
+                      {selectedExpert.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-semibold">{selectedExpert.name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedExpert.title}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Session Details */}
+              <div className="space-y-2">
+                <h3 className="font-semibold">Session Details</h3>
+                <div className="space-y-2 p-4 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                    <span>{format(selectedDate, 'PPP')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span>{availableTimeSlots.find(s => s.id === selectedTimeSlot)?.time}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Video className="h-4 w-4 text-muted-foreground" />
+                    <span>Online Video Call (60 minutes)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Your Details */}
+              <div className="space-y-2">
+                <h3 className="font-semibold">Your Details</h3>
+                <div className="space-y-1 p-4 bg-muted rounded-lg text-sm">
+                  <p><span className="font-medium">Name:</span> {name}</p>
+                  <p><span className="font-medium">Email:</span> {email}</p>
+                  <p><span className="font-medium">Phone:</span> {phone}</p>
+                  {notes && <p><span className="font-medium">Notes:</span> {notes}</p>}
+                </div>
+              </div>
+
+              {/* Payment Summary */}
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold text-lg">Total Amount</span>
+                  <span className="font-bold text-2xl text-primary">₹{selectedExpert.hourly_rate}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Includes 1-hour session with expert guidance, career roadmap, and follow-up resources
+                </p>
+              </div>
+
+              <Button
+                onClick={handleBookSession}
+                disabled={isBooking}
+                className="w-full"
+                size="lg"
+              >
+                {isBooking ? 'Processing...' : `Proceed to Payment`}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Success Dialog */}
+        <Dialog open={bookingSuccess} onOpenChange={setBookingSuccess}>
+          <DialogContent className="sm:max-w-md">
+            <div className="flex flex-col items-center justify-center py-6 space-y-4">
+              <div className="rounded-full bg-green-100 p-3">
+                <CheckCircle2 className="h-12 w-12 text-green-600" />
+              </div>
+              <DialogTitle className="text-center text-xl">Booking Confirmed!</DialogTitle>
+              <DialogDescription className="text-center">
+                Your session with {selectedExpert?.name} has been booked successfully.
+                You will receive a confirmation email with the meeting link shortly.
+              </DialogDescription>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+};
+
+export default BookExpertSession;

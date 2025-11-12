@@ -1,14 +1,10 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, BookOpen, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import ExpertBooking from "./ExpertBooking";
 
 const ExploreResources = () => {
-  const [showExpertDialog, setShowExpertDialog] = useState(false);
 
   return (
     <div className="mt-8">
@@ -64,27 +60,17 @@ const ExploreResources = () => {
           </CardContent>
           <CardFooter>
             <Button 
-              onClick={() => setShowExpertDialog(true)}
+              asChild
               className="w-full flex justify-between"
             >
-              Book Expert Session
-              <ArrowRightIcon className="h-4 w-4" />
+              <Link to="/book-expert">
+                Book Expert Session
+                <ArrowRightIcon className="h-4 w-4" />
+              </Link>
             </Button>
           </CardFooter>
         </Card>
       </div>
-
-      <Dialog open={showExpertDialog} onOpenChange={setShowExpertDialog}>
-        <DialogContent className="max-w-[100vw] w-screen h-screen max-h-screen overflow-y-auto p-6">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Book a Session with Industry Experts</DialogTitle>
-            <p className="text-muted-foreground">Choose an expert to guide your career journey</p>
-          </DialogHeader>
-          <div className="mt-6">
-            <ExpertBooking />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
