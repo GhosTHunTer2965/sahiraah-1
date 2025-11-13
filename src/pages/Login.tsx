@@ -103,9 +103,6 @@ const Login = () => {
           toast.error("Please verify your email before accessing the dashboard. Check your inbox for verification link.");
           return;
         }
-
-        // Store user data in localStorage for app-level access
-        localStorage.setItem("sahiraah_user", JSON.stringify(data.user));
         
         toast.success("Login successful!");
         

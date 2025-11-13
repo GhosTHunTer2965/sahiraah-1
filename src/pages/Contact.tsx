@@ -6,6 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  subject: z.string().max(200, "Subject must be less than 200 characters").optional(),
+  message: z.string().trim().min(10, "Message must be at least 10 characters").max(5000, "Message must be less than 5000 characters")
+});
 
 const Contact = () => {
   const [name, setName] = useState("");
@@ -17,24 +25,23 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !email || !message) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
     
     try {
-      // Store contact form submission in Supabase
-      const { error } = await supabase.from("contact_messages").insert({
+      // Validate input data
+      const validated = contactSchema.parse({
         name,
         email,
-        subject,
-        message,
+        subject: subject || undefined,
+        message
+      });
+      
+      // Store contact form submission in Supabase
+      const { error } = await supabase.from("contact_messages").insert({
+        name: validated.name,
+        email: validated.email,
+        subject: validated.subject || null,
+        message: validated.message,
         status: "unread"
       });
       
@@ -52,13 +59,21 @@ const Contact = () => {
       setMessage("");
       
     } catch (error: any) {
-      console.error("Error sending message:", error);
-      
-      toast({
-        title: "Error",
-        description: "There was a problem sending your message. Please try again later.",
-        variant: "destructive",
-      });
+      // Handle validation errors
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast({
+          title: "Validation Error",
+          description: firstError.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "There was a problem sending your message. Please try again later.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
