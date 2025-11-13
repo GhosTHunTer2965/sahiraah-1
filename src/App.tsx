@@ -33,20 +33,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check for user in localStorage first (for faster access)
-        const user = localStorage.getItem("sahiraah_user");
-        
-        if (user) {
-          setIsAuthenticated(true);
-          return;
-        }
-        
-        // If no user in localStorage, check session from Supabase
+        // Check Supabase session only - secure authentication
         const { data } = await supabase.auth.getSession();
         
         if (data.session) {
-          // Store user data in localStorage for future checks
-          localStorage.setItem("sahiraah_user", JSON.stringify(data.session.user));
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);

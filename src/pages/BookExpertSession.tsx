@@ -20,6 +20,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { z } from 'zod';
+
+const bookingSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  phone: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
+  notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
+  selectedDate: z.date({ required_error: "Please select a date" }),
+  selectedTimeSlot: z.string().min(1, "Please select a time slot")
+});
 
 interface Expert {
   id: string;
@@ -122,22 +132,24 @@ const BookExpertSession = () => {
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedDate) {
-      toast.error('Please select a date');
-      return;
-    }
-    
-    if (!selectedTimeSlot) {
-      toast.error('Please select a time slot');
-      return;
-    }
+    try {
+      // Validate form data
+      const validated = bookingSchema.parse({
+        name,
+        email,
+        phone,
+        notes: notes || undefined,
+        selectedDate,
+        selectedTimeSlot
+      });
 
-    if (!name || !email || !phone) {
-      toast.error('Please fill in all required fields');
-      return;
+      setStep('confirm');
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      }
     }
-
-    setStep('confirm');
   };
 
   const handleBookSession = async () => {
