@@ -25,7 +25,8 @@ import { z } from 'zod';
 const bookingSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
   email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
-  phone: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
+  countryCode: z.string().min(1, "Please select a country code"),
+  phone: z.string().regex(/^[0-9]{6,15}$/, "Phone number must be between 6 and 15 digits"),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
   selectedDate: z.date({ required_error: "Please select a date" }),
   selectedTimeSlot: z.string().min(1, "Please select a time slot")
@@ -61,6 +62,7 @@ const BookExpertSession = () => {
   // Form fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -137,6 +139,7 @@ const BookExpertSession = () => {
       const validated = bookingSchema.parse({
         name,
         email,
+        countryCode,
         phone,
         notes: notes || undefined,
         selectedDate,
@@ -199,7 +202,7 @@ const BookExpertSession = () => {
         prefill: {
           name: name,
           email: email,
-          contact: phone,
+          contact: countryCode + phone,
         },
         handler: async function (response: any) {
           try {
@@ -383,14 +386,42 @@ const BookExpertSession = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+91 98765 43210"
-                      required
-                    />
+                    <div className="flex gap-2">
+                      <Select value={countryCode} onValueChange={setCountryCode}>
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="+91">🇮🇳 +91</SelectItem>
+                          <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                          <SelectItem value="+44">🇬🇧 +44</SelectItem>
+                          <SelectItem value="+61">🇦🇺 +61</SelectItem>
+                          <SelectItem value="+81">🇯🇵 +81</SelectItem>
+                          <SelectItem value="+86">🇨🇳 +86</SelectItem>
+                          <SelectItem value="+49">🇩🇪 +49</SelectItem>
+                          <SelectItem value="+33">🇫🇷 +33</SelectItem>
+                          <SelectItem value="+39">🇮🇹 +39</SelectItem>
+                          <SelectItem value="+34">🇪🇸 +34</SelectItem>
+                          <SelectItem value="+7">🇷🇺 +7</SelectItem>
+                          <SelectItem value="+55">🇧🇷 +55</SelectItem>
+                          <SelectItem value="+52">🇲🇽 +52</SelectItem>
+                          <SelectItem value="+82">🇰🇷 +82</SelectItem>
+                          <SelectItem value="+65">🇸🇬 +65</SelectItem>
+                          <SelectItem value="+971">🇦🇪 +971</SelectItem>
+                          <SelectItem value="+966">🇸🇦 +966</SelectItem>
+                          <SelectItem value="+27">🇿🇦 +27</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                        placeholder="9876543210"
+                        required
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="notes">Notes (Optional)</Label>
@@ -502,7 +533,7 @@ const BookExpertSession = () => {
                 <div className="space-y-1 p-4 bg-muted rounded-lg text-sm">
                   <p><span className="font-medium">Name:</span> {name}</p>
                   <p><span className="font-medium">Email:</span> {email}</p>
-                  <p><span className="font-medium">Phone:</span> {phone}</p>
+                  <p><span className="font-medium">Phone:</span> {countryCode} {phone}</p>
                   {notes && <p><span className="font-medium">Notes:</span> {notes}</p>}
                 </div>
               </div>
