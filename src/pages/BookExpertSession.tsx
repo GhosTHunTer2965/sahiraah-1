@@ -215,12 +215,25 @@ const BookExpertSession = () => {
 
             if (verifyError) throw verifyError;
 
+            // Get the created session ID from the response
+            const { data: sessionData } = await supabase
+              .from('expert_sessions')
+              .select('id')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+
             setBookingSuccess(true);
             toast.success('Payment successful! Your session has been booked.');
             
             setTimeout(() => {
-              navigate('/dashboard');
-            }, 3000);
+              if (sessionData?.id) {
+                navigate(`/video-meeting/${sessionData.id}`);
+              } else {
+                navigate('/dashboard');
+              }
+            }, 2000);
           } catch (err) {
             console.error('Payment verification error:', err);
             toast.error('Payment received but booking failed. Please contact support.');
