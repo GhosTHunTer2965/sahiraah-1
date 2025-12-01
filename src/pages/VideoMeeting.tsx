@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Video, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, Video, ArrowLeft, PhoneOff, Maximize2, Minimize2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -22,17 +22,47 @@ interface SessionDetails {
   };
 }
 
+declare global {
+  interface Window {
+    JitsiMeetExternalAPI: any;
+  }
+}
+
 const VideoMeeting = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<SessionDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [jitsiLoaded, setJitsiLoaded] = useState(false);
+  const [meetingStarted, setMeetingStarted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const jitsiContainerRef = useRef<HTMLDivElement>(null);
+  const jitsiApiRef = useRef<any>(null);
 
   useEffect(() => {
     if (sessionId) {
       loadSessionDetails();
     }
   }, [sessionId]);
+
+  // Load Jitsi script
+  useEffect(() => {
+    if (!window.JitsiMeetExternalAPI) {
+      const script = document.createElement('script');
+      script.src = 'https://meet.jit.si/external_api.js';
+      script.async = true;
+      script.onload = () => setJitsiLoaded(true);
+      document.body.appendChild(script);
+    } else {
+      setJitsiLoaded(true);
+    }
+
+    return () => {
+      if (jitsiApiRef.current) {
+        jitsiApiRef.current.dispose();
+      }
+    };
+  }, []);
 
   const loadSessionDetails = async () => {
     try {
@@ -89,6 +119,76 @@ const VideoMeeting = () => {
     }
   };
 
+  const startMeeting = async () => {
+    if (!jitsiLoaded || !jitsiContainerRef.current || !session) {
+      toast.error('Meeting system is loading, please wait...');
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+      
+      // Create a unique room name using session ID
+      const roomName = `career-guidance-${session.id.slice(0, 8)}`;
+
+      const domain = 'meet.jit.si';
+      const options = {
+        roomName: roomName,
+        width: '100%',
+        height: '100%',
+        parentNode: jitsiContainerRef.current,
+        userInfo: {
+          displayName: userName,
+        },
+        configOverwrite: {
+          startWithAudioMuted: true,
+          startWithVideoMuted: false,
+          prejoinPageEnabled: true,
+          disableDeepLinking: true,
+        },
+        interfaceConfigOverwrite: {
+          TOOLBAR_BUTTONS: [
+            'microphone', 'camera', 'closedcaptions', 'desktop', 
+            'fullscreen', 'fodeviceselection', 'hangup', 'chat', 
+            'raisehand', 'videoquality', 'filmstrip', 'tileview',
+            'settings', 'shortcuts'
+          ],
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+          DEFAULT_BACKGROUND: '#1a1a2e',
+          MOBILE_APP_PROMO: false,
+        },
+      };
+
+      jitsiApiRef.current = new window.JitsiMeetExternalAPI(domain, options);
+
+      jitsiApiRef.current.addListener('videoConferenceLeft', () => {
+        setMeetingStarted(false);
+        if (jitsiApiRef.current) {
+          jitsiApiRef.current.dispose();
+          jitsiApiRef.current = null;
+        }
+      });
+
+      setMeetingStarted(true);
+      toast.success('Meeting started! Share this page link with your expert.');
+    } catch (error) {
+      console.error('Error starting meeting:', error);
+      toast.error('Failed to start meeting');
+    }
+  };
+
+  const endMeeting = () => {
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.executeCommand('hangup');
+    }
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -122,7 +222,25 @@ const VideoMeeting = () => {
   }
 
   const sessionDate = new Date(session.session_date);
-  const isUpcoming = sessionDate > new Date();
+
+  // Fullscreen meeting view
+  if (meetingStarted && isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background">
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <Button variant="outline" size="sm" onClick={toggleFullscreen}>
+            <Minimize2 className="h-4 w-4 mr-2" />
+            Exit Fullscreen
+          </Button>
+          <Button variant="destructive" size="sm" onClick={endMeeting}>
+            <PhoneOff className="h-4 w-4 mr-2" />
+            End Meeting
+          </Button>
+        </div>
+        <div ref={jitsiContainerRef} className="w-full h-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -198,26 +316,29 @@ const VideoMeeting = () => {
                     <p className="text-sm text-muted-foreground">{session.notes}</p>
                   </div>
                 )}
+
+                {meetingStarted && (
+                  <div className="pt-3 border-t space-y-2">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={toggleFullscreen}
+                    >
+                      <Maximize2 className="mr-2 h-4 w-4" />
+                      Fullscreen
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={endMeeting}
+                    >
+                      <PhoneOff className="mr-2 h-4 w-4" />
+                      End Meeting
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
-
-            {!isUpcoming && session.meeting_link && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => window.open(session.meeting_link!, '_blank')}
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Open in New Tab
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Video Meeting Area */}
@@ -226,57 +347,45 @@ const VideoMeeting = () => {
               <CardHeader>
                 <CardTitle>Video Meeting</CardTitle>
                 <CardDescription>
-                  {isUpcoming
-                    ? 'Your meeting link will be available shortly before the scheduled time'
-                    : 'Join your video meeting below'}
+                  {meetingStarted 
+                    ? 'Meeting in progress - share the room link with your expert'
+                    : 'Start your video meeting session'
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {!session.meeting_link ? (
-                  <div className="flex flex-col items-center justify-center h-[500px] text-center space-y-4">
-                    <Video className="h-16 w-16 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Meeting Link Not Available</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        The expert will share the meeting link before the scheduled session
+                {!meetingStarted ? (
+                  <div className="flex flex-col items-center justify-center h-[500px] text-center space-y-6">
+                    <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Video className="h-12 w-12 text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xl font-semibold">Ready to Start Your Session?</p>
+                      <p className="text-sm text-muted-foreground max-w-md">
+                        Click the button below to start a video meeting. Your expert can join using the same session link.
                       </p>
                     </div>
-                  </div>
-                ) : isUpcoming ? (
-                  <div className="flex flex-col items-center justify-center h-[500px] text-center space-y-4">
-                    <Calendar className="h-16 w-16 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Meeting Scheduled</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Your meeting is scheduled for {format(sessionDate, 'MMMM d, yyyy at h:mm a')}
-                      </p>
-                      <Button
-                        className="mt-4"
-                        onClick={() => window.open(session.meeting_link!, '_blank')}
-                      >
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        Open Meeting Link
-                      </Button>
-                    </div>
+                    <Button 
+                      size="lg" 
+                      onClick={startMeeting}
+                      disabled={!jitsiLoaded}
+                      className="gap-2"
+                    >
+                      <Video className="h-5 w-5" />
+                      {jitsiLoaded ? 'Start Meeting' : 'Loading...'}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      Powered by Jitsi Meet - Free & Secure Video Conferencing
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                      <iframe
-                        src={session.meeting_link}
-                        className="w-full h-full"
-                        allow="camera; microphone; fullscreen; display-capture"
-                        title="Video Meeting"
-                      />
-                    </div>
+                    <div 
+                      ref={jitsiContainerRef} 
+                      className="w-full h-[500px] rounded-lg overflow-hidden bg-muted"
+                    />
                     <p className="text-xs text-muted-foreground text-center">
-                      If the meeting doesn't load, try{' '}
-                      <button
-                        onClick={() => window.open(session.meeting_link!, '_blank')}
-                        className="text-primary hover:underline"
-                      >
-                        opening it in a new tab
-                      </button>
+                      Share this page URL with your expert so they can join the same meeting room
                     </p>
                   </div>
                 )}
