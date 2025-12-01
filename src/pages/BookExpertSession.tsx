@@ -169,104 +169,42 @@ const BookExpertSession = () => {
 
       setIsBooking(true);
 
-      const { data, error } = await supabase.functions.invoke('create-expert-session-payment', {
-        body: {
-          expertId: selectedExpert.id,
-          expertName: selectedExpert.name,
-          hourlyRate: selectedExpert.hourly_rate,
-        },
-      });
+      // Create session datetime
+      const [hours] = selectedTimeSlot.split(':');
+      const sessionDateTime = new Date(selectedDate);
+      sessionDateTime.setHours(parseInt(hours), 0, 0, 0);
 
-      if (error) throw error;
+      // Create booking directly without payment (Razorpay disabled)
+      const { data: sessionData, error: bookingError } = await supabase
+        .from('expert_sessions')
+        .insert({
+          user_id: user.id,
+          expert_id: selectedExpert.id,
+          session_date: sessionDateTime.toISOString(),
+          duration_minutes: 60,
+          amount_paid: selectedExpert.hourly_rate,
+          payment_status: 'pending', // Payment disabled
+          session_status: 'scheduled',
+          notes: notes || null,
+        })
+        .select('id')
+        .single();
 
-      if (!(window as any).Razorpay) {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        document.body.appendChild(script);
-        
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-        });
-      }
+      if (bookingError) throw bookingError;
 
-      const options = {
-        key: data.keyId,
-        amount: data.amount,
-        currency: data.currency,
-        name: 'Expert Career Guidance',
-        description: `Session with ${data.expertName}`,
-        order_id: data.orderId,
-        redirect: true,
-        prefill: {
-          name: name,
-          email: email,
-          contact: countryCode + phone,
-        },
-        handler: async function (response: any) {
-          try {
-            const { error: verifyError } = await supabase.functions.invoke('verify-expert-payment', {
-              body: {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                expertId: selectedExpert.id,
-                hourlyRate: selectedExpert.hourly_rate,
-              },
-            });
-
-            if (verifyError) throw verifyError;
-
-            // Get the created session ID from the response
-            const { data: sessionData } = await supabase
-              .from('expert_sessions')
-              .select('id')
-              .eq('user_id', user.id)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single();
-
-            setBookingSuccess(true);
-            toast.success('Payment successful! Your session has been booked.');
-            
-            setTimeout(() => {
-              if (sessionData?.id) {
-                navigate(`/video-meeting/${sessionData.id}`);
-              } else {
-                navigate('/dashboard');
-              }
-            }, 2000);
-          } catch (err) {
-            console.error('Payment verification error:', err);
-            toast.error('Payment received but booking failed. Please contact support.');
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setIsBooking(false);
-            toast.error('Payment was cancelled');
-          },
-          escape: true,
-          backdropclose: true,
-        },
-        theme: {
-          color: '#3b82f6',
-        },
-      };
-
-      (document.activeElement as HTMLElement | null)?.blur?.();
-      document.body.style.pointerEvents = 'auto';
+      setBookingSuccess(true);
+      toast.success('Session booked successfully!');
       
       setTimeout(() => {
-        requestAnimationFrame(() => {
-          const razorpay = new (window as any).Razorpay(options);
-          razorpay.open();
-        });
-      }, 100);
+        if (sessionData?.id) {
+          navigate(`/video-meeting/${sessionData.id}`);
+        } else {
+          navigate('/dashboard');
+        }
+      }, 2000);
     } catch (error) {
-      console.error('Error initiating payment:', error);
-      toast.error('Failed to initiate payment. Please try again.');
+      console.error('Error booking session:', error);
+      toast.error('Failed to book session. Please try again.');
       setIsBooking(false);
     }
   };
