@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -36,6 +36,7 @@ const VideoMeeting = () => {
   const [jitsiLoaded, setJitsiLoaded] = useState(false);
   const [meetingStarted, setMeetingStarted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<any>(null);
 
@@ -47,18 +48,33 @@ const VideoMeeting = () => {
 
   // Load Jitsi script
   useEffect(() => {
-    if (!window.JitsiMeetExternalAPI) {
+    const loadJitsiScript = () => {
+      if (window.JitsiMeetExternalAPI) {
+        console.log('Jitsi API already loaded');
+        setJitsiLoaded(true);
+        return;
+      }
+
+      console.log('Loading Jitsi script...');
       const script = document.createElement('script');
       script.src = 'https://meet.jit.si/external_api.js';
       script.async = true;
-      script.onload = () => setJitsiLoaded(true);
+      script.onload = () => {
+        console.log('Jitsi script loaded successfully');
+        setJitsiLoaded(true);
+      };
+      script.onerror = (error) => {
+        console.error('Failed to load Jitsi script:', error);
+        toast.error('Failed to load video meeting system');
+      };
       document.body.appendChild(script);
-    } else {
-      setJitsiLoaded(true);
-    }
+    };
+
+    loadJitsiScript();
 
     return () => {
       if (jitsiApiRef.current) {
+        console.log('Disposing Jitsi API');
         jitsiApiRef.current.dispose();
       }
     };
@@ -91,7 +107,7 @@ const VideoMeeting = () => {
         `)
         .eq('id', sessionId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -119,9 +135,9 @@ const VideoMeeting = () => {
     }
   };
 
-  const startMeeting = async () => {
-    if (!jitsiLoaded || !jitsiContainerRef.current || !session) {
-      toast.error('Meeting system is loading, please wait...');
+  const initializeJitsi = useCallback(async () => {
+    if (!jitsiContainerRef.current || !session) {
+      console.error('Container ref or session not available');
       return;
     }
 
@@ -130,7 +146,8 @@ const VideoMeeting = () => {
       const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
       
       // Create a unique room name using session ID
-      const roomName = `career-guidance-${session.id.slice(0, 8)}`;
+      const roomName = `CareerGuidance${session.id.replace(/-/g, '').slice(0, 12)}`;
+      console.log('Starting meeting in room:', roomName);
 
       const domain = 'meet.jit.si';
       const options = {
@@ -161,27 +178,70 @@ const VideoMeeting = () => {
         },
       };
 
+      console.log('Creating Jitsi Meet instance...');
       jitsiApiRef.current = new window.JitsiMeetExternalAPI(domain, options);
 
+      jitsiApiRef.current.addListener('videoConferenceJoined', () => {
+        console.log('User joined the conference');
+        toast.success('You have joined the meeting!');
+      });
+
       jitsiApiRef.current.addListener('videoConferenceLeft', () => {
+        console.log('User left the conference');
         setMeetingStarted(false);
+        setIsInitializing(false);
         if (jitsiApiRef.current) {
           jitsiApiRef.current.dispose();
           jitsiApiRef.current = null;
         }
       });
 
-      setMeetingStarted(true);
-      toast.success('Meeting started! Share this page link with your expert.');
+      jitsiApiRef.current.addListener('readyToClose', () => {
+        console.log('Meeting ready to close');
+        setMeetingStarted(false);
+        setIsInitializing(false);
+      });
+
+      console.log('Jitsi Meet initialized successfully');
     } catch (error) {
-      console.error('Error starting meeting:', error);
-      toast.error('Failed to start meeting');
+      console.error('Error initializing Jitsi:', error);
+      toast.error('Failed to start meeting. Please try again.');
+      setMeetingStarted(false);
+      setIsInitializing(false);
     }
+  }, [session]);
+
+  // Initialize Jitsi when meeting starts and container is ready
+  useEffect(() => {
+    if (meetingStarted && jitsiLoaded && jitsiContainerRef.current && !jitsiApiRef.current) {
+      console.log('Container ready, initializing Jitsi...');
+      initializeJitsi();
+    }
+  }, [meetingStarted, jitsiLoaded, initializeJitsi]);
+
+  const startMeeting = () => {
+    if (!jitsiLoaded) {
+      toast.error('Meeting system is still loading, please wait...');
+      return;
+    }
+
+    if (!session) {
+      toast.error('Session details not loaded');
+      return;
+    }
+
+    console.log('Starting meeting...');
+    setIsInitializing(true);
+    setMeetingStarted(true);
+    toast.info('Initializing video meeting...');
   };
 
   const endMeeting = () => {
     if (jitsiApiRef.current) {
       jitsiApiRef.current.executeCommand('hangup');
+    } else {
+      setMeetingStarted(false);
+      setIsInitializing(false);
     }
   };
 
@@ -237,7 +297,7 @@ const VideoMeeting = () => {
             End Meeting
           </Button>
         </div>
-        <div ref={jitsiContainerRef} className="w-full h-full" />
+        <div ref={!isFullscreen ? undefined : jitsiContainerRef} className="w-full h-full" />
       </div>
     );
   }
@@ -368,11 +428,11 @@ const VideoMeeting = () => {
                     <Button 
                       size="lg" 
                       onClick={startMeeting}
-                      disabled={!jitsiLoaded}
+                      disabled={!jitsiLoaded || isInitializing}
                       className="gap-2"
                     >
                       <Video className="h-5 w-5" />
-                      {jitsiLoaded ? 'Start Meeting' : 'Loading...'}
+                      {!jitsiLoaded ? 'Loading...' : isInitializing ? 'Starting...' : 'Start Meeting'}
                     </Button>
                     <p className="text-xs text-muted-foreground">
                       Powered by Jitsi Meet - Free & Secure Video Conferencing
@@ -383,7 +443,16 @@ const VideoMeeting = () => {
                     <div 
                       ref={jitsiContainerRef} 
                       className="w-full h-[500px] rounded-lg overflow-hidden bg-muted"
-                    />
+                    >
+                      {isInitializing && !jitsiApiRef.current && (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                            <p className="text-muted-foreground">Initializing video meeting...</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground text-center">
                       Share this page URL with your expert so they can join the same meeting room
                     </p>
