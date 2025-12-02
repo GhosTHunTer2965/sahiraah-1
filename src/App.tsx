@@ -24,6 +24,7 @@ import EntranceExamGuidePage from "./pages/EntranceExamGuidePage";
 import ReportView from "./pages/ReportView";
 import BookExpertSession from "./pages/BookExpertSession";
 import VideoMeeting from "./pages/VideoMeeting";
+import SessionFeedback from "./pages/SessionFeedback";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
@@ -153,6 +154,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <VideoMeeting />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/session-feedback/:sessionId"
+              element={
+                <ProtectedRoute>
+                  <SessionFeedback />
                 </ProtectedRoute>
               }
             />
