@@ -95,13 +95,13 @@ const VideoMeeting = () => {
   // Generate a unique room name based on session ID
   const getRoomName = () => {
     if (!session) return '';
-    return `career-guidance-${session.id.replace(/-/g, '').slice(0, 16)}`;
+    return `CareerGuidance${session.id.replace(/-/g, '').slice(0, 16)}`;
   };
 
-  // Daily.co demo room URL - uses their free public rooms
+  // Jitsi Meet public instance - allows any room name
   const getMeetingUrl = () => {
     const roomName = getRoomName();
-    return `https://demo.daily.co/${roomName}`;
+    return `https://meet.jit.si/${roomName}`;
   };
 
   const startMeeting = () => {
@@ -328,7 +328,7 @@ const VideoMeeting = () => {
                       Start Meeting
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                      Powered by Daily.co - Free & Secure Video Conferencing
+                      Powered by Jitsi Meet - Free & Secure Video Conferencing
                     </p>
                   </div>
                 ) : (
