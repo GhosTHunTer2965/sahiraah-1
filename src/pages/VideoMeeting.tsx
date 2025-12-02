@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Video, ArrowLeft, PhoneOff, Maximize2, Minimize2 } from 'lucide-react';
+import { Calendar, Clock, Video, ArrowLeft, PhoneOff, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -22,63 +22,20 @@ interface SessionDetails {
   };
 }
 
-declare global {
-  interface Window {
-    JitsiMeetExternalAPI: any;
-  }
-}
-
 const VideoMeeting = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<SessionDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [jitsiLoaded, setJitsiLoaded] = useState(false);
   const [meetingStarted, setMeetingStarted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(false);
-  const jitsiContainerRef = useRef<HTMLDivElement>(null);
-  const jitsiApiRef = useRef<any>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (sessionId) {
       loadSessionDetails();
     }
   }, [sessionId]);
-
-  // Load Jitsi script
-  useEffect(() => {
-    const loadJitsiScript = () => {
-      if (window.JitsiMeetExternalAPI) {
-        console.log('Jitsi API already loaded');
-        setJitsiLoaded(true);
-        return;
-      }
-
-      console.log('Loading Jitsi script...');
-      const script = document.createElement('script');
-      script.src = 'https://meet.jit.si/external_api.js';
-      script.async = true;
-      script.onload = () => {
-        console.log('Jitsi script loaded successfully');
-        setJitsiLoaded(true);
-      };
-      script.onerror = (error) => {
-        console.error('Failed to load Jitsi script:', error);
-        toast.error('Failed to load video meeting system');
-      };
-      document.body.appendChild(script);
-    };
-
-    loadJitsiScript();
-
-    return () => {
-      if (jitsiApiRef.current) {
-        console.log('Disposing Jitsi API');
-        jitsiApiRef.current.dispose();
-      }
-    };
-  }, []);
 
   const loadSessionDetails = async () => {
     try {
@@ -135,118 +92,38 @@ const VideoMeeting = () => {
     }
   };
 
-  const initializeJitsi = useCallback(async () => {
-    if (!jitsiContainerRef.current || !session) {
-      console.error('Container ref or session not available');
-      return;
-    }
+  // Generate a unique room name based on session ID
+  const getRoomName = () => {
+    if (!session) return '';
+    return `career-guidance-${session.id.replace(/-/g, '').slice(0, 16)}`;
+  };
 
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const userName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
-      
-      // Create a unique room name using session ID
-      const roomName = `CareerGuidance${session.id.replace(/-/g, '').slice(0, 12)}`;
-      console.log('Starting meeting in room:', roomName);
-
-      const domain = 'meet.jit.si';
-      const options = {
-        roomName: roomName,
-        width: '100%',
-        height: '100%',
-        parentNode: jitsiContainerRef.current,
-        userInfo: {
-          displayName: userName,
-        },
-        configOverwrite: {
-          startWithAudioMuted: true,
-          startWithVideoMuted: false,
-          prejoinPageEnabled: true,
-          disableDeepLinking: true,
-        },
-        interfaceConfigOverwrite: {
-          TOOLBAR_BUTTONS: [
-            'microphone', 'camera', 'closedcaptions', 'desktop', 
-            'fullscreen', 'fodeviceselection', 'hangup', 'chat', 
-            'raisehand', 'videoquality', 'filmstrip', 'tileview',
-            'settings', 'shortcuts'
-          ],
-          SHOW_JITSI_WATERMARK: false,
-          SHOW_WATERMARK_FOR_GUESTS: false,
-          DEFAULT_BACKGROUND: '#1a1a2e',
-          MOBILE_APP_PROMO: false,
-        },
-      };
-
-      console.log('Creating Jitsi Meet instance...');
-      jitsiApiRef.current = new window.JitsiMeetExternalAPI(domain, options);
-
-      jitsiApiRef.current.addListener('videoConferenceJoined', () => {
-        console.log('User joined the conference');
-        toast.success('You have joined the meeting!');
-      });
-
-      jitsiApiRef.current.addListener('videoConferenceLeft', () => {
-        console.log('User left the conference');
-        setMeetingStarted(false);
-        setIsInitializing(false);
-        if (jitsiApiRef.current) {
-          jitsiApiRef.current.dispose();
-          jitsiApiRef.current = null;
-        }
-      });
-
-      jitsiApiRef.current.addListener('readyToClose', () => {
-        console.log('Meeting ready to close');
-        setMeetingStarted(false);
-        setIsInitializing(false);
-      });
-
-      console.log('Jitsi Meet initialized successfully');
-    } catch (error) {
-      console.error('Error initializing Jitsi:', error);
-      toast.error('Failed to start meeting. Please try again.');
-      setMeetingStarted(false);
-      setIsInitializing(false);
-    }
-  }, [session]);
-
-  // Initialize Jitsi when meeting starts and container is ready
-  useEffect(() => {
-    if (meetingStarted && jitsiLoaded && jitsiContainerRef.current && !jitsiApiRef.current) {
-      console.log('Container ready, initializing Jitsi...');
-      initializeJitsi();
-    }
-  }, [meetingStarted, jitsiLoaded, initializeJitsi]);
+  // Daily.co demo room URL - uses their free public rooms
+  const getMeetingUrl = () => {
+    const roomName = getRoomName();
+    return `https://demo.daily.co/${roomName}`;
+  };
 
   const startMeeting = () => {
-    if (!jitsiLoaded) {
-      toast.error('Meeting system is still loading, please wait...');
-      return;
-    }
-
     if (!session) {
       toast.error('Session details not loaded');
       return;
     }
-
-    console.log('Starting meeting...');
-    setIsInitializing(true);
     setMeetingStarted(true);
-    toast.info('Initializing video meeting...');
+    toast.success('Meeting started! Share this page with your expert.');
   };
 
   const endMeeting = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('hangup');
-    } else {
-      setMeetingStarted(false);
-      setIsInitializing(false);
-    }
+    setMeetingStarted(false);
+    setIsFullscreen(false);
   };
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
+  };
+
+  const openInNewTab = () => {
+    window.open(getMeetingUrl(), '_blank');
   };
 
   if (loading) {
@@ -292,12 +169,21 @@ const VideoMeeting = () => {
             <Minimize2 className="h-4 w-4 mr-2" />
             Exit Fullscreen
           </Button>
+          <Button variant="outline" size="sm" onClick={openInNewTab}>
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Open in Tab
+          </Button>
           <Button variant="destructive" size="sm" onClick={endMeeting}>
             <PhoneOff className="h-4 w-4 mr-2" />
             End Meeting
           </Button>
         </div>
-        <div ref={!isFullscreen ? undefined : jitsiContainerRef} className="w-full h-full" />
+        <iframe
+          ref={iframeRef}
+          src={getMeetingUrl()}
+          allow="camera; microphone; fullscreen; display-capture; autoplay"
+          className="w-full h-full border-0"
+        />
       </div>
     );
   }
@@ -388,6 +274,14 @@ const VideoMeeting = () => {
                       Fullscreen
                     </Button>
                     <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={openInNewTab}
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Open in New Tab
+                    </Button>
+                    <Button
                       variant="destructive"
                       className="w-full"
                       onClick={endMeeting}
@@ -408,7 +302,7 @@ const VideoMeeting = () => {
                 <CardTitle>Video Meeting</CardTitle>
                 <CardDescription>
                   {meetingStarted 
-                    ? 'Meeting in progress - share the room link with your expert'
+                    ? 'Meeting in progress - share this page URL with your expert'
                     : 'Start your video meeting session'
                   }
                 </CardDescription>
@@ -428,31 +322,23 @@ const VideoMeeting = () => {
                     <Button 
                       size="lg" 
                       onClick={startMeeting}
-                      disabled={!jitsiLoaded || isInitializing}
                       className="gap-2"
                     >
                       <Video className="h-5 w-5" />
-                      {!jitsiLoaded ? 'Loading...' : isInitializing ? 'Starting...' : 'Start Meeting'}
+                      Start Meeting
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                      Powered by Jitsi Meet - Free & Secure Video Conferencing
+                      Powered by Daily.co - Free & Secure Video Conferencing
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div 
-                      ref={jitsiContainerRef} 
-                      className="w-full h-[500px] rounded-lg overflow-hidden bg-muted"
-                    >
-                      {isInitializing && !jitsiApiRef.current && (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                            <p className="text-muted-foreground">Initializing video meeting...</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <iframe
+                      ref={iframeRef}
+                      src={getMeetingUrl()}
+                      allow="camera; microphone; fullscreen; display-capture; autoplay"
+                      className="w-full h-[500px] rounded-lg border-0 bg-muted"
+                    />
                     <p className="text-xs text-muted-foreground text-center">
                       Share this page URL with your expert so they can join the same meeting room
                     </p>
