@@ -116,6 +116,8 @@ const VideoMeeting = () => {
   const endMeeting = () => {
     setMeetingStarted(false);
     setIsFullscreen(false);
+    // Navigate to feedback page
+    navigate(`/session-feedback/${sessionId}`);
   };
 
   const toggleFullscreen = () => {
