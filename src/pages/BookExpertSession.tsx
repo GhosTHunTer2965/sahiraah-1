@@ -57,6 +57,7 @@ const BookExpertSession = () => {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookedSessionId, setBookedSessionId] = useState<string | null>(null);
   const [step, setStep] = useState<'expert' | 'details' | 'confirm'>('expert');
 
   // Form fields
@@ -192,16 +193,10 @@ const BookExpertSession = () => {
 
       if (bookingError) throw bookingError;
 
+      setBookedSessionId(sessionData?.id || null);
       setBookingSuccess(true);
+      setIsBooking(false);
       toast.success('Session booked successfully!');
-      
-      setTimeout(() => {
-        if (sessionData?.id) {
-          navigate(`/video-meeting/${sessionData.id}`);
-        } else {
-          navigate('/dashboard');
-        }
-      }, 2000);
     } catch (error) {
       console.error('Error booking session:', error);
       toast.error('Failed to book session. Please try again.');
@@ -511,6 +506,15 @@ const BookExpertSession = () => {
                 Your session with {selectedExpert?.name} has been booked successfully.
                 You will receive a confirmation email with the meeting link shortly.
               </DialogDescription>
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                  Go to Dashboard
+                </Button>
+                <Button onClick={() => bookedSessionId && navigate(`/video-meeting/${bookedSessionId}`)}>
+                  <Video className="h-4 w-4 mr-2" />
+                  Go to Meeting
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
