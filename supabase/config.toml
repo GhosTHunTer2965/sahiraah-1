@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.export-chat-pdf]
 verify_jwt = true
+
+[functions.invite-expert]
+verify_jwt = true

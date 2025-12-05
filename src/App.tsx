@@ -25,6 +25,9 @@ import ReportView from "./pages/ReportView";
 import BookExpertSession from "./pages/BookExpertSession";
 import VideoMeeting from "./pages/VideoMeeting";
 import SessionFeedback from "./pages/SessionFeedback";
+import ExpertLogin from "./pages/ExpertLogin";
+import ExpertDashboard from "./pages/ExpertDashboard";
+import ExpertProtectedRoute from "./components/ExpertProtectedRoute";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
@@ -163,6 +166,16 @@ const App = () => {
                 <ProtectedRoute>
                   <SessionFeedback />
                 </ProtectedRoute>
+              }
+            />
+            {/* Expert Routes */}
+            <Route path="/expert-login" element={<ExpertLogin />} />
+            <Route
+              path="/expert-dashboard"
+              element={
+                <ExpertProtectedRoute>
+                  <ExpertDashboard />
+                </ExpertProtectedRoute>
               }
             />
             <Route path="*" element={<NotFound />} />
