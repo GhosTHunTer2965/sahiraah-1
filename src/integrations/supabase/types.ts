@@ -588,6 +588,53 @@ export type Database = {
         }
         Relationships: []
       }
+      expert_availability: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          end_time: string
+          expert_id: string
+          id: string
+          is_available: boolean | null
+          is_recurring: boolean | null
+          specific_date: string | null
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          end_time: string
+          expert_id: string
+          id?: string
+          is_available?: boolean | null
+          is_recurring?: boolean | null
+          specific_date?: string | null
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          end_time?: string
+          expert_id?: string
+          id?: string
+          is_available?: boolean | null
+          is_recurring?: boolean | null
+          specific_date?: string | null
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expert_availability_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expert_sessions: {
         Row: {
           amount_paid: number | null
@@ -648,6 +695,7 @@ export type Database = {
         Row: {
           bio: string | null
           created_at: string | null
+          email: string | null
           expertise: Json | null
           hourly_rate: number | null
           id: string
@@ -655,10 +703,12 @@ export type Database = {
           is_available: boolean | null
           name: string
           title: string
+          user_id: string | null
         }
         Insert: {
           bio?: string | null
           created_at?: string | null
+          email?: string | null
           expertise?: Json | null
           hourly_rate?: number | null
           id?: string
@@ -666,10 +716,12 @@ export type Database = {
           is_available?: boolean | null
           name: string
           title: string
+          user_id?: string | null
         }
         Update: {
           bio?: string | null
           created_at?: string | null
+          email?: string | null
           expertise?: Json | null
           hourly_rate?: number | null
           id?: string
@@ -677,6 +729,7 @@ export type Database = {
           is_available?: boolean | null
           name?: string
           title?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1623,7 +1676,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "expert"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1751,7 +1804,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "expert"],
     },
   },
 } as const
