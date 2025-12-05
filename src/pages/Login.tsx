@@ -452,12 +452,16 @@ const Login = () => {
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="justify-center">
+          <CardFooter className="flex flex-col gap-3 justify-center">
             <p className="text-sm text-gray-500 text-center">
               By continuing, you agree to our{' '}
               <Link to="/terms" className="text-blue-700 hover:underline">Terms</Link>{' '}
               and{' '}
               <Link to="/privacy" className="text-blue-700 hover:underline">Privacy Policy</Link>.
+            </p>
+            <p className="text-sm text-gray-500">
+              Are you an expert?{' '}
+              <Link to="/expert-login" className="text-blue-700 hover:underline font-medium">Login here</Link>
             </p>
           </CardFooter>
         </Card>

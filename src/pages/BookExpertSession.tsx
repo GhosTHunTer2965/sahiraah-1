@@ -73,10 +73,10 @@ const BookExpertSession = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && selectedExpert) {
       generateTimeSlots();
     }
-  }, [selectedDate]);
+  }, [selectedDate, selectedExpert]);
 
   const loadUserDetails = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -112,19 +112,92 @@ const BookExpertSession = () => {
     }
   };
 
-  const generateTimeSlots = () => {
-    const slots: TimeSlot[] = [
-      { id: '09:00', time: '09:00 AM', available: true },
-      { id: '10:00', time: '10:00 AM', available: true },
-      { id: '11:00', time: '11:00 AM', available: true },
-      { id: '12:00', time: '12:00 PM', available: true },
-      { id: '14:00', time: '02:00 PM', available: true },
-      { id: '15:00', time: '03:00 PM', available: true },
-      { id: '16:00', time: '04:00 PM', available: true },
-      { id: '17:00', time: '05:00 PM', available: true },
-      { id: '18:00', time: '06:00 PM', available: true },
-    ];
-    setAvailableTimeSlots(slots);
+  const generateTimeSlots = async () => {
+    if (!selectedExpert || !selectedDate) return;
+
+    try {
+      const dayOfWeek = selectedDate.getDay();
+      
+      // Fetch expert's availability for this day
+      const { data: availability, error: availError } = await supabase
+        .from('expert_availability')
+        .select('*')
+        .eq('expert_id', selectedExpert.id)
+        .eq('day_of_week', dayOfWeek)
+        .eq('is_available', true)
+        .eq('is_recurring', true);
+
+      if (availError) throw availError;
+
+      // If no availability set, show default slots
+      if (!availability || availability.length === 0) {
+        const defaultSlots: TimeSlot[] = [
+          { id: '09:00', time: '09:00 AM', available: true },
+          { id: '10:00', time: '10:00 AM', available: true },
+          { id: '11:00', time: '11:00 AM', available: true },
+          { id: '12:00', time: '12:00 PM', available: true },
+          { id: '14:00', time: '02:00 PM', available: true },
+          { id: '15:00', time: '03:00 PM', available: true },
+          { id: '16:00', time: '04:00 PM', available: true },
+          { id: '17:00', time: '05:00 PM', available: true },
+          { id: '18:00', time: '06:00 PM', available: true },
+        ];
+        setAvailableTimeSlots(defaultSlots);
+        return;
+      }
+
+      // Fetch already booked sessions for this date
+      const startOfDay = new Date(selectedDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const { data: bookedSessions } = await supabase
+        .from('expert_sessions')
+        .select('session_date')
+        .eq('expert_id', selectedExpert.id)
+        .gte('session_date', startOfDay.toISOString())
+        .lte('session_date', endOfDay.toISOString())
+        .in('session_status', ['scheduled', 'completed']);
+
+      const bookedHours = new Set(
+        (bookedSessions || []).map(s => new Date(s.session_date).getHours())
+      );
+
+      // Convert availability to time slots
+      const timeLabels: Record<string, string> = {
+        '09': '09:00 AM', '10': '10:00 AM', '11': '11:00 AM',
+        '12': '12:00 PM', '13': '01:00 PM', '14': '02:00 PM',
+        '15': '03:00 PM', '16': '04:00 PM', '17': '05:00 PM',
+      };
+
+      const slots: TimeSlot[] = availability.map(slot => {
+        const hour = slot.start_time.substring(0, 2);
+        const hourNum = parseInt(hour);
+        return {
+          id: `${hour}:00`,
+          time: timeLabels[hour] || `${hour}:00`,
+          available: !bookedHours.has(hourNum)
+        };
+      }).sort((a, b) => a.id.localeCompare(b.id));
+
+      setAvailableTimeSlots(slots);
+    } catch (error) {
+      console.error('Error generating time slots:', error);
+      // Fallback to default slots
+      const defaultSlots: TimeSlot[] = [
+        { id: '09:00', time: '09:00 AM', available: true },
+        { id: '10:00', time: '10:00 AM', available: true },
+        { id: '11:00', time: '11:00 AM', available: true },
+        { id: '12:00', time: '12:00 PM', available: true },
+        { id: '14:00', time: '02:00 PM', available: true },
+        { id: '15:00', time: '03:00 PM', available: true },
+        { id: '16:00', time: '04:00 PM', available: true },
+        { id: '17:00', time: '05:00 PM', available: true },
+        { id: '18:00', time: '06:00 PM', available: true },
+      ];
+      setAvailableTimeSlots(defaultSlots);
+    }
   };
 
   const handleExpertSelect = (expert: Expert) => {
