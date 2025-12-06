@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, IndianRupee, Video, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, IndianRupee, Video, CheckCircle2, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import MyExpertBookings from './MyExpertBookings';
 
 interface Expert {
   id: string;
@@ -176,44 +177,61 @@ const ExpertBooking = () => {
   };
 
   return (
-    <>
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {experts.map((expert) => (
-          <Card key={expert.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3 mx-auto">
-                <span className="text-2xl font-bold text-primary">
-                  {expert.name.split(' ').map(n => n[0]).join('')}
-                </span>
-              </div>
-              <CardTitle className="text-center text-lg">{expert.name}</CardTitle>
-              <CardDescription className="text-center text-sm">{expert.title}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground line-clamp-2">{expert.bio}</p>
-              <div className="flex flex-wrap gap-1">
-                {expert.expertise.slice(0, 3).map((skill, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-xs">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex items-center justify-center gap-2 pt-2">
-                <IndianRupee className="h-4 w-4 text-primary" />
-                <span className="font-bold text-lg">₹{expert.hourly_rate}</span>
-                <span className="text-sm text-muted-foreground">/hour</span>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={() => setSelectedExpert(expert)}
-                className="w-full"
-              >
-                Book Session
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+    <div className="space-y-8">
+      {/* My Bookings Section */}
+      <div>
+        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-primary" />
+          My Bookings
+          <Badge variant="secondary" className="ml-2">Live Tracking</Badge>
+        </h3>
+        <MyExpertBookings />
+      </div>
+
+      {/* Available Experts Section */}
+      <div>
+        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Users className="h-5 w-5 text-primary" />
+          Available Experts
+        </h3>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {experts.map((expert) => (
+            <Card key={expert.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3 mx-auto">
+                  <span className="text-2xl font-bold text-primary">
+                    {expert.name.split(' ').map(n => n[0]).join('')}
+                  </span>
+                </div>
+                <CardTitle className="text-center text-lg">{expert.name}</CardTitle>
+                <CardDescription className="text-center text-sm">{expert.title}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground line-clamp-2">{expert.bio}</p>
+                <div className="flex flex-wrap gap-1">
+                  {expert.expertise.slice(0, 3).map((skill, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <IndianRupee className="h-4 w-4 text-primary" />
+                  <span className="font-bold text-lg">₹{expert.hourly_rate}</span>
+                  <span className="text-sm text-muted-foreground">/hour</span>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={() => setSelectedExpert(expert)}
+                  className="w-full"
+                >
+                  Book Session
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
 
       <Dialog open={!!selectedExpert && !bookingSuccess && !razorpayOpen} onOpenChange={() => setSelectedExpert(null)}>
@@ -288,7 +306,7 @@ const ExpertBooking = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 
