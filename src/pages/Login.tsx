@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaYahoo } from "react-icons/fa";
-import { AlertCircle, CheckCircle, Mail } from "lucide-react";
+import { AlertCircle, CheckCircle, Mail, Briefcase } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Helper function to clean up auth state
@@ -44,6 +44,8 @@ const Login = () => {
   const [socialLoading, setSocialLoading] = useState("");
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [showEmailVerificationAlert, setShowEmailVerificationAlert] = useState(false);
+  const [expertEmail, setExpertEmail] = useState("");
+  const [expertPassword, setExpertPassword] = useState("");
   const navigate = useNavigate();
 
   // Check if already logged in
@@ -233,6 +235,54 @@ const Login = () => {
     }
   };
 
+  const handleExpertLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!expertEmail || !expertPassword) {
+      toast.error("Please provide both email and password");
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: expertEmail,
+        password: expertPassword,
+      });
+      
+      if (error) throw error;
+      
+      if (!data.user) throw new Error('Login failed');
+      
+      // Check if user has expert role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .eq('role', 'expert')
+        .maybeSingle();
+      
+      if (roleError) {
+        console.error('Error checking role:', roleError);
+        throw new Error('Failed to verify expert access');
+      }
+      
+      if (!roleData) {
+        await supabase.auth.signOut();
+        throw new Error('This login is for invited experts only. Please use the regular login if you are a user.');
+      }
+      
+      toast.success('Welcome back!');
+      navigate('/expert-dashboard');
+    } catch (error: any) {
+      console.error('Expert login error:', error);
+      toast.error(error.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f0f6ff] flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-4">
@@ -271,9 +321,13 @@ const Login = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Sign Up</TabsTrigger>
+                <TabsTrigger value="expert" className="flex items-center gap-1">
+                  <Briefcase className="h-3 w-3" />
+                  Expert
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
@@ -450,40 +504,62 @@ const Login = () => {
                   </div>
                 </form>
               </TabsContent>
+
+              {/* Expert Login Tab */}
+              <TabsContent value="expert">
+                <form onSubmit={handleExpertLogin} className="space-y-4">
+                  <div className="p-3 bg-primary/5 rounded-lg border border-primary/20 mb-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                      <span>This login is for invited industry experts only.</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="expert-email">Expert Email</Label>
+                    <Input 
+                      id="expert-email" 
+                      type="email" 
+                      placeholder="expert@email.com" 
+                      value={expertEmail}
+                      onChange={(e) => setExpertEmail(e.target.value)}
+                      disabled={isLoading}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expert-password">Password</Label>
+                    <Input 
+                      id="expert-password" 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={expertPassword}
+                      onChange={(e) => setExpertPassword(e.target.value)}
+                      disabled={isLoading}
+                      required
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-primary hover:bg-primary/90"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Signing in..." : "Sign In as Expert"}
+                  </Button>
+                  
+                  <p className="text-xs text-center text-muted-foreground mt-4">
+                    If you're a user looking to book a session with an expert, please use the regular <button type="button" onClick={() => {}} className="text-primary hover:underline">Login</button> tab.
+                  </p>
+                </form>
+              </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4 justify-center">
-            {/* Expert Login Section */}
-            <div className="w-full p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-sm font-medium text-foreground">Are you an Expert?</span>
-                </div>
-                <Link 
-                  to="/expert-login" 
-                  className="text-sm font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
-                >
-                  Login here →
-                </Link>
-              </div>
-            </div>
-
-            <Separator className="my-1" />
-
+          <CardFooter className="flex flex-col gap-2 justify-center">
             <p className="text-sm text-gray-500 text-center">
               By continuing, you agree to our{' '}
               <Link to="/terms" className="text-blue-700 hover:underline">Terms</Link>{' '}
               and{' '}
               <Link to="/privacy" className="text-blue-700 hover:underline">Privacy Policy</Link>.
-            </p>
-            <p className="text-sm text-gray-500">
-              Are you an expert?{' '}
-              <Link to="/expert-login" className="text-blue-700 hover:underline font-medium">Login here</Link>
             </p>
           </CardFooter>
         </Card>
