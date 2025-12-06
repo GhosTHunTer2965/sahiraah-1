@@ -452,7 +452,29 @@ const Login = () => {
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="flex flex-col gap-3 justify-center">
+          <CardFooter className="flex flex-col gap-4 justify-center">
+            {/* Expert Login Section */}
+            <div className="w-full p-3 bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg border border-primary/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">Are you an Expert?</span>
+                </div>
+                <Link 
+                  to="/expert-login" 
+                  className="text-sm font-medium text-primary hover:text-primary/80 hover:underline transition-colors"
+                >
+                  Login here →
+                </Link>
+              </div>
+            </div>
+
+            <Separator className="my-1" />
+
             <p className="text-sm text-gray-500 text-center">
               By continuing, you agree to our{' '}
               <Link to="/terms" className="text-blue-700 hover:underline">Terms</Link>{' '}
