@@ -46,7 +46,7 @@ const ExpertDashboard = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate('/expert-login');
+        navigate('/login');
         return;
       }
 
@@ -92,7 +92,7 @@ const ExpertDashboard = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/expert-login');
+    navigate('/login');
     toast.success('Logged out successfully');
   };
 
