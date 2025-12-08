@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaYahoo } from "react-icons/fa";
-import { AlertCircle, CheckCircle, Mail, Briefcase } from "lucide-react";
+import { AlertCircle, CheckCircle, Mail } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Helper function to clean up auth state
@@ -44,8 +44,6 @@ const Login = () => {
   const [socialLoading, setSocialLoading] = useState("");
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [showEmailVerificationAlert, setShowEmailVerificationAlert] = useState(false);
-  const [expertEmail, setExpertEmail] = useState("");
-  const [expertPassword, setExpertPassword] = useState("");
   const navigate = useNavigate();
 
   // Check if already logged in
@@ -106,10 +104,22 @@ const Login = () => {
           return;
         }
         
+        // Check if user has expert role
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'expert')
+          .maybeSingle();
+        
         toast.success("Login successful!");
         
-        // Force a full page refresh and redirect to dashboard
-        window.location.href = "/dashboard";
+        // Redirect to expert dashboard if user has expert role
+        if (roleData) {
+          window.location.href = "/expert-dashboard";
+        } else {
+          window.location.href = "/dashboard";
+        }
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -235,53 +245,6 @@ const Login = () => {
     }
   };
 
-  const handleExpertLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!expertEmail || !expertPassword) {
-      toast.error("Please provide both email and password");
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: expertEmail,
-        password: expertPassword,
-      });
-      
-      if (error) throw error;
-      
-      if (!data.user) throw new Error('Login failed');
-      
-      // Check if user has expert role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id)
-        .eq('role', 'expert')
-        .maybeSingle();
-      
-      if (roleError) {
-        console.error('Error checking role:', roleError);
-        throw new Error('Failed to verify expert access');
-      }
-      
-      if (!roleData) {
-        await supabase.auth.signOut();
-        throw new Error('This login is for invited experts only. Please use the regular login if you are a user.');
-      }
-      
-      toast.success('Welcome back!');
-      navigate('/expert-dashboard');
-    } catch (error: any) {
-      console.error('Expert login error:', error);
-      toast.error(error.message || 'Login failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#f0f6ff] flex items-center justify-center p-4">
@@ -321,16 +284,9 @@ const Login = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Sign Up</TabsTrigger>
-                <TabsTrigger 
-                  value="expert" 
-                  className="flex items-center gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                >
-                  <Briefcase className="h-3.5 w-3.5" />
-                  Expert
-                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
@@ -508,80 +464,6 @@ const Login = () => {
                 </form>
               </TabsContent>
 
-              {/* Expert Login Tab */}
-              <TabsContent value="expert">
-                <div className="relative">
-                  {/* Premium gradient border effect */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 via-orange-400/10 to-amber-500/20 rounded-xl blur-sm -z-10" />
-                  
-                  <form onSubmit={handleExpertLogin} className="space-y-4 p-4 rounded-xl border border-amber-200/50 bg-gradient-to-br from-amber-50/80 to-orange-50/50">
-                    {/* Expert Badge Header */}
-                    <div className="flex items-center justify-center mb-2">
-                      <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full shadow-lg">
-                        <Briefcase className="h-4 w-4 text-white" />
-                        <span className="text-sm font-semibold text-white">Industry Expert Portal</span>
-                      </div>
-                    </div>
-                    
-                    <div className="p-3 bg-white/70 rounded-lg border border-amber-200/60 mb-4">
-                      <div className="flex items-start gap-2 text-sm text-amber-800">
-                        <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                        <span>This exclusive portal is for invited industry experts only. If you've received an invitation email, use those credentials to sign in.</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="expert-email" className="text-amber-900 font-medium">Expert Email</Label>
-                      <Input 
-                        id="expert-email" 
-                        type="email" 
-                        placeholder="expert@company.com" 
-                        value={expertEmail}
-                        onChange={(e) => setExpertEmail(e.target.value)}
-                        disabled={isLoading}
-                        required
-                        className="border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 bg-white"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="expert-password" className="text-amber-900 font-medium">Password</Label>
-                      <Input 
-                        id="expert-password" 
-                        type="password" 
-                        placeholder="••••••••" 
-                        value={expertPassword}
-                        onChange={(e) => setExpertPassword(e.target.value)}
-                        disabled={isLoading}
-                        required
-                        className="border-amber-200 focus:border-amber-400 focus:ring-amber-400/20 bg-white"
-                      />
-                    </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <span className="animate-spin mr-2">⏳</span>
-                          Signing in...
-                        </>
-                      ) : (
-                        <>
-                          <Briefcase className="h-4 w-4 mr-2" />
-                          Sign In as Expert
-                        </>
-                      )}
-                    </Button>
-                    
-                    <div className="pt-2 border-t border-amber-200/50">
-                      <p className="text-xs text-center text-amber-700">
-                        Looking to book a session with an expert? Use the <span className="font-medium">Login</span> tab instead.
-                      </p>
-                    </div>
-                  </form>
-                </div>
-              </TabsContent>
             </Tabs>
           </CardContent>
           <CardFooter className="flex flex-col gap-2 justify-center">
