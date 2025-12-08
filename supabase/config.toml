@@ -20,3 +20,12 @@ verify_jwt = true
 
 [functions.invite-expert]
 verify_jwt = true
+
+[functions.create-expert-session-payment]
+verify_jwt = true
+
+[functions.verify-expert-payment]
+verify_jwt = true
+
+[functions.setup-experts]
+verify_jwt = false
