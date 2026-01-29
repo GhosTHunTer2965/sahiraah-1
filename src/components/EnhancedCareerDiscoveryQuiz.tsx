@@ -64,18 +64,16 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
   const currentQuestion = allQuestions.length > 0 ? allQuestions[currentQuestionIndex] : educationLevelQuestion;
   const progress = allQuestions.length > 0 ? ((currentQuestionIndex + 1) / allQuestions.length) * 100 : 0;
 
-  // Timer for multiple-choice questions
+  // Timer for all questions
   useEffect(() => {
-    if (currentQuestion?.type !== "multiple-choice") return;
-    
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
       return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && !currentAnswerRef.current) {
+    } else if (timeLeft === 0 && !currentAnswerRef.current?.trim()) {
       // Set timer expired flag to trigger auto-advance
       setTimerExpired(true);
     }
-  }, [timeLeft, currentQuestion?.type]);
+  }, [timeLeft]);
 
   // Handle timer expiration separately to avoid dependency issues
   useEffect(() => {
@@ -88,10 +86,8 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
 
   // Reset timer when question changes
   useEffect(() => {
-    if (currentQuestion?.type === "multiple-choice") {
-      setTimeLeft(60);
-      setTimerExpired(false);
-    }
+    setTimeLeft(60);
+    setTimerExpired(false);
   }, [currentQuestionIndex]);
 
   // Create session on mount
@@ -345,12 +341,10 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
           <CardTitle className="text-2xl text-blue-900">
             Career Discovery Assessment
           </CardTitle>
-          {currentQuestion?.type === "multiple-choice" && (
-            <div className="flex items-center gap-2 text-orange-600">
-              <Clock className="w-5 h-5" />
-              <span className="text-lg font-semibold">{timeLeft}s</span>
-            </div>
-          )}
+          <div className={`flex items-center gap-2 ${timeLeft <= 10 ? 'text-red-600 animate-pulse' : 'text-orange-600'}`}>
+            <Clock className="w-5 h-5" />
+            <span className="text-lg font-semibold">{timeLeft}s</span>
+          </div>
         </div>
         {allQuestions.length > 0 && (
           <div className="space-y-2">
@@ -364,10 +358,10 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {currentQuestion?.type === "multiple-choice" && timeLeft <= 10 && (
-          <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+        {timeLeft <= 10 && (
+          <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg animate-fade-in">
             <AlertCircle className="w-5 h-5 text-orange-600" />
-            <p className="text-sm text-orange-800">Time is running out! Please select an answer.</p>
+            <p className="text-sm text-orange-800">Time is running out! Please {currentQuestion?.type === "multiple-choice" ? "select an answer" : "provide your answer"}.</p>
           </div>
         )}
 
