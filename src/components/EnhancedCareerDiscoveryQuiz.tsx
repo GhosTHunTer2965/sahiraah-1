@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, AlertCircle } from "lucide-react";
+import { Clock, AlertCircle, ArrowLeft } from "lucide-react";
 
 interface Props {
   onComplete: (sessionId: string) => void;
+  onEarlyExit?: (answeredCount: number) => void;
 }
 
 interface Question {
@@ -21,7 +22,7 @@ interface Question {
   category?: string;
 }
 
-const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
+const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [currentAnswer, setCurrentAnswer] = useState("");
@@ -400,6 +401,20 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
         </div>
 
         <div className="flex justify-between items-center pt-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Count answered questions (excluding education level question)
+              const answeredCount = Object.keys(answers).filter(
+                key => answers[parseInt(key)] && answers[parseInt(key)] !== "No answer (time expired)"
+              ).length;
+              onEarlyExit?.(answeredCount);
+            }}
+            className="text-blue-600 border-blue-300 hover:bg-blue-50"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Exit Quiz
+          </Button>
           {currentQuestion && currentQuestion.type !== "multiple-choice" ? (
             <>
               <div className="text-sm text-blue-600">
@@ -414,7 +429,7 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
               </Button>
             </>
           ) : (
-            <div className="text-sm text-blue-600 text-center w-full">
+            <div className="text-sm text-blue-600 text-center flex-1">
               Your selection will automatically continue to the next question
             </div>
           )}

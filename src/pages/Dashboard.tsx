@@ -165,6 +165,20 @@ const Dashboard = () => {
     setCompletedSessionId(null);
   };
 
+  const handleQuizEarlyExit = (answeredCount: number) => {
+    const minRequiredAnswers = 5;
+    if (answeredCount < minRequiredAnswers) {
+      toast({
+        title: "Incomplete Quiz",
+        description: "Please answer all the questions in the quiz for optimal results",
+        variant: "destructive"
+      });
+    }
+    setQuizStarted(false);
+    setQuizCompleted(false);
+    setCompletedSessionId(null);
+  };
+
   const handleViewLastResults = () => {
     if (lastSessionId) {
       setCompletedSessionId(lastSessionId);
@@ -209,7 +223,10 @@ const Dashboard = () => {
         ) : quizStarted ? (
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-blue-900 mb-6">AI-Powered Career Assessment</h2>
-            <EnhancedCareerDiscoveryQuiz onComplete={(sessionId) => handleQuizComplete(sessionId)} />
+            <EnhancedCareerDiscoveryQuiz 
+              onComplete={(sessionId) => handleQuizComplete(sessionId)} 
+              onEarlyExit={handleQuizEarlyExit}
+            />
           </div>
         ) : (
           <>
