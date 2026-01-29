@@ -1,6 +1,6 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -9,19 +9,56 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Input validation schema
+const requestSchema = z.object({
+  answers: z.record(z.string(), z.string().max(2000)).optional().default({}),
+  educationLevel: z.string().min(1).max(100).optional(),
+  userName: z.string().min(1).max(100).optional(),
+  currentQuestionNumber: z.number().int().min(0).max(100).optional()
+});
+
+// Sanitize user input before using in prompts
+function sanitizeForPrompt(text: string): string {
+  return text
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/[<>{}]/g, '') // Remove potentially dangerous characters
+    .slice(0, 2000); // Enforce length limit
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { answers, educationLevel, userName, currentQuestionNumber } = await req.json();
+    // Validate input
+    const rawBody = await req.json();
+    const validationResult = requestSchema.safeParse(rawBody);
     
-    console.log('Generating questions for:', { userName, educationLevel, currentQuestionNumber, answersCount: Object.keys(answers || {}).length });
+    if (!validationResult.success) {
+      console.error("Validation error:", validationResult.error.errors);
+      return new Response(
+        JSON.stringify({ error: 'Invalid input data' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { answers, educationLevel, userName, currentQuestionNumber } = validationResult.data;
+    
+    // Sanitize inputs
+    const sanitizedUserName = userName ? sanitizeForPrompt(userName) : 'Student';
+    const sanitizedEducationLevel = educationLevel ? sanitizeForPrompt(educationLevel) : 'Not specified';
+    
+    console.log('Generating questions for:', { 
+      userName: sanitizedUserName, 
+      educationLevel: sanitizedEducationLevel, 
+      currentQuestionNumber, 
+      answersCount: Object.keys(answers || {}).length 
+    });
 
     // Enhanced fallback questions that work without AI
-    const generateFallbackQuestions = (userContext: any) => {
-      const { userName: contextUserName, educationLevel: contextEducationLevel, answers: contextAnswers } = userContext;
+    const generateFallbackQuestions = (userContext: { userName: string; educationLevel: string; answers: Record<string, string> }) => {
+      const { userName: contextUserName } = userContext;
       
       return [
         {
@@ -186,17 +223,17 @@ serve(async (req) => {
     // Try AI generation first if API key is available
     if (openAIApiKey) {
       try {
-        // Create context from previous answers
+        // Create context from previous answers (sanitized)
         const answerContext = Object.entries(answers || {}).map(([question, answer]) => 
-          `Q: ${question}\nA: ${answer}`
+          `Q: ${sanitizeForPrompt(question)}\nA: ${sanitizeForPrompt(answer)}`
         ).join('\n\n');
 
         // Create a more sophisticated prompt based on current progress
         const questionPrompt = `You are an expert career counselor creating adaptive questions for Indian students.
 
 STUDENT PROFILE:
-- Name: ${userName || 'Student'}
-- Education Level: ${educationLevel || 'Not specified'}
+- Name: ${sanitizedUserName}
+- Education Level: ${sanitizedEducationLevel}
 - Current Question Number: ${currentQuestionNumber || 'Initial'}
 
 PREVIOUS RESPONSES:
@@ -266,7 +303,7 @@ Return exactly this JSON format:
         if (!response.ok) {
           const errorText = await response.text();
           console.error('OpenAI API error:', response.status, errorText);
-          throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+          throw new Error(`OpenAI API error: ${response.status}`);
         }
 
         const aiData = await response.json();
@@ -282,7 +319,7 @@ Return exactly this JSON format:
 
         // Enhanced question validation and formatting
         const questions = (result.questions || []).map((q: any, index: number) => {
-          const questionData = {
+          const questionData: any = {
             question: q.question || `Assessment question ${index + 1}`,
             type: q.type === 'text' ? 'text' : 'radio',
             category: q.category || "assessment",
@@ -314,8 +351,8 @@ Return exactly this JSON format:
           metadata: {
             generated_at: new Date().toISOString(),
             user_context: {
-              name: userName,
-              education: educationLevel,
+              name: sanitizedUserName,
+              education: sanitizedEducationLevel,
               previous_answers: Object.keys(answers || {}).length
             }
           }
@@ -330,8 +367,8 @@ Return exactly this JSON format:
 
     // Use enhanced fallback questions
     const fallbackQuestions = generateFallbackQuestions({
-      userName: userName || 'Student',
-      educationLevel: educationLevel || 'Not specified',
+      userName: sanitizedUserName,
+      educationLevel: sanitizedEducationLevel,
       answers: answers || {}
     });
 
@@ -344,8 +381,8 @@ Return exactly this JSON format:
       metadata: {
         generated_at: new Date().toISOString(),
         user_context: {
-          name: userName,
-          education: educationLevel,
+          name: sanitizedUserName,
+          education: sanitizedEducationLevel,
           previous_answers: Object.keys(answers || {}).length
         }
       }
@@ -356,7 +393,7 @@ Return exactly this JSON format:
   } catch (error) {
     console.error('Error generating adaptive questions:', error);
     
-    // Final emergency fallback
+    // Final emergency fallback - don't expose error details
     const emergencyQuestions = [
       {
         question: "What subjects or topics make you lose track of time when you're learning about them?",
@@ -383,8 +420,7 @@ Return exactly this JSON format:
     return new Response(JSON.stringify({
       success: true,
       questions: emergencyQuestions,
-      fallback: true,
-      error_message: error.message
+      fallback: true
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
