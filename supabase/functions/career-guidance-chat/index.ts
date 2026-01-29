@@ -1,15 +1,26 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface CareerGuidanceRequest {
-  message: string;
-  conversationId?: string;
+// Input validation schema
+const requestSchema = z.object({
+  message: z.string().min(1).max(5000),
+  conversationId: z.string().uuid().optional(),
+});
+
+// Sanitize user input for AI prompts
+function sanitizeForPrompt(text: string): string {
+  return text
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/[<>{}]/g, '') // Remove potentially dangerous characters
+    .trim()
+    .slice(0, 5000); // Limit length
 }
 
 serve(async (req) => {
@@ -37,16 +48,28 @@ serve(async (req) => {
       );
     }
 
-    const { message, conversationId } = await req.json() as CareerGuidanceRequest;
+    // Parse and validate input
+    const rawBody = await req.json();
+    const validationResult = requestSchema.safeParse(rawBody);
+    
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error.errors);
+      return new Response(
+        JSON.stringify({ error: 'Invalid input data' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { message, conversationId } = validationResult.data;
+    const sanitizedMessage = sanitizeForPrompt(message);
     
     console.log('Career guidance request from user:', user.user.id);
-    console.log('Message:', message);
 
     let currentConversationId = conversationId;
 
     // Create new conversation if none exists
     if (!currentConversationId) {
-      const conversationTitle = message.slice(0, 50) + (message.length > 50 ? '...' : '');
+      const conversationTitle = sanitizedMessage.slice(0, 50) + (sanitizedMessage.length > 50 ? '...' : '');
       
       const { data: conversation, error: convError } = await supabaseClient
         .from('chat_conversations')
@@ -70,7 +93,7 @@ serve(async (req) => {
       .from('chat_messages')
       .insert({
         conversation_id: currentConversationId,
-        content: message,
+        content: sanitizedMessage,
         role: 'user'
       });
 
@@ -139,9 +162,9 @@ Remember: Write like a helpful mentor, not like a formal report. Be conversation
       { role: 'system', content: systemPrompt },
       ...(messageHistory || []).map(msg => ({
         role: msg.role,
-        content: msg.content
+        content: sanitizeForPrompt(msg.content)
       })),
-      { role: 'user', content: message }
+      { role: 'user', content: sanitizedMessage }
     ];
 
     // Call Groq API for chat
@@ -171,7 +194,7 @@ Remember: Write like a helpful mentor, not like a formal report. Be conversation
     if (!groqResponse.ok) {
       const errorData = await groqResponse.text();
       console.error('Groq API error:', groqResponse.status, errorData);
-      throw new Error(`AI service error: ${groqResponse.status}`);
+      throw new Error('AI service temporarily unavailable');
     }
 
     const aiData = await groqResponse.json();
@@ -183,8 +206,6 @@ Remember: Write like a helpful mentor, not like a formal report. Be conversation
     }
     
     const aiMessage = aiData.choices[0].message.content;
-
-    console.log('AI Response:', aiMessage);
 
     // Store the AI response
     await supabaseClient
@@ -208,7 +229,7 @@ Remember: Write like a helpful mentor, not like a formal report. Be conversation
   } catch (error) {
     console.error('Error in career-guidance-chat function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'An error occurred processing your request' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
