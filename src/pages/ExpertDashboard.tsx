@@ -50,10 +50,10 @@ const ExpertDashboard = () => {
         return;
       }
 
-      // Get expert record linked to this user
+      // Get expert record linked to this user - select only needed fields
       const { data: expertData, error: expertError } = await supabase
         .from('experts')
-        .select('*')
+        .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id')
         .eq('user_id', session.user.id)
         .single();
 

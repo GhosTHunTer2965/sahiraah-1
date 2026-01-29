@@ -88,9 +88,10 @@ const BookExpertSession = () => {
 
   const loadExperts = async () => {
     try {
+      // Explicitly select only public fields, excluding email for privacy
       const { data, error } = await supabase
         .from('experts')
-        .select('*')
+        .select('id, name, title, bio, expertise, hourly_rate, image_url, is_available')
         .eq('is_available', true);
 
       if (error) throw error;
