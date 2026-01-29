@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { Resend } from "npm:resend@2.0.0";
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -9,14 +10,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface InviteExpertRequest {
-  name: string;
-  email: string;
-  title: string;
-  bio?: string;
-  expertise?: string[];
-  hourly_rate?: number;
-}
+// Input validation schema
+const inviteSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200, "Name too long"),
+  email: z.string().email("Invalid email address").max(255),
+  title: z.string().min(1, "Title is required").max(200, "Title too long"),
+  bio: z.string().max(2000, "Bio too long").optional(),
+  expertise: z.array(z.string().max(100)).max(20, "Too many expertise items").optional(),
+  hourly_rate: z.number().positive().max(100000, "Rate too high").optional()
+});
 
 function generatePassword(length = 12): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
@@ -25,6 +27,15 @@ function generatePassword(length = 12): string {
     password += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return password;
+}
+
+// Sanitize string for safe email output
+function sanitizeForEmail(text: string): string {
+  return text
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -44,14 +55,20 @@ const handler = async (req: Request): Promise<Response> => {
     // Verify the caller is an admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return new Response(
+        JSON.stringify({ error: "Authorization required" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !user) {
-      throw new Error("Unauthorized");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // Check if user is admin
@@ -63,10 +80,25 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (!roleData) {
-      throw new Error("Only admins can invite experts");
+      return new Response(
+        JSON.stringify({ error: "Only admins can invite experts" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    const { name, email, title, bio, expertise, hourly_rate }: InviteExpertRequest = await req.json();
+    // Validate input
+    const rawBody = await req.json();
+    const validationResult = inviteSchema.safeParse(rawBody);
+    
+    if (!validationResult.success) {
+      console.error("Validation error:", validationResult.error.errors);
+      return new Response(
+        JSON.stringify({ error: "Invalid input data" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const { name, email, title, bio, expertise, hourly_rate } = validationResult.data;
     
     console.log("Inviting expert:", { name, email, title });
 
@@ -83,7 +115,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (createUserError) {
       console.error("Error creating auth user:", createUserError);
-      throw new Error(`Failed to create user: ${createUserError.message}`);
+      return new Response(
+        JSON.stringify({ error: "Failed to create user account" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     const userId = authData.user.id;
@@ -107,7 +142,10 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (updateError) {
         console.error("Error updating expert:", updateError);
-        throw new Error(`Failed to update expert: ${updateError.message}`);
+        return new Response(
+          JSON.stringify({ error: "Failed to update expert record" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
       }
       expertId = existingExpert.id;
     } else {
@@ -129,7 +167,10 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (expertError) {
         console.error("Error creating expert:", expertError);
-        throw new Error(`Failed to create expert: ${expertError.message}`);
+        return new Response(
+          JSON.stringify({ error: "Failed to create expert record" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
       }
       expertId = expertData.id;
     }
@@ -146,12 +187,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (roleError) {
       console.error("Error assigning role:", roleError);
-      throw new Error(`Failed to assign role: ${roleError.message}`);
+      return new Response(
+        JSON.stringify({ error: "Failed to assign expert role" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     console.log("Expert role assigned");
 
-    // Send invitation email
+    // Send invitation email with sanitized content
     const emailResponse = await resend.emails.send({
       from: "Career Guidance <onboarding@resend.dev>",
       to: [email],
@@ -159,13 +203,13 @@ const handler = async (req: Request): Promise<Response> => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #2563eb;">Welcome to Career Guidance Expert Portal!</h1>
-          <p>Hello ${name},</p>
+          <p>Hello ${sanitizeForEmail(name)},</p>
           <p>You have been invited to join our platform as a career guidance expert. We're excited to have you on board!</p>
           
           <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="margin-top: 0;">Your Login Credentials:</h3>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Temporary Password:</strong> ${tempPassword}</p>
+            <p><strong>Email:</strong> ${sanitizeForEmail(email)}</p>
+            <p><strong>Temporary Password:</strong> ${sanitizeForEmail(tempPassword)}</p>
           </div>
           
           <p><strong>Important:</strong> Please change your password after your first login.</p>
@@ -202,7 +246,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in invite-expert function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "An error occurred processing your request" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
