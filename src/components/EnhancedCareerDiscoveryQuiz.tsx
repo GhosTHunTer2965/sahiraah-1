@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -31,7 +31,21 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
   const [educationLevel, setEducationLevel] = useState<string>("");
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const [timerExpired, setTimerExpired] = useState(false);
   const { toast } = useToast();
+
+  // Refs to track current state for timer callback
+  const currentAnswerRef = useRef(currentAnswer);
+  const sessionIdRef = useRef(sessionId);
+
+  // Keep refs in sync
+  useEffect(() => {
+    currentAnswerRef.current = currentAnswer;
+  }, [currentAnswer]);
+
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
 
   // Initial education level question
   const educationLevelQuestion: Question = {
@@ -55,18 +69,28 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
     if (currentQuestion?.type !== "multiple-choice") return;
     
     if (timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
       return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && !currentAnswer) {
-      // Auto-advance when time runs out only if no answer is selected
-      handleNext({ autoAdvance: true });
+    } else if (timeLeft === 0 && !currentAnswerRef.current) {
+      // Set timer expired flag to trigger auto-advance
+      setTimerExpired(true);
     }
   }, [timeLeft, currentQuestion?.type]);
+
+  // Handle timer expiration separately to avoid dependency issues
+  useEffect(() => {
+    if (timerExpired && sessionIdRef.current) {
+      setTimerExpired(false);
+      // Auto-advance when time runs out with no answer
+      handleTimerExpired();
+    }
+  }, [timerExpired]);
 
   // Reset timer when question changes
   useEffect(() => {
     if (currentQuestion?.type === "multiple-choice") {
       setTimeLeft(60);
+      setTimerExpired(false);
     }
   }, [currentQuestionIndex]);
 
@@ -100,6 +124,50 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete }: Props) => {
 
     createSession();
   }, []);
+
+  // Handle timer expiration - advances to next question with no answer
+  const handleTimerExpired = async () => {
+    if (!sessionIdRef.current) return;
+
+    const noAnswerValue = "No answer (time expired)";
+    const newAnswers = { ...answers, [currentQuestion.id]: noAnswerValue };
+    setAnswers(newAnswers);
+
+    // If this is the education level question with no answer, use a default
+    if (currentQuestion.category === "education_level" && !educationLevel) {
+      const defaultEdu = "B. 12th Standard (Higher Secondary)";
+      setEducationLevel(defaultEdu);
+      await generateAdaptiveQuestions(defaultEdu);
+      setCurrentAnswer("");
+      return;
+    }
+
+    // Store unanswered question in database
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase.from('user_quiz_answers').insert({
+        session_id: sessionIdRef.current,
+        user_id: user.id,
+        question_number: currentQuestion.id,
+        question_category: currentQuestion.category || currentQuestion.type,
+        question_text: currentQuestion.question,
+        answer_text: noAnswerValue
+      });
+    } catch (error) {
+      console.error('Error saving unanswered question:', error);
+    }
+
+    // Move to next question or complete
+    if (currentQuestionIndex < allQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentAnswer("");
+    } else {
+      // Quiz complete - generate recommendations
+      await generateRecommendations();
+    }
+  };
 
   const handleNext = async ({ autoAdvance = false, selectedValue }: { autoAdvance?: boolean; selectedValue?: string } = {}) => {
     if (!sessionId) return;
