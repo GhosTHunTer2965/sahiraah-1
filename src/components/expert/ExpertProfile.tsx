@@ -40,9 +40,10 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
 
   const loadExpertProfile = async () => {
     try {
+      // Expert's own profile - select all fields needed for editing (email not needed here)
       const { data, error } = await supabase
         .from('experts')
-        .select('*')
+        .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id')
         .eq('id', expertId)
         .single();
 
