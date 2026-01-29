@@ -1,11 +1,34 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schemas
+const answerSchema = z.object({
+  question: z.string().min(1).max(500),
+  answer: z.string().min(1).max(2000),
+});
+
+const requestSchema = z.object({
+  sessionId: z.string().uuid().optional(),
+  answers: z.array(answerSchema).max(50).optional().default([]),
+  action: z.enum(['generate_questions', 'analyze']).optional(),
+  educationLevel: z.string().min(1).max(100).optional().default('Not specified'),
+});
+
+// Sanitize user input for AI prompts
+function sanitizeForPrompt(text: string): string {
+  return text
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/[<>{}]/g, '') // Remove potentially dangerous characters
+    .trim()
+    .slice(0, 2000); // Limit length
+}
 
 async function generateAdaptiveQuestions(educationLevel: string) {
   const groqApiKey = Deno.env.get('GROQ_API_KEY');
@@ -13,7 +36,9 @@ async function generateAdaptiveQuestions(educationLevel: string) {
     throw new Error('GROQ_API_KEY not configured');
   }
 
-  const questionPrompt = `Generate 20 personalized career discovery questions for a student at: ${educationLevel}
+  const sanitizedEducationLevel = sanitizeForPrompt(educationLevel);
+
+  const questionPrompt = `Generate 20 personalized career discovery questions for a student at: ${sanitizedEducationLevel}
 
 REQUIREMENTS:
 - First 15 questions: Multiple-choice with 4 options (A, B, C, D)
@@ -36,7 +61,7 @@ Return EXACTLY this JSON format:
   ]
 }
 
-Generate all 20 questions (15 MCQ + 5 text) tailored to ${educationLevel}.`;
+Generate all 20 questions (15 MCQ + 5 text) tailored to ${sanitizedEducationLevel}.`;
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -86,16 +111,38 @@ serve(async (req) => {
   }
 
   try {
-    const { sessionId, answers, action, educationLevel } = await req.json();
+    const rawBody = await req.json();
+    
+    // Validate input
+    const validationResult = requestSchema.safeParse(rawBody);
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error.errors);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid input data'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    const { sessionId, answers, action, educationLevel } = validationResult.data;
+    
+    // Sanitize inputs
+    const sanitizedEducationLevel = sanitizeForPrompt(educationLevel);
+    const sanitizedAnswers = answers.map(a => ({
+      question: sanitizeForPrompt(a.question),
+      answer: sanitizeForPrompt(a.answer),
+    }));
     
     // Handle question generation
     if (action === 'generate_questions') {
-      return await generateAdaptiveQuestions(educationLevel);
+      return await generateAdaptiveQuestions(sanitizedEducationLevel);
     }
     
     console.log('Processing career analysis for session:', sessionId);
-    console.log('Education level:', educationLevel);
-    console.log('Total answers received:', answers?.length);
+    console.log('Education level:', sanitizedEducationLevel);
+    console.log('Total answers received:', sanitizedAnswers.length);
 
     const groqApiKey = Deno.env.get('GROQ_API_KEY');
     if (!groqApiKey) {
@@ -104,14 +151,14 @@ serve(async (req) => {
     }
 
     // Format answers for AI analysis
-    const answersText = answers.map((a: any, i: number) => 
+    const answersText = sanitizedAnswers.map((a, i) => 
       `Q${i + 1}: ${a.question}\nAnswer: ${a.answer}`
     ).join('\n\n');
 
     const analysisPrompt = `You are an expert career counselor analyzing a student's comprehensive career assessment.
 
 STUDENT PROFILE:
-Education Level: ${educationLevel}
+Education Level: ${sanitizedEducationLevel}
 
 ASSESSMENT RESPONSES:
 ${answersText}
@@ -143,7 +190,7 @@ Return EXACTLY this JSON structure:
       "salaryRange": "₹X-Y LPA",
       "keySkills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4"],
       "roadmap": {
-        "currentStage": "Based on education level: ${educationLevel}",
+        "currentStage": "Based on education level: ${sanitizedEducationLevel}",
         "steps": [
           {
             "stage": "Stage name (e.g., Complete 12th Standard)",
@@ -253,7 +300,7 @@ Generate all 5 career recommendations following this exact format.`;
     if (!groqResponse.ok) {
       const errorText = await groqResponse.text();
       console.error('Groq API error:', groqResponse.status, errorText);
-      throw new Error(`Groq API error: ${groqResponse.status}`);
+      throw new Error('AI service temporarily unavailable');
     }
 
     const groqData = await groqResponse.json();
@@ -288,42 +335,44 @@ Generate all 5 career recommendations following this exact format.`;
 
     console.log('Successfully generated 5 career recommendations with proper course structure');
 
-    // Store recommendations in user_career_history
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
+    // Store recommendations in user_career_history if sessionId is provided
+    if (sessionId) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
       
-      // Get user ID from session
-      const { data: sessionData } = await supabase
-        .from('user_quiz_sessions')
-        .select('user_id')
-        .eq('id', sessionId)
-        .single();
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        // Get user ID from session
+        const { data: sessionData } = await supabase
+          .from('user_quiz_sessions')
+          .select('user_id')
+          .eq('id', sessionId)
+          .single();
 
-      if (sessionData?.user_id) {
-        // Store each career recommendation in history
-        for (const career of analysis.careerRecommendations) {
-          await supabase.from('user_career_history').insert({
-            user_id: sessionData.user_id,
-            session_id: sessionId,
-            career: career.title,
-            reason: career.description,
-            courses: career.freeResources,
-            strengths: analysis.strengths,
-            weaknesses: analysis.areasForImprovement,
-            improvement_areas: analysis.areasForImprovement,
-            report_data: {
-              matchScore: career.matchScore,
-              growthPotential: career.growthPotential,
-              salaryRange: career.salaryRange,
-              keySkills: career.keySkills,
-              educationPath: career.educationPath,
-              personalityInsights: analysis.personalityInsights,
-              recommendedNextSteps: analysis.recommendedNextSteps
-            }
-          });
+        if (sessionData?.user_id) {
+          // Store each career recommendation in history
+          for (const career of analysis.careerRecommendations) {
+            await supabase.from('user_career_history').insert({
+              user_id: sessionData.user_id,
+              session_id: sessionId,
+              career: career.title,
+              reason: career.description,
+              courses: career.freeResources,
+              strengths: analysis.strengths,
+              weaknesses: analysis.areasForImprovement,
+              improvement_areas: analysis.areasForImprovement,
+              report_data: {
+                matchScore: career.matchScore,
+                growthPotential: career.growthPotential,
+                salaryRange: career.salaryRange,
+                keySkills: career.keySkills,
+                educationPath: career.educationPath,
+                personalityInsights: analysis.personalityInsights,
+                recommendedNextSteps: analysis.recommendedNextSteps
+              }
+            });
+          }
         }
       }
     }
@@ -339,7 +388,7 @@ Generate all 5 career recommendations following this exact format.`;
     console.error('Error in groq-career-analysis:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || 'Failed to generate career analysis'
+      error: 'An error occurred processing your request'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

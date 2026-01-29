@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const geminiApiKey = Deno.env.get('GEMINI_API_KEY') ?? '';
 
@@ -8,24 +9,70 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Input validation schemas
+const answerSchema = z.object({
+  question: z.string().min(1).max(500),
+  answer: z.string().min(1).max(2000),
+});
+
+const requestSchema = z.object({
+  action: z.enum(['generate_question', 'generate_report']),
+  answers: z.array(answerSchema).max(50).optional().default([]),
+  currentQuestionCount: z.number().int().min(0).max(100).optional().default(0),
+  userName: z.string().min(1).max(100).optional().default('Student'),
+  educationLevel: z.string().min(1).max(100).optional().default('Not specified'),
+});
+
+// Sanitize user input for AI prompts
+function sanitizeForPrompt(text: string): string {
+  return text
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/[<>{}]/g, '') // Remove potentially dangerous characters
+    .trim()
+    .slice(0, 2000); // Limit length
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { action, answers, currentQuestionCount, userName, educationLevel } = await req.json();
+    const rawBody = await req.json();
     
-    console.log('Gemini Career Guidance:', { action, currentQuestionCount, answersCount: answers?.length });
+    // Validate input
+    const validationResult = requestSchema.safeParse(rawBody);
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error.errors);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Invalid input data' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    const { action, answers, currentQuestionCount, userName, educationLevel } = validationResult.data;
+    
+    // Sanitize text inputs
+    const sanitizedUserName = sanitizeForPrompt(userName);
+    const sanitizedEducationLevel = sanitizeForPrompt(educationLevel);
+    const sanitizedAnswers = answers.map(a => ({
+      question: sanitizeForPrompt(a.question),
+      answer: sanitizeForPrompt(a.answer),
+    }));
+    
+    console.log('Gemini Career Guidance:', { action, currentQuestionCount, answersCount: sanitizedAnswers.length });
 
     if (!geminiApiKey) {
       throw new Error('Gemini API key not configured');
     }
 
     if (action === 'generate_question') {
-      return await generateNextQuestion(answers, currentQuestionCount, userName, educationLevel);
+      return await generateNextQuestion(sanitizedAnswers, currentQuestionCount, sanitizedUserName, sanitizedEducationLevel);
     } else if (action === 'generate_report') {
-      return await generateCareerReport(answers, userName, educationLevel);
+      return await generateCareerReport(sanitizedAnswers, sanitizedUserName, sanitizedEducationLevel);
     }
 
     throw new Error('Invalid action');
@@ -33,7 +80,7 @@ serve(async (req) => {
     console.error('Error in gemini-career-guidance:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: 'An error occurred processing your request' 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -41,7 +88,7 @@ serve(async (req) => {
   }
 });
 
-async function generateNextQuestion(answers: any[], currentQuestionCount: number, userName: string, educationLevel: string) {
+async function generateNextQuestion(answers: { question: string; answer: string }[], currentQuestionCount: number, userName: string, educationLevel: string) {
   const maxQuestions = 15;
   
   if (currentQuestionCount >= maxQuestions) {
@@ -156,7 +203,7 @@ Generate a question that feels like a natural continuation of the conversation.`
   }
 }
 
-async function generateCareerReport(answers: any[], userName: string, educationLevel: string) {
+async function generateCareerReport(answers: { question: string; answer: string }[], userName: string, educationLevel: string) {
   const answerContext = answers.map((a, i) => 
     `Q${i + 1}: ${a.question}\nAnswer: ${a.answer}`
   ).join('\n\n');
@@ -299,7 +346,7 @@ Focus on careers relevant to India's job market and include ONLY working, free, 
   }
 }
 
-function getFallbackQuestion(questionCount: number, answers: any[]) {
+function getFallbackQuestion(questionCount: number, answers: { question: string; answer: string }[]) {
   const fallbackQuestions = [
     {
       question: "What subjects interest you most?",

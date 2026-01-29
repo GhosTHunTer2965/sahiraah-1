@@ -1,7 +1,7 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -12,15 +12,59 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Input validation schema
+const requestSchema = z.object({
+  sessionId: z.string().uuid(),
+  userId: z.string().uuid(),
+  answers: z.record(z.string(), z.string().max(2000)).refine(
+    (obj) => Object.keys(obj).length <= 50,
+    { message: "Too many answers" }
+  ),
+  studentName: z.string().min(1).max(100),
+  educationLevel: z.string().min(1).max(100),
+});
+
+// Sanitize user input for AI prompts
+function sanitizeForPrompt(text: string): string {
+  return text
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/[<>{}]/g, '') // Remove potentially dangerous characters
+    .trim()
+    .slice(0, 2000); // Limit length
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { sessionId, userId, answers, studentName, educationLevel } = await req.json();
+    const rawBody = await req.json();
     
-    console.log('Analyzing career guidance for:', { sessionId, userId, studentName, educationLevel });
+    // Validate input
+    const validationResult = requestSchema.safeParse(rawBody);
+    if (!validationResult.success) {
+      console.error('Validation error:', validationResult.error.errors);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Invalid input data' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    const { sessionId, userId, answers, studentName, educationLevel } = validationResult.data;
+    
+    // Sanitize inputs
+    const sanitizedStudentName = sanitizeForPrompt(studentName);
+    const sanitizedEducationLevel = sanitizeForPrompt(educationLevel);
+    const sanitizedAnswers: Record<string, string> = {};
+    for (const [key, value] of Object.entries(answers)) {
+      sanitizedAnswers[sanitizeForPrompt(key)] = sanitizeForPrompt(value);
+    }
+    
+    console.log('Analyzing career guidance for:', { sessionId, userId, studentName: sanitizedStudentName, educationLevel: sanitizedEducationLevel });
     
     const supabase = createClient(supabaseUrl!, supabaseKey!);
 
@@ -34,9 +78,9 @@ serve(async (req) => {
         const analysisPrompt = `You are an expert career counselor specializing in guidance for Indian students. 
 
 Analyze the following student profile and quiz responses:
-- Name: ${studentName}
-- Education Level: ${educationLevel}
-- Quiz Responses: ${JSON.stringify(answers, null, 2)}
+- Name: ${sanitizedStudentName}
+- Education Level: ${sanitizedEducationLevel}
+- Quiz Responses: ${JSON.stringify(sanitizedAnswers, null, 2)}
 
 Provide a comprehensive career analysis with:
 
@@ -102,7 +146,7 @@ Return response in JSON format:
         if (!response.ok) {
           const errorData = await response.text();
           console.error(`OpenAI API error ${response.status}:`, errorData);
-          throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
+          throw new Error('AI service temporarily unavailable');
         }
 
         const aiData = await response.json();
@@ -125,7 +169,7 @@ Return response in JSON format:
     // Enhanced fallback analysis based on user responses
     if (!analysis) {
       console.log('Using fallback analysis');
-      analysis = generateFallbackAnalysis(answers, studentName, educationLevel);
+      analysis = generateFallbackAnalysis(sanitizedAnswers, sanitizedStudentName, sanitizedEducationLevel);
     }
 
     // Update quiz session with analysis results
@@ -134,8 +178,8 @@ Return response in JSON format:
       .update({
         session_completed_at: new Date().toISOString(),
         is_completed: true,
-        student_name: studentName,
-        education_level: educationLevel,
+        student_name: sanitizedStudentName,
+        education_level: sanitizedEducationLevel,
         strengths: analysis.strengths,
         weaknesses: analysis.areasForImprovement,
         career_recommendations: analysis.careerRecommendations
@@ -188,7 +232,7 @@ Return response in JSON format:
     console.error('Error in career analysis:', error);
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message 
+      error: 'An error occurred processing your request'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
