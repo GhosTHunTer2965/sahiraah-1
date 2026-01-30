@@ -254,30 +254,30 @@ export const HistoryDetailModal = ({ isOpen, onClose, item }: HistoryDetailModal
               {Array.isArray(item.courses) ? (
                 // New format: Array of courses with level property
                 <Tabs defaultValue="beginner" className="w-full">
-                  <TabsList className="w-full grid grid-cols-3 mb-6">
+                  <TabsList className="w-full grid grid-cols-3 mb-6 h-auto p-1">
                     <TabsTrigger 
                       value="beginner" 
-                      className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
+                      className="flex-1 py-3 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
                     >
-                      <div className="text-center">
+                      <div className="text-center w-full">
                         <div className="font-medium">Beginner</div>
                         <div className="text-xs opacity-75">Foundation</div>
                       </div>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="intermediate" 
-                      className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
+                      className="flex-1 py-3 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
                     >
-                      <div className="text-center">
+                      <div className="text-center w-full">
                         <div className="font-medium">Intermediate</div>
                         <div className="text-xs opacity-75">Practical Skills</div>
                       </div>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="advanced" 
-                      className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
+                      className="flex-1 py-3 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
                     >
-                      <div className="text-center">
+                      <div className="text-center w-full">
                         <div className="font-medium">Advanced</div>
                         <div className="text-xs opacity-75">Mastery</div>
                       </div>
@@ -299,30 +299,30 @@ export const HistoryDetailModal = ({ isOpen, onClose, item }: HistoryDetailModal
               ) : (
                 // Legacy format: Object with level keys
                 <Tabs defaultValue="beginner" className="w-full">
-                  <TabsList className="w-full grid grid-cols-3 mb-6">
+                  <TabsList className="w-full grid grid-cols-3 mb-6 h-auto p-1">
                     <TabsTrigger 
                       value="beginner" 
-                      className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
+                      className="flex-1 py-3 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
                     >
-                      <div className="text-center">
+                      <div className="text-center w-full">
                         <div className="font-medium">Beginner</div>
                         <div className="text-xs opacity-75">Foundation</div>
                       </div>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="intermediate" 
-                      className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
+                      className="flex-1 py-3 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
                     >
-                      <div className="text-center">
+                      <div className="text-center w-full">
                         <div className="font-medium">Intermediate</div>
                         <div className="text-xs opacity-75">Practical Skills</div>
                       </div>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="advanced" 
-                      className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
+                      className="flex-1 py-3 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-900"
                     >
-                      <div className="text-center">
+                      <div className="text-center w-full">
                         <div className="font-medium">Advanced</div>
                         <div className="text-xs opacity-75">Mastery</div>
                       </div>
