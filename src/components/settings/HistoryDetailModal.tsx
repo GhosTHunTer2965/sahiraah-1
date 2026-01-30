@@ -133,8 +133,8 @@ export const HistoryDetailModal = ({ isOpen, onClose, item }: HistoryDetailModal
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      if (course.link) {
-                        window.open(course.link, '_blank', 'noopener,noreferrer');
+                      if (course.url) {
+                        window.open(course.url, '_blank', 'noopener,noreferrer');
                       }
                     }}
                   >
