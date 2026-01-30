@@ -128,8 +128,15 @@ export const HistoryDetailModal = ({ isOpen, onClose, item }: HistoryDetailModal
                   <Button
                     variant="outline"
                     size="sm"
+                    type="button"
                     className="border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white"
-                    onClick={() => handleLinkClick(course.link, course.title)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (course.link) {
+                        window.open(course.link, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
                   >
                     <ExternalLinkIcon className="h-4 w-4 mr-1" />
                     Access
