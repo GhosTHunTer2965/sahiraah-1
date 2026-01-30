@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/sonner";
 import { ProfileForm } from "@/components/settings/ProfileForm";
@@ -12,8 +12,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Get active tab from navigation state, default to "profile"
+  const activeTab = (location.state as { activeTab?: string })?.activeTab || "profile";
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -128,7 +132,7 @@ const Settings = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-blue-900 mb-6">Account Settings</h1>
         
         {profile && (
-          <Tabs defaultValue="profile" className="w-full">
+          <Tabs defaultValue={activeTab} className="w-full">
             <TabsList className="mb-6 grid w-full grid-cols-2 md:grid-cols-4 h-auto">
               <TabsTrigger value="profile" className="text-xs md:text-sm">Profile</TabsTrigger>
               <TabsTrigger value="account" className="text-xs md:text-sm">Account</TabsTrigger>

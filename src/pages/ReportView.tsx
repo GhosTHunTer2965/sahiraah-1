@@ -14,8 +14,8 @@ const ReportView = () => {
     if (location.state?.reportData) {
       setReportData(location.state.reportData);
     } else {
-      // If no data, redirect back to settings
-      navigate("/settings", { replace: true });
+      // If no data, redirect back to settings history tab
+      navigate("/settings", { replace: true, state: { activeTab: "history" } });
     }
   }, [location.state, navigate]);
 
@@ -28,7 +28,7 @@ const ReportView = () => {
       <div className="container mx-auto max-w-full">
         <Button
           variant="ghost"
-          onClick={() => navigate("/settings")}
+          onClick={() => navigate("/settings", { state: { activeTab: "history" } })}
           className="mb-2 ml-4 mt-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -37,7 +37,7 @@ const ReportView = () => {
         
         <CareerReport
           reportData={reportData}
-          onClose={() => navigate("/settings")}
+          onClose={() => navigate("/settings", { state: { activeTab: "history" } })}
           onDownloadPDF={() => {}}
         />
       </div>
