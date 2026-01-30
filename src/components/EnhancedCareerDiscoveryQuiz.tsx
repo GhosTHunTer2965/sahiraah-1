@@ -130,12 +130,10 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
     const newAnswers = { ...answers, [currentQuestion.id]: noAnswerValue };
     setAnswers(newAnswers);
 
-    // If this is the education level question with no answer, use a default
+    // If this is the education level question with no answer, trigger early exit
     if (currentQuestion.category === "education_level" && !educationLevel) {
-      const defaultEdu = "B. 12th Standard (Higher Secondary)";
-      setEducationLevel(defaultEdu);
-      await generateAdaptiveQuestions(defaultEdu);
-      setCurrentAnswer("");
+      // User didn't answer the first question - redirect to dashboard
+      onEarlyExit?.(0);
       return;
     }
 
@@ -161,8 +159,8 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
       setCurrentQuestionIndex(prev => prev + 1);
       setCurrentAnswer("");
     } else {
-      // Quiz complete - generate recommendations
-      await generateRecommendations();
+      // Quiz complete - check if user answered enough questions
+      await handleQuizCompletion(newAnswers);
     }
   };
 
@@ -217,9 +215,26 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setCurrentAnswer("");
     } else {
-      // Quiz complete - generate recommendations
-      await generateRecommendations();
+      // Quiz complete - check if user answered enough questions
+      await handleQuizCompletion(newAnswers);
     }
+  };
+
+  // Check if user answered at least 5 questions, otherwise trigger early exit
+  const handleQuizCompletion = async (finalAnswers: Record<number, string>) => {
+    const validAnswerCount = Object.values(finalAnswers).filter(
+      answer => answer && answer !== "No answer (time expired)"
+    ).length;
+
+    const minRequiredAnswers = 5;
+    if (validAnswerCount < minRequiredAnswers) {
+      // Not enough valid answers - redirect to dashboard
+      onEarlyExit?.(validAnswerCount);
+      return;
+    }
+
+    // Sufficient answers - generate recommendations
+    await generateRecommendations();
   };
 
   const generateAdaptiveQuestions = async (eduLevel: string) => {
