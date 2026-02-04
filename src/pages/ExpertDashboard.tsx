@@ -1,23 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Users, 
-  Settings, 
-  LogOut,
-  IndianRupee,
-  Clock,
-  TrendingUp
-} from 'lucide-react';
-import AvailabilityManager from '@/components/expert/AvailabilityManager';
-import ExpertSessions from '@/components/expert/ExpertSessions';
-import ExpertProfile from '@/components/expert/ExpertProfile';
+import ExpertLayout from '@/components/expert-portal/ExpertLayout';
+import ExpertOverview from '@/components/expert-portal/ExpertOverview';
+import ExpertSessionsPortal from '@/components/expert-portal/ExpertSessionsPortal';
+import ExpertEarnings from '@/components/expert-portal/ExpertEarnings';
+import StudentInsights from '@/components/expert-portal/StudentInsights';
+import AvailabilityManagerPortal from '@/components/expert-portal/AvailabilityManagerPortal';
+import ExpertProfilePortal from '@/components/expert-portal/ExpertProfilePortal';
 
 interface ExpertData {
   id: string;
@@ -30,12 +21,14 @@ interface SessionStats {
   upcoming: number;
   completed: number;
   totalEarnings: number;
+  pendingEarnings: number;
 }
 
 const ExpertDashboard = () => {
   const [expert, setExpert] = useState<ExpertData | null>(null);
-  const [stats, setStats] = useState<SessionStats>({ upcoming: 0, completed: 0, totalEarnings: 0 });
+  const [stats, setStats] = useState<SessionStats>({ upcoming: 0, completed: 0, totalEarnings: 0, pendingEarnings: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,7 +43,7 @@ const ExpertDashboard = () => {
         return;
       }
 
-      // Get expert record linked to this user - select only needed fields
+      // Get expert record linked to this user
       const { data: expertData, error: expertError } = await supabase
         .from('experts')
         .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id')
@@ -80,8 +73,11 @@ const ExpertDashboard = () => {
         const totalEarnings = sessions
           .filter(s => s.payment_status === 'completed')
           .reduce((sum, s) => sum + (s.amount_paid || 0), 0);
+        const pendingEarnings = sessions
+          .filter(s => s.payment_status === 'pending')
+          .reduce((sum, s) => sum + (s.amount_paid || 0), 0);
 
-        setStats({ upcoming, completed, totalEarnings });
+        setStats({ upcoming, completed, totalEarnings, pendingEarnings });
       }
     } catch (error) {
       console.error('Error loading expert data:', error);
@@ -90,124 +86,44 @@ const ExpertDashboard = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-    toast.success('Logged out successfully');
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <ExpertOverview stats={stats} expertName={expert?.name || 'Expert'} />;
+      case 'sessions':
+        return expert ? <ExpertSessionsPortal expertId={expert.id} /> : null;
+      case 'earnings':
+        return expert ? <ExpertEarnings expertId={expert.id} /> : null;
+      case 'students':
+        return expert ? <StudentInsights expertId={expert.id} /> : null;
+      case 'availability':
+        return expert ? <AvailabilityManagerPortal expertId={expert.id} /> : null;
+      case 'profile':
+        return expert ? <ExpertProfilePortal expertId={expert.id} /> : null;
+      default:
+        return <ExpertOverview stats={stats} expertName={expert?.name || 'Expert'} />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <LayoutDashboard className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-semibold">Expert Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Welcome back, {expert?.name}</p>
-            </div>
-          </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Upcoming Sessions</p>
-                  <p className="text-3xl font-bold">{stats.upcoming}</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Completed Sessions</p>
-                  <p className="text-3xl font-bold">{stats.completed}</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <Users className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Earnings</p>
-                  <p className="text-3xl font-bold flex items-center">
-                    <IndianRupee className="h-6 w-6" />
-                    {stats.totalEarnings.toLocaleString()}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-amber-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="availability" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-            <TabsTrigger value="availability" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Availability
-            </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Sessions
-            </TabsTrigger>
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Profile
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="availability">
-            {expert && <AvailabilityManager expertId={expert.id} />}
-          </TabsContent>
-
-          <TabsContent value="sessions">
-            {expert && <ExpertSessions expertId={expert.id} />}
-          </TabsContent>
-
-          <TabsContent value="profile">
-            {expert && <ExpertProfile expertId={expert.id} />}
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+    <ExpertLayout 
+      expertName={expert?.name} 
+      activeTab={activeTab} 
+      onTabChange={setActiveTab}
+    >
+      {renderContent()}
+    </ExpertLayout>
   );
 };
 
