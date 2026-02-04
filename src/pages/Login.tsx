@@ -231,7 +231,8 @@ const Login = () => {
         // @ts-ignore - Ignore typescript error for yahoo provider
         provider,
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: window.location.origin,
+          skipBrowserRedirect: false,
         }
       });
       
