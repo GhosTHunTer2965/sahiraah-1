@@ -54,7 +54,19 @@ const Login = () => {
         // Check if email is verified before allowing login
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email_confirmed_at) {
-          navigate("/dashboard", { replace: true });
+          // Check if user has expert role
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .eq('role', 'expert')
+            .maybeSingle();
+          
+          if (roleData) {
+            navigate("/expert-dashboard", { replace: true });
+          } else {
+            navigate("/dashboard", { replace: true });
+          }
         } else {
           setShowEmailVerificationAlert(true);
           toast.error("Please verify your email before accessing the dashboard.");
