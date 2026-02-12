@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Video, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Video, User, CheckCircle, XCircle, AlertCircle, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 interface Session {
@@ -10,8 +11,8 @@ interface Session {
   session_status: string;
   payment_status: string;
   duration_minutes: number;
-  meeting_link: string;
-  notes: string;
+  meeting_link: string | null;
+  notes: string | null;
   user_id: string;
   student_name?: string;
 }
@@ -24,9 +25,32 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
+  const [meetingLinkInput, setMeetingLinkInput] = useState('');
 
   useEffect(() => {
     loadSessions();
+
+    // Real-time subscription for new bookings from students
+    const channel = supabase
+      .channel('expert-sessions-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'expert_sessions',
+          filter: `expert_id=eq.${expertId}`,
+        },
+        () => {
+          loadSessions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [expertId]);
 
   const loadSessions = async () => {
@@ -39,7 +63,6 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
 
       if (error) throw error;
 
-      // Fetch student names
       const userIds = [...new Set(data?.map(s => s.user_id) || [])];
       const { data: profiles } = await supabase
         .from('user_profiles')
@@ -75,6 +98,29 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
     } catch (error) {
       console.error('Error updating session:', error);
       toast.error('Failed to update session');
+    }
+  };
+
+  const saveMeetingLink = async (sessionId: string) => {
+    if (!meetingLinkInput.trim()) {
+      toast.error('Please enter a meeting link');
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('expert_sessions')
+        .update({ meeting_link: meetingLinkInput.trim() })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      toast.success('Meeting link saved — student can now join');
+      setEditingLinkId(null);
+      setMeetingLinkInput('');
+      loadSessions();
+    } catch (error) {
+      console.error('Error saving meeting link:', error);
+      toast.error('Failed to save meeting link');
     }
   };
 
@@ -190,19 +236,31 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       {session.session_status === 'scheduled' && !isPast && (
                         <>
                           {session.meeting_link && (
                             <Button
                               size="sm"
                               className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
-                              onClick={() => window.open(session.meeting_link, '_blank')}
+                              onClick={() => window.open(session.meeting_link!, '_blank')}
                             >
                               <Video className="h-4 w-4 mr-2" />
-                              Join Meeting
+                              Join
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-blue-500/50 text-blue-400 hover:bg-blue-500/20"
+                            onClick={() => {
+                              setEditingLinkId(session.id);
+                              setMeetingLinkInput(session.meeting_link || '');
+                            }}
+                          >
+                            <Link2 className="h-4 w-4 mr-2" />
+                            {session.meeting_link ? 'Edit Link' : 'Add Link'}
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -228,6 +286,43 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                     </div>
                   </div>
 
+                  {/* Meeting Link Editor */}
+                  {editingLinkId === session.id && (
+                    <div className="mt-4 p-4 rounded-lg bg-[#1e1e2e] flex flex-col sm:flex-row gap-3">
+                      <Input
+                        placeholder="Paste meeting link (Google Meet, Zoom, etc.)"
+                        value={meetingLinkInput}
+                        onChange={(e) => setMeetingLinkInput(e.target.value)}
+                        className="bg-[#12121a] border-[#2e2e3e] text-white flex-1"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => saveMeetingLink(session.id)}
+                          className="bg-violet-600 hover:bg-violet-700"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-[#2e2e3e] text-gray-400"
+                          onClick={() => { setEditingLinkId(null); setMeetingLinkInput(''); }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Existing meeting link display */}
+                  {session.meeting_link && editingLinkId !== session.id && (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-violet-400">
+                      <Link2 className="h-4 w-4" />
+                      <span className="truncate">{session.meeting_link}</span>
+                    </div>
+                  )}
+
                   {/* Notes */}
                   {session.notes && (
                     <div className="mt-4 p-4 rounded-lg bg-[#1e1e2e] text-sm text-gray-400">
@@ -249,7 +344,7 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
               ? 'You have no upcoming sessions scheduled'
               : filter === 'completed'
               ? 'You have not completed any sessions yet'
-              : 'No sessions recorded yet'}
+              : 'No sessions recorded yet. When students book sessions with you, they will appear here.'}
           </p>
         </div>
       )}
