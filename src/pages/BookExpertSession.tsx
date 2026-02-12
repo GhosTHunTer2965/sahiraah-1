@@ -113,6 +113,12 @@ const BookExpertSession = () => {
     }
   };
 
+  const formatHourTo12 = (hour: number): string => {
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const h = hour % 12 || 12;
+    return `${h.toString().padStart(2, '0')}:00 ${period}`;
+  };
+
   const generateTimeSlots = async () => {
     if (!selectedExpert || !selectedDate) return;
 
@@ -130,20 +136,9 @@ const BookExpertSession = () => {
 
       if (availError) throw availError;
 
-      // If no availability set, show default slots
+      // If no availability set, show message (no default slots)
       if (!availability || availability.length === 0) {
-        const defaultSlots: TimeSlot[] = [
-          { id: '09:00', time: '09:00 AM', available: true },
-          { id: '10:00', time: '10:00 AM', available: true },
-          { id: '11:00', time: '11:00 AM', available: true },
-          { id: '12:00', time: '12:00 PM', available: true },
-          { id: '14:00', time: '02:00 PM', available: true },
-          { id: '15:00', time: '03:00 PM', available: true },
-          { id: '16:00', time: '04:00 PM', available: true },
-          { id: '17:00', time: '05:00 PM', available: true },
-          { id: '18:00', time: '06:00 PM', available: true },
-        ];
-        setAvailableTimeSlots(defaultSlots);
+        setAvailableTimeSlots([]);
         return;
       }
 
@@ -165,39 +160,38 @@ const BookExpertSession = () => {
         (bookedSessions || []).map(s => new Date(s.session_date).getHours())
       );
 
-      // Convert availability to time slots
-      const timeLabels: Record<string, string> = {
-        '09': '09:00 AM', '10': '10:00 AM', '11': '11:00 AM',
-        '12': '12:00 PM', '13': '01:00 PM', '14': '02:00 PM',
-        '15': '03:00 PM', '16': '04:00 PM', '17': '05:00 PM',
-      };
+      // Generate 1-hour slots from each availability range
+      const slots: TimeSlot[] = [];
+      const seenHours = new Set<number>();
 
-      const slots: TimeSlot[] = availability.map(slot => {
-        const hour = slot.start_time.substring(0, 2);
-        const hourNum = parseInt(hour);
-        return {
-          id: `${hour}:00`,
-          time: timeLabels[hour] || `${hour}:00`,
-          available: !bookedHours.has(hourNum)
-        };
-      }).sort((a, b) => a.id.localeCompare(b.id));
+      for (const slot of availability) {
+        const startHour = parseInt(slot.start_time.substring(0, 2));
+        const endHour = parseInt(slot.end_time.substring(0, 2));
 
-      setAvailableTimeSlots(slots);
+        for (let h = startHour; h < endHour; h++) {
+          if (seenHours.has(h)) continue;
+          seenHours.add(h);
+          const hourStr = h.toString().padStart(2, '0');
+          slots.push({
+            id: `${hourStr}:00`,
+            time: formatHourTo12(h),
+            available: !bookedHours.has(h),
+          });
+        }
+      }
+
+      // Filter out past slots if date is today
+      const now = new Date();
+      const isToday = selectedDate.toDateString() === now.toDateString();
+      const filtered = isToday 
+        ? slots.filter(s => parseInt(s.id) > now.getHours())
+        : slots;
+
+      filtered.sort((a, b) => a.id.localeCompare(b.id));
+      setAvailableTimeSlots(filtered);
     } catch (error) {
       console.error('Error generating time slots:', error);
-      // Fallback to default slots
-      const defaultSlots: TimeSlot[] = [
-        { id: '09:00', time: '09:00 AM', available: true },
-        { id: '10:00', time: '10:00 AM', available: true },
-        { id: '11:00', time: '11:00 AM', available: true },
-        { id: '12:00', time: '12:00 PM', available: true },
-        { id: '14:00', time: '02:00 PM', available: true },
-        { id: '15:00', time: '03:00 PM', available: true },
-        { id: '16:00', time: '04:00 PM', available: true },
-        { id: '17:00', time: '05:00 PM', available: true },
-        { id: '18:00', time: '06:00 PM', available: true },
-      ];
-      setAvailableTimeSlots(defaultSlots);
+      setAvailableTimeSlots([]);
     }
   };
 
@@ -480,6 +474,13 @@ const BookExpertSession = () => {
                         </Button>
                       ))}
                     </div>
+                  </div>
+                )}
+                {selectedDate && availableTimeSlots.length === 0 && (
+                  <div className="text-center py-6 text-muted-foreground border rounded-lg bg-muted/30">
+                    <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="font-medium">No available slots on this day</p>
+                    <p className="text-sm mt-1">The expert hasn't set availability for this day. Please select another date.</p>
                   </div>
                 )}
 
