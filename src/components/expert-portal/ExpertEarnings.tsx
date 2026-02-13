@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { IndianRupee, TrendingUp, ArrowUpRight, Download, Calendar, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { toast } from 'sonner';
 
 interface EarningRecord {
   id: string;
   session_date: string;
   amount_paid: number;
   payment_status: string;
+  session_status: string;
   student_name?: string;
 }
 
@@ -24,6 +27,7 @@ const ExpertEarnings = ({ expertId }: ExpertEarningsProps) => {
     pending: 0,
     completed: 0,
   });
+  const [monthlyData, setMonthlyData] = useState<{ month: string; earnings: number }[]>([]);
 
   useEffect(() => {
     loadEarnings();
@@ -33,13 +37,12 @@ const ExpertEarnings = ({ expertId }: ExpertEarningsProps) => {
     try {
       const { data, error } = await supabase
         .from('expert_sessions')
-        .select('id, session_date, amount_paid, payment_status, user_id')
+        .select('id, session_date, amount_paid, payment_status, session_status, user_id')
         .eq('expert_id', expertId)
         .order('session_date', { ascending: false });
 
       if (error) throw error;
 
-      // Fetch user profiles for student names
       const userIds = [...new Set(data?.map(e => e.user_id) || [])];
       const { data: profiles } = await supabase
         .from('user_profiles')
@@ -71,11 +74,53 @@ const ExpertEarnings = ({ expertId }: ExpertEarningsProps) => {
         .reduce((sum, e) => sum + (e.amount_paid || 0), 0);
 
       setTotals({ total, thisMonth, pending, completed });
+
+      // Build monthly chart data (last 6 months)
+      const months: { month: string; earnings: number }[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+        const monthEarnings = enrichedData
+          .filter(e => {
+            const sd = new Date(e.session_date);
+            return sd >= d && sd <= monthEnd;
+          })
+          .reduce((sum, e) => sum + (e.amount_paid || 0), 0);
+        months.push({
+          month: d.toLocaleDateString('en-IN', { month: 'short' }),
+          earnings: monthEarnings,
+        });
+      }
+      setMonthlyData(months);
     } catch (error) {
       console.error('Error loading earnings:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const exportCSV = () => {
+    if (earnings.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+    const headers = ['Student', 'Date', 'Amount', 'Payment Status', 'Session Status'];
+    const rows = earnings.map(e => [
+      e.student_name || 'Student',
+      new Date(e.session_date).toLocaleDateString('en-IN'),
+      `₹${e.amount_paid || 0}`,
+      e.payment_status,
+      e.session_status,
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `earnings-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Earnings exported');
   };
 
   if (isLoading) {
@@ -131,13 +176,48 @@ const ExpertEarnings = ({ expertId }: ExpertEarningsProps) => {
         </div>
       </div>
 
+      {/* Monthly Earnings Chart */}
+      <div className="rounded-xl bg-[#12121a] border border-[#1e1e2e] p-6">
+        <h3 className="text-lg font-semibold text-white mb-6">Monthly Earnings</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e1e2e" />
+              <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
+              <YAxis stroke="#6b7280" fontSize={12} tickFormatter={(v) => `₹${v}`} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1e1e2e',
+                  border: '1px solid #2e2e3e',
+                  borderRadius: '8px',
+                  color: '#fff',
+                }}
+                formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Earnings']}
+              />
+              <Bar dataKey="earnings" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
+              <defs>
+                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#6366f1" />
+                </linearGradient>
+              </defs>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
       {/* Transaction History */}
       <div className="rounded-xl bg-[#12121a] border border-[#1e1e2e] overflow-hidden">
         <div className="p-6 border-b border-[#1e1e2e] flex items-center justify-between">
           <h3 className="text-lg font-semibold text-white">Transaction History</h3>
-          <Button variant="outline" size="sm" className="border-[#2e2e3e] text-gray-300 hover:bg-[#1e1e2e]">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-[#2e2e3e] text-gray-300 hover:bg-[#1e1e2e]"
+            onClick={exportCSV}
+          >
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Export CSV
           </Button>
         </div>
 

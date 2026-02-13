@@ -100,7 +100,7 @@ const ExpertDashboard = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <ExpertOverview stats={stats} expertName={expert?.name || 'Expert'} />;
+        return <ExpertOverview stats={stats} expertName={expert?.name || 'Expert'} expertId={expert?.id} />;
       case 'sessions':
         return expert ? <ExpertSessionsPortal expertId={expert.id} /> : null;
       case 'earnings':
@@ -112,7 +112,7 @@ const ExpertDashboard = () => {
       case 'profile':
         return expert ? <ExpertProfilePortal expertId={expert.id} /> : null;
       default:
-        return <ExpertOverview stats={stats} expertName={expert?.name || 'Expert'} />;
+        return <ExpertOverview stats={stats} expertName={expert?.name || 'Expert'} expertId={expert?.id} />;
     }
   };
 
