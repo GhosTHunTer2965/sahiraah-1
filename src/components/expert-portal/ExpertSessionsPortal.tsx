@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Video, User, CheckCircle, XCircle, AlertCircle, Link2 } from 'lucide-react';
+import { Calendar, Clock, Video, User, CheckCircle, XCircle, AlertCircle, Link2, MessageSquare, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
 interface Session {
@@ -13,6 +14,7 @@ interface Session {
   duration_minutes: number;
   meeting_link: string | null;
   notes: string | null;
+  amount_paid: number | null;
   user_id: string;
   student_name?: string;
 }
@@ -24,14 +26,15 @@ interface ExpertSessionsPortalProps {
 const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed' | 'cancelled'>('all');
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
+  const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [meetingLinkInput, setMeetingLinkInput] = useState('');
+  const [notesInput, setNotesInput] = useState('');
 
   useEffect(() => {
     loadSessions();
 
-    // Real-time subscription for new bookings from students
     const channel = supabase
       .channel('expert-sessions-realtime')
       .on(
@@ -124,6 +127,43 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
     }
   };
 
+  const saveNotes = async (sessionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('expert_sessions')
+        .update({ notes: notesInput.trim() || null })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      toast.success('Notes saved');
+      setEditingNotesId(null);
+      setNotesInput('');
+      loadSessions();
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      toast.error('Failed to save notes');
+    }
+  };
+
+  const cancelSession = async (sessionId: string) => {
+    if (!confirm('Are you sure you want to cancel this session?')) return;
+    try {
+      const { error } = await supabase
+        .from('expert_sessions')
+        .update({ session_status: 'cancelled' })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      toast.success('Session cancelled');
+      loadSessions();
+    } catch (error) {
+      console.error('Error cancelling session:', error);
+      toast.error('Failed to cancel session');
+    }
+  };
+
   const filteredSessions = sessions.filter(session => {
     const now = new Date();
     const sessionDate = new Date(session.session_date);
@@ -133,6 +173,9 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
     }
     if (filter === 'completed') {
       return session.session_status === 'completed';
+    }
+    if (filter === 'cancelled') {
+      return session.session_status === 'cancelled';
     }
     return true;
   });
@@ -158,21 +201,33 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
     );
   }
 
+  const sessionCounts = {
+    all: sessions.length,
+    upcoming: sessions.filter(s => new Date(s.session_date) >= new Date() && s.session_status === 'scheduled').length,
+    completed: sessions.filter(s => s.session_status === 'completed').length,
+    cancelled: sessions.filter(s => s.session_status === 'cancelled').length,
+  };
+
   return (
     <div className="space-y-6">
       {/* Filter Tabs */}
-      <div className="flex gap-2">
-        {['all', 'upcoming', 'completed'].map((f) => (
+      <div className="flex gap-2 flex-wrap">
+        {(['all', 'upcoming', 'completed', 'cancelled'] as const).map((f) => (
           <button
             key={f}
-            onClick={() => setFilter(f as any)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            onClick={() => setFilter(f)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
               filter === f
                 ? 'bg-violet-600 text-white'
                 : 'bg-[#1e1e2e] text-gray-400 hover:text-white'
             }`}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
+            <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+              filter === f ? 'bg-white/20' : 'bg-[#2e2e3e]'
+            }`}>
+              {sessionCounts[f]}
+            </span>
           </button>
         ))}
       </div>
@@ -209,6 +264,15 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                               Today
                             </span>
                           )}
+                          {session.payment_status && (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              session.payment_status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' :
+                              session.payment_status === 'pending' ? 'bg-amber-500/10 text-amber-400' :
+                              'bg-gray-500/10 text-gray-400'
+                            }`}>
+                              ₹{session.amount_paid || 0} • {session.payment_status}
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
                           <span className="flex items-center gap-1">
@@ -236,7 +300,7 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {session.session_status === 'scheduled' && !isPast && (
                         <>
                           {session.meeting_link && (
@@ -245,7 +309,7 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                               className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
                               onClick={() => window.open(session.meeting_link!, '_blank')}
                             >
-                              <Video className="h-4 w-4 mr-2" />
+                              <Video className="h-4 w-4 mr-1" />
                               Join
                             </Button>
                           )}
@@ -258,8 +322,8 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                               setMeetingLinkInput(session.meeting_link || '');
                             }}
                           >
-                            <Link2 className="h-4 w-4 mr-2" />
-                            {session.meeting_link ? 'Edit Link' : 'Add Link'}
+                            <Link2 className="h-4 w-4 mr-1" />
+                            {session.meeting_link ? 'Edit' : 'Add'} Link
                           </Button>
                           <Button
                             size="sm"
@@ -267,8 +331,17 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                             className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20"
                             onClick={() => updateSessionStatus(session.id, 'completed')}
                           >
-                            <CheckCircle className="h-4 w-4 mr-2" />
+                            <CheckCircle className="h-4 w-4 mr-1" />
                             Complete
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-500/50 text-red-400 hover:bg-red-500/20"
+                            onClick={() => cancelSession(session.id)}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Cancel
                           </Button>
                         </>
                       )}
@@ -279,10 +352,23 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                           className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20"
                           onClick={() => updateSessionStatus(session.id, 'completed')}
                         >
-                          <CheckCircle className="h-4 w-4 mr-2" />
+                          <CheckCircle className="h-4 w-4 mr-1" />
                           Mark Complete
                         </Button>
                       )}
+                      {/* Notes button for all sessions */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-[#2e2e3e] text-gray-400 hover:bg-[#1e1e2e]"
+                        onClick={() => {
+                          setEditingNotesId(editingNotesId === session.id ? null : session.id);
+                          setNotesInput(session.notes || '');
+                        }}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" />
+                        Notes
+                      </Button>
                     </div>
                   </div>
 
@@ -296,19 +382,32 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                         className="bg-[#12121a] border-[#2e2e3e] text-white flex-1"
                       />
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => saveMeetingLink(session.id)}
-                          className="bg-violet-600 hover:bg-violet-700"
-                        >
-                          Save
+                        <Button size="sm" onClick={() => saveMeetingLink(session.id)} className="bg-violet-600 hover:bg-violet-700">
+                          <Save className="h-4 w-4 mr-1" /> Save
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-[#2e2e3e] text-gray-400"
-                          onClick={() => { setEditingLinkId(null); setMeetingLinkInput(''); }}
-                        >
+                        <Button size="sm" variant="outline" className="border-[#2e2e3e] text-gray-400"
+                          onClick={() => { setEditingLinkId(null); setMeetingLinkInput(''); }}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes Editor */}
+                  {editingNotesId === session.id && (
+                    <div className="mt-4 p-4 rounded-lg bg-[#1e1e2e] space-y-3">
+                      <Textarea
+                        placeholder="Add session notes, key topics discussed, action items..."
+                        value={notesInput}
+                        onChange={(e) => setNotesInput(e.target.value)}
+                        className="bg-[#12121a] border-[#2e2e3e] text-white min-h-[100px]"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => saveNotes(session.id)} className="bg-violet-600 hover:bg-violet-700">
+                          <Save className="h-4 w-4 mr-1" /> Save Notes
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-[#2e2e3e] text-gray-400"
+                          onClick={() => { setEditingNotesId(null); setNotesInput(''); }}>
                           Cancel
                         </Button>
                       </div>
@@ -323,8 +422,8 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                     </div>
                   )}
 
-                  {/* Notes */}
-                  {session.notes && (
+                  {/* Notes display */}
+                  {session.notes && editingNotesId !== session.id && (
                     <div className="mt-4 p-4 rounded-lg bg-[#1e1e2e] text-sm text-gray-400">
                       <p className="font-medium text-gray-300 mb-1">Notes:</p>
                       {session.notes}
@@ -344,6 +443,8 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
               ? 'You have no upcoming sessions scheduled'
               : filter === 'completed'
               ? 'You have not completed any sessions yet'
+              : filter === 'cancelled'
+              ? 'No cancelled sessions'
               : 'No sessions recorded yet. When students book sessions with you, they will appear here.'}
           </p>
         </div>
