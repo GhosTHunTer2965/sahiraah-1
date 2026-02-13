@@ -43,7 +43,7 @@ const ExpertProfilePortal = ({ expertId }: ExpertProfilePortalProps) => {
     try {
       const { data, error } = await supabase
         .from('experts')
-        .select('*')
+        .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id, is_available, email')
         .eq('id', expertId)
         .single();
 

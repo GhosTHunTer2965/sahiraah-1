@@ -633,6 +633,13 @@ export type Database = {
             referencedRelation: "experts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "expert_availability_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       expert_sessions: {
@@ -687,6 +694,13 @@ export type Database = {
             columns: ["expert_id"]
             isOneToOne: false
             referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expert_sessions_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1664,7 +1678,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      experts_public: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          expertise: Json | null
+          hourly_rate: number | null
+          id: string | null
+          image_url: string | null
+          is_available: boolean | null
+          name: string | null
+          title: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          expertise?: Json | null
+          hourly_rate?: number | null
+          id?: string | null
+          image_url?: string | null
+          is_available?: boolean | null
+          name?: string | null
+          title?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          expertise?: Json | null
+          hourly_rate?: number | null
+          id?: string | null
+          image_url?: string | null
+          is_available?: boolean | null
+          name?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
