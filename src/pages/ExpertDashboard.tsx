@@ -44,16 +44,61 @@ const ExpertDashboard = () => {
       }
 
       // Get expert record linked to this user
-      const { data: expertData, error: expertError } = await supabase
+      let { data: expertData, error: expertError } = await supabase
         .from('experts')
-        .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id')
+        .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id, is_available, email')
         .eq('user_id', session.user.id)
         .single();
 
+      // If no expert record exists, auto-create one from the user's auth info
       if (expertError || !expertData) {
-        console.error('Error loading expert:', expertError);
-        toast.error('Could not load expert profile');
-        return;
+        const userEmail = session.user.email || '';
+        const userName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || userEmail.split('@')[0] || 'Expert';
+        
+        const { data: newExpert, error: createError } = await supabase
+          .from('experts')
+          .insert({
+            user_id: session.user.id,
+            name: userName,
+            title: 'Career Counselor',
+            email: userEmail,
+            hourly_rate: 500,
+            is_available: true,
+          })
+          .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id, is_available, email')
+          .single();
+
+        if (createError) {
+          console.error('Error creating expert profile:', createError);
+          // Try to find an unlinked expert and link it
+          const { data: unlinkedExpert } = await supabase
+            .from('experts')
+            .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id, is_available, email')
+            .is('user_id', null)
+            .limit(1)
+            .single();
+
+          if (unlinkedExpert) {
+            await supabase
+              .from('experts')
+              .update({ user_id: session.user.id, email: userEmail })
+              .eq('id', unlinkedExpert.id);
+            
+            expertData = { ...unlinkedExpert, user_id: session.user.id };
+          } else {
+            toast.error('Could not create expert profile. Please contact admin.');
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          expertData = newExpert;
+        }
+
+        // Ensure user has expert role
+        await supabase
+          .from('user_roles')
+          .upsert({ user_id: session.user.id, role: 'expert' as const }, { onConflict: 'user_id,role' })
+          .select();
       }
 
       setExpert(expertData);
@@ -97,20 +142,22 @@ const ExpertDashboard = () => {
     );
   }
 
+  const expertId = expert?.id || '';
+
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
         return <ExpertOverview stats={stats} expertName={expert?.name || 'Expert'} expertId={expert?.id} />;
       case 'sessions':
-        return expert ? <ExpertSessionsPortal expertId={expert.id} /> : null;
+        return <ExpertSessionsPortal expertId={expertId} />;
       case 'earnings':
-        return expert ? <ExpertEarnings expertId={expert.id} /> : null;
+        return <ExpertEarnings expertId={expertId} />;
       case 'students':
-        return expert ? <StudentInsights expertId={expert.id} /> : null;
+        return <StudentInsights expertId={expertId} />;
       case 'availability':
-        return expert ? <AvailabilityManagerPortal expertId={expert.id} /> : null;
+        return <AvailabilityManagerPortal expertId={expertId} />;
       case 'profile':
-        return expert ? <ExpertProfilePortal expertId={expert.id} /> : null;
+        return <ExpertProfilePortal expertId={expertId} />;
       default:
         return <ExpertOverview stats={stats} expertName={expert?.name || 'Expert'} expertId={expert?.id} />;
     }
