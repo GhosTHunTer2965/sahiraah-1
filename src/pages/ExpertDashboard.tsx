@@ -55,13 +55,13 @@ const ExpertDashboard = () => {
         const userEmail = session.user.email || '';
         const userName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || userEmail.split('@')[0] || 'Expert';
         
+        // Insert without email to avoid unique constraint conflicts
         const { data: newExpert, error: createError } = await supabase
           .from('experts')
           .insert({
             user_id: session.user.id,
             name: userName,
             title: 'Career Counselor',
-            email: userEmail,
             hourly_rate: 500,
             is_available: true,
           })
@@ -70,29 +70,12 @@ const ExpertDashboard = () => {
 
         if (createError) {
           console.error('Error creating expert profile:', createError);
-          // Try to find an unlinked expert and link it
-          const { data: unlinkedExpert } = await supabase
-            .from('experts')
-            .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id, is_available, email')
-            .is('user_id', null)
-            .limit(1)
-            .single();
-
-          if (unlinkedExpert) {
-            await supabase
-              .from('experts')
-              .update({ user_id: session.user.id, email: userEmail })
-              .eq('id', unlinkedExpert.id);
-            
-            expertData = { ...unlinkedExpert, user_id: session.user.id };
-          } else {
-            toast.error('Could not create expert profile. Please contact admin.');
-            setIsLoading(false);
-            return;
-          }
-        } else {
-          expertData = newExpert;
+          toast.error('Could not create expert profile. Please try logging in again.');
+          setIsLoading(false);
+          return;
         }
+        
+        expertData = newExpert;
 
         // Ensure user has expert role
         await supabase
