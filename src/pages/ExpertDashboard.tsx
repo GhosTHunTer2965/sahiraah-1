@@ -61,13 +61,13 @@ const ExpertDashboard = () => {
         // Insert without email and without RETURNING to avoid RLS recursion
         const { error: createError } = await supabase
           .from('experts')
-          .insert({
+          .upsert({
             user_id: session.user.id,
             name: userName,
             title: 'Career Counselor',
             hourly_rate: 500,
             is_available: true,
-          });
+          }, { onConflict: 'user_id' });
 
         if (createError) {
           console.error('Error creating expert profile:', createError);
