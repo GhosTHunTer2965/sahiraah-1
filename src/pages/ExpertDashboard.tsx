@@ -55,8 +55,8 @@ const ExpertDashboard = () => {
         const userEmail = session.user.email || '';
         const userName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || userEmail.split('@')[0] || 'Expert';
         
-        // Insert without email to avoid unique constraint conflicts
-        const { data: newExpert, error: createError } = await supabase
+        // Insert without email and without RETURNING to avoid RLS recursion
+        const { error: createError } = await supabase
           .from('experts')
           .insert({
             user_id: session.user.id,
@@ -64,9 +64,7 @@ const ExpertDashboard = () => {
             title: 'Career Counselor',
             hourly_rate: 500,
             is_available: true,
-          })
-          .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id, is_available, email')
-          .single();
+          });
 
         if (createError) {
           console.error('Error creating expert profile:', createError);
@@ -74,8 +72,15 @@ const ExpertDashboard = () => {
           setIsLoading(false);
           return;
         }
+
+        // Fetch the newly created record separately
+        const { data: createdExpert } = await supabase
+          .from('experts')
+          .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id, is_available, email')
+          .eq('user_id', session.user.id)
+          .single();
         
-        expertData = newExpert;
+        expertData = createdExpert;
 
         // Ensure user has expert role
         await supabase
