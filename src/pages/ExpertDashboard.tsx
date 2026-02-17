@@ -44,11 +44,14 @@ const ExpertDashboard = () => {
       }
 
       // Get expert record linked to this user
-      let { data: expertData, error: expertError } = await supabase
+      // Use .limit(1) instead of .single() to avoid errors when duplicates exist
+      const { data: expertRows, error: expertError } = await supabase
         .from('experts')
         .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id, is_available, email')
         .eq('user_id', session.user.id)
-        .single();
+        .limit(1);
+
+      let expertData = expertRows?.[0] || null;
 
       // If no expert record exists, auto-create one from the user's auth info
       if (expertError || !expertData) {
@@ -74,13 +77,13 @@ const ExpertDashboard = () => {
         }
 
         // Fetch the newly created record separately
-        const { data: createdExpert } = await supabase
+        const { data: createdRows } = await supabase
           .from('experts')
           .select('id, name, title, bio, expertise, hourly_rate, image_url, user_id, is_available, email')
           .eq('user_id', session.user.id)
-          .single();
+          .limit(1);
         
-        expertData = createdExpert;
+        expertData = createdRows?.[0] || null;
 
         // Ensure user has expert role
         await supabase
