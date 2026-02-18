@@ -66,6 +66,7 @@ const BookExpertSession = () => {
   const [countryCode, setCountryCode] = useState('+91');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
+  const [availableDays, setAvailableDays] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadExperts();
@@ -73,10 +74,34 @@ const BookExpertSession = () => {
   }, []);
 
   useEffect(() => {
+    if (selectedExpert) {
+      loadAvailableDays();
+    }
+  }, [selectedExpert]);
+
+  useEffect(() => {
     if (selectedDate && selectedExpert) {
       generateTimeSlots();
     }
   }, [selectedDate, selectedExpert]);
+
+  const loadAvailableDays = async () => {
+    if (!selectedExpert) return;
+    try {
+      const { data, error } = await supabase
+        .from('expert_availability')
+        .select('day_of_week')
+        .eq('expert_id', selectedExpert.id)
+        .eq('is_available', true)
+        .eq('is_recurring', true);
+
+      if (error) throw error;
+      const days = new Set((data || []).map(d => d.day_of_week));
+      setAvailableDays(days);
+    } catch (error) {
+      console.error('Error loading available days:', error);
+    }
+  };
 
   const loadUserDetails = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -444,13 +469,26 @@ const BookExpertSession = () => {
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
-                      disabled={(date) => date < new Date() || date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        if (date < today) return true;
+                        return !availableDays.has(date.getDay());
+                      }}
                       className="rounded-md border"
                     />
                   </div>
-                  {selectedDate && (
+                  {availableDays.size > 0 && (
                     <p className="text-sm text-center text-muted-foreground">
-                      Selected: {format(selectedDate, 'PPP')}
+                      {selectedDate 
+                        ? `Selected: ${format(selectedDate, 'PPP')}`
+                        : `Available on: ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].filter((_, i) => availableDays.has(i)).join(', ')}`
+                      }
+                    </p>
+                  )}
+                  {availableDays.size === 0 && (
+                    <p className="text-sm text-center text-destructive">
+                      This expert hasn't set any availability yet.
                     </p>
                   )}
                 </div>
