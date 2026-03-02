@@ -55,6 +55,8 @@ const BookExpertSession = () => {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
+  const [isLoadingTimeSlots, setIsLoadingTimeSlots] = useState(false);
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookedSessionId, setBookedSessionId] = useState<string | null>(null);
@@ -85,8 +87,24 @@ const BookExpertSession = () => {
     }
   }, [selectedDate, selectedExpert]);
 
+  const getNextAvailableDate = (days: Set<number>) => {
+    if (days.size === 0) return undefined;
+
+    const candidate = new Date();
+    candidate.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < 60; i++) {
+      if (days.has(candidate.getDay())) return new Date(candidate);
+      candidate.setDate(candidate.getDate() + 1);
+    }
+
+    return undefined;
+  };
+
   const loadAvailableDays = async () => {
     if (!selectedExpert) return;
+
+    setIsLoadingAvailability(true);
     try {
       const { data, error } = await supabase
         .from('expert_availability')
@@ -96,10 +114,21 @@ const BookExpertSession = () => {
         .eq('is_recurring', true);
 
       if (error) throw error;
+
       const days = new Set((data || []).map(d => d.day_of_week));
       setAvailableDays(days);
+
+      if (days.size > 0) {
+        const nextDate = getNextAvailableDate(days);
+        if (nextDate) {
+          setSelectedDate(nextDate);
+        }
+      }
     } catch (error) {
       console.error('Error loading available days:', error);
+      setAvailableDays(new Set());
+    } finally {
+      setIsLoadingAvailability(false);
     }
   };
 
@@ -147,6 +176,7 @@ const BookExpertSession = () => {
   const generateTimeSlots = async () => {
     if (!selectedExpert || !selectedDate) return;
 
+    setIsLoadingTimeSlots(true);
     try {
       const dayOfWeek = selectedDate.getDay();
       
@@ -217,11 +247,17 @@ const BookExpertSession = () => {
     } catch (error) {
       console.error('Error generating time slots:', error);
       setAvailableTimeSlots([]);
+    } finally {
+      setIsLoadingTimeSlots(false);
     }
   };
 
   const handleExpertSelect = (expert: Expert) => {
     setSelectedExpert(expert);
+    setSelectedDate(undefined);
+    setSelectedTimeSlot('');
+    setAvailableTimeSlots([]);
+    setAvailableDays(new Set());
     setStep('details');
   };
 
@@ -478,7 +514,10 @@ const BookExpertSession = () => {
                       className="rounded-md border"
                     />
                   </div>
-                  {availableDays.size > 0 && (
+                  {isLoadingAvailability && (
+                    <p className="text-sm text-center text-muted-foreground">Loading availability...</p>
+                  )}
+                  {!isLoadingAvailability && availableDays.size > 0 && (
                     <p className="text-sm text-center text-muted-foreground">
                       {selectedDate 
                         ? `Selected: ${format(selectedDate, 'PPP')}`
@@ -486,7 +525,7 @@ const BookExpertSession = () => {
                       }
                     </p>
                   )}
-                  {availableDays.size === 0 && (
+                  {!isLoadingAvailability && availableDays.size === 0 && (
                     <p className="text-sm text-center text-destructive">
                       This expert hasn't set any availability yet.
                     </p>
@@ -494,7 +533,13 @@ const BookExpertSession = () => {
                 </div>
 
                 {/* Time Slot Selection */}
-                {selectedDate && availableTimeSlots.length > 0 && (
+                {selectedDate && isLoadingTimeSlots && (
+                  <div className="text-center py-6 text-muted-foreground border rounded-lg bg-muted/30">
+                    <Clock className="h-8 w-8 mx-auto mb-2 opacity-50 animate-pulse" />
+                    <p className="font-medium">Loading available slots...</p>
+                  </div>
+                )}
+                {selectedDate && !isLoadingTimeSlots && availableTimeSlots.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="font-semibold text-lg">Available Time Slots</h3>
                     <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
@@ -514,7 +559,7 @@ const BookExpertSession = () => {
                     </div>
                   </div>
                 )}
-                {selectedDate && availableTimeSlots.length === 0 && (
+                {false && (
                   <div className="text-center py-6 text-muted-foreground border rounded-lg bg-muted/30">
                     <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="font-medium">No available slots on this day</p>
