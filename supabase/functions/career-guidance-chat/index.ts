@@ -11,7 +11,7 @@ const corsHeaders = {
 // Input validation schema
 const requestSchema = z.object({
   message: z.string().min(1).max(5000),
-  conversationId: z.string().uuid().optional(),
+  conversationId: z.string().uuid().optional().nullable(),
 });
 
 // Sanitize user input for AI prompts
