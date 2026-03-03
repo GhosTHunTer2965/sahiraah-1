@@ -121,8 +121,18 @@ const About = () => {
                   <AvatarFallback>AR</AvatarFallback>
                 </Avatar>
               </div>
-              <h3 className="text-xl font-bold mb-1 text-blue-800">H Adithya Rao</h3>
+             <h3 className="text-xl font-bold mb-1 text-blue-800">H Adithya Rao</h3>
               <p className="text-blue-700">Co-founder & Product Lead</p>
+            </div>
+
+            <div className="bg-blue-50 p-5 rounded-xl shadow text-center">
+              <div className="mx-auto mb-3 w-24 h-24 rounded-full overflow-hidden border-4 border-blue-200">
+                <Avatar className="w-full h-full">
+                  <AvatarFallback className="text-2xl font-bold text-blue-800 bg-blue-100">NA</AvatarFallback>
+                </Avatar>
+              </div>
+              <h3 className="text-xl font-bold mb-1 text-blue-800">Nayan Ajay</h3>
+              <p className="text-blue-700">Chief Technical Officer</p>
             </div>
           </div>
         </div>
