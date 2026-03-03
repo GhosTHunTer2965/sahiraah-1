@@ -106,11 +106,12 @@ const CourseDetail = ({ isOpen, onClose, course }: CourseDetailProps) => {
                       variant="outline" 
                       size="sm"
                       className="border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white"
-                      asChild
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(resource.link, '_blank', 'noopener,noreferrer');
+                      }}
                     >
-                      <a href={resource.link} target="_blank" rel="noopener noreferrer">
-                        Access
-                      </a>
+                      Access
                     </Button>
                   </div>
                 </div>
