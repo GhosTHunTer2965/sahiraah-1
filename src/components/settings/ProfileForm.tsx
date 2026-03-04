@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/components/ui/sonner";
 import { UserProfile } from "@/types/user";
+import { supabase } from "@/integrations/supabase/client";
+import { Camera, Loader2 } from "lucide-react";
 
 interface ProfileFormProps {
   profile: UserProfile;
@@ -21,11 +23,49 @@ export const ProfileForm = ({ profile, onProfileUpdate }: ProfileFormProps) => {
   const [bio, setBio] = useState(profile.bio || "");
   const [profilePicture, setProfilePicture] = useState(profile.profilePicture || "");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file.");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be under 2MB.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${profile.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
+      setProfilePicture(publicUrl);
+      toast.success("Profile picture uploaded!");
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSaveProfile = () => {
     setSaving(true);
     
-    // Update profile
     const updatedProfile = {
       ...profile,
       name,
@@ -64,25 +104,50 @@ export const ProfileForm = ({ profile, onProfileUpdate }: ProfileFormProps) => {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-          <Avatar className="w-24 h-24">
-            {profilePicture ? (
-              <AvatarImage src={profilePicture} alt={name} />
-            ) : (
-              <AvatarFallback className="text-xl">{getInitials(name)}</AvatarFallback>
-            )}
-          </Avatar>
+          <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+            <Avatar className="w-24 h-24">
+              {profilePicture ? (
+                <AvatarImage src={profilePicture} alt={name} />
+              ) : (
+                <AvatarFallback className="text-xl">{getInitials(name)}</AvatarFallback>
+              )}
+            </Avatar>
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploading ? (
+                <Loader2 className="h-6 w-6 text-white animate-spin" />
+              ) : (
+                <Camera className="h-6 w-6 text-white" />
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarUpload}
+              disabled={uploading}
+            />
+          </div>
           <div className="space-y-2">
             <h3 className="text-lg font-medium">Profile Picture</h3>
-            <p className="text-sm text-gray-500">
-              This will be displayed on your profile and in your posts.
+            <p className="text-sm text-muted-foreground">
+              Click the avatar to upload a new photo. Max 2MB.
             </p>
-            <Input
-              type="text"
-              placeholder="Profile picture URL"
-              value={profilePicture}
-              onChange={(e) => setProfilePicture(e.target.value)}
-              className="max-w-md"
-            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Change Photo"
+              )}
+            </Button>
           </div>
         </div>
         
