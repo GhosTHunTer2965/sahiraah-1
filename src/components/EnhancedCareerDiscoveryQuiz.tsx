@@ -85,9 +85,10 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
     }
   }, [timerExpired]);
 
-  // Reset timer when question changes
+  // Reset timer when question changes (300s for questions 16-20, 60s otherwise)
   useEffect(() => {
-    setTimeLeft(60);
+    const timeLimit = currentQuestionIndex >= 15 ? 300 : 60;
+    setTimeLeft(timeLimit);
     setTimerExpired(false);
   }, [currentQuestionIndex]);
 
