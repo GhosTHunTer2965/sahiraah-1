@@ -178,6 +178,22 @@ const App = () => {
                 </ExpertProtectedRoute>
               }
             />
+            <Route
+              path="/terms"
+              element={
+                <Layout>
+                  <Terms />
+                </Layout>
+              }
+            />
+            <Route
+              path="/privacy"
+              element={
+                <Layout>
+                  <Privacy />
+                </Layout>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
