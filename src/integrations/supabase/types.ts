@@ -1438,24 +1438,39 @@ export type Database = {
         Row: {
           app_notifications: boolean | null
           created_at: string
+          data_sharing: boolean
           email_notifications: boolean | null
           id: string
+          language_preference: string
+          learning_style: string
+          profile_visibility: string
+          theme: string
           updated_at: string
           user_id: string
         }
         Insert: {
           app_notifications?: boolean | null
           created_at?: string
+          data_sharing?: boolean
           email_notifications?: boolean | null
           id?: string
+          language_preference?: string
+          learning_style?: string
+          profile_visibility?: string
+          theme?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           app_notifications?: boolean | null
           created_at?: string
+          data_sharing?: boolean
           email_notifications?: boolean | null
           id?: string
+          language_preference?: string
+          learning_style?: string
+          profile_visibility?: string
+          theme?: string
           updated_at?: string
           user_id?: string
         }
