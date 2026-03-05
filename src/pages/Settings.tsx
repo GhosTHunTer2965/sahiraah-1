@@ -9,10 +9,12 @@ import { PreferencesSettings } from "@/components/settings/PreferencesSettings";
 import { HistorySettings } from "@/components/settings/HistorySettings";
 import { UserProfile } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 const Settings = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -129,15 +131,15 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-blue-50 py-6">
       <div className="container mx-auto px-4 max-w-6xl">
-        <h1 className="text-2xl md:text-3xl font-bold text-blue-900 mb-6">Account Settings</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-blue-900 mb-6">{t('settings.title')}</h1>
         
         {profile && (
           <Tabs defaultValue={activeTab} className="w-full">
             <TabsList className="mb-6 grid w-full grid-cols-2 md:grid-cols-4 h-auto">
-              <TabsTrigger value="profile" className="text-xs md:text-sm">Profile</TabsTrigger>
-              <TabsTrigger value="account" className="text-xs md:text-sm">Account</TabsTrigger>
-              <TabsTrigger value="history" className="text-xs md:text-sm">History</TabsTrigger>
-              <TabsTrigger value="preferences" className="text-xs md:text-sm">Preferences</TabsTrigger>
+              <TabsTrigger value="profile" className="text-xs md:text-sm">{t('settings.profile')}</TabsTrigger>
+              <TabsTrigger value="account" className="text-xs md:text-sm">{t('settings.account')}</TabsTrigger>
+              <TabsTrigger value="history" className="text-xs md:text-sm">{t('settings.history')}</TabsTrigger>
+              <TabsTrigger value="preferences" className="text-xs md:text-sm">{t('settings.preferences')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="profile" className="space-y-6">

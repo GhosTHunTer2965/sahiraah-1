@@ -9,6 +9,7 @@ import { BookIcon, BellIcon, SunIcon, MoonIcon, GlobeIcon, GraduationCapIcon, Sh
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/toast/use-toast";
 import { useTheme } from "next-themes";
+import { useTranslation } from "react-i18next";
 
 interface PreferencesSettingsProps {
   userId?: string;
@@ -16,6 +17,7 @@ interface PreferencesSettingsProps {
 
 export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
   const { setTheme: setAppTheme } = useTheme();
+  const { t, i18n } = useTranslation();
   const [selectedCareer, setSelectedCareer] = useState<string | null>(null);
   const [careerReason, setCareerReason] = useState<string | null>(null);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -66,6 +68,7 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
           setTheme((prefData as any).theme ?? "light");
           setAppTheme((prefData as any).theme ?? "light");
           setLanguagePreference((prefData as any).language_preference ?? "english");
+          i18n.changeLanguage((prefData as any).language_preference ?? "english");
           setLearningStyle((prefData as any).learning_style ?? "visual");
           setProfileVisibility((prefData as any).profile_visibility ?? "public");
           setDataSharing((prefData as any).data_sharing ?? true);
@@ -123,10 +126,14 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
     if (field === "theme") {
       setAppTheme(value);
     }
+    if (field === "language_preference") {
+      i18n.changeLanguage(value);
+    }
     const ok = await updatePreference(field, value);
     if (!ok) {
       setter(prev);
       if (field === "theme") setAppTheme(prev);
+      if (field === "language_preference") i18n.changeLanguage(prev);
     }
   };
 
@@ -134,8 +141,8 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Preferences</CardTitle>
-          <CardDescription>Loading your preferences...</CardDescription>
+          <CardTitle>{t('settings.preferences')}</CardTitle>
+          <CardDescription>{t('preferences.loadingPreferences')}</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center py-6">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
