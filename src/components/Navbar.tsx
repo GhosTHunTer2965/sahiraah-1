@@ -11,15 +11,16 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/compon
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { AlignJustify } from "lucide-react"
 import LogoutButton from "@/components/LogoutButton";
+import { useTranslation } from "react-i18next";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const handleDashboardClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (location.pathname === '/dashboard') {
-      // Force a navigation with state to trigger reset
       navigate('/dashboard', { replace: true, state: { reset: true } });
     } else {
       navigate('/dashboard');
@@ -36,16 +37,16 @@ const Navbar = () => {
         <NavigationMenu>
           <NavigationMenuList className="hidden md:flex items-center gap-4">
             <NavigationMenuItem>
-              <a href="/dashboard" onClick={handleDashboardClick} className="cursor-pointer">Dashboard</a>
+              <a href="/dashboard" onClick={handleDashboardClick} className="cursor-pointer">{t('nav.dashboard')}</a>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/about">About</Link>
+              <Link to="/about">{t('nav.about')}</Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/contact">Contact</Link>
+              <Link to="/contact">{t('nav.contact')}</Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link to="/settings">Settings</Link>
+              <Link to="/settings">{t('nav.settings')}</Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <LogoutButton />
@@ -59,16 +60,16 @@ const Navbar = () => {
           </SheetTrigger>
           <SheetContent className="w-full sm:w-3/4 md:w-2/5">
             <SheetHeader>
-              <SheetTitle>Menu</SheetTitle>
+              <SheetTitle>{t('nav.menu')}</SheetTitle>
               <SheetDescription>
-                Navigate through the app
+                {t('nav.navigateApp')}
               </SheetDescription>
             </SheetHeader>
             <div className="grid gap-4">
-              <a href="/dashboard" onClick={handleDashboardClick} className="cursor-pointer">Dashboard</a>
-              <Link to="/about">About</Link>
-              <Link to="/contact">Contact</Link>
-              <Link to="/settings">Settings</Link>
+              <a href="/dashboard" onClick={handleDashboardClick} className="cursor-pointer">{t('nav.dashboard')}</a>
+              <Link to="/about">{t('nav.about')}</Link>
+              <Link to="/contact">{t('nav.contact')}</Link>
+              <Link to="/settings">{t('nav.settings')}</Link>
               <LogoutButton />
             </div>
           </SheetContent>
