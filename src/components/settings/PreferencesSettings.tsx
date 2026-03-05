@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BookIcon, BellIcon, SunIcon, MoonIcon, GlobeIcon, GraduationCapIcon, ShieldIcon, EyeIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/toast/use-toast";
+import { useTheme } from "next-themes";
 
 interface PreferencesSettingsProps {
   userId?: string;
 }
 
 export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
+  const { setTheme: setAppTheme } = useTheme();
   const [selectedCareer, setSelectedCareer] = useState<string | null>(null);
   const [careerReason, setCareerReason] = useState<string | null>(null);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -62,6 +64,7 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
           setEmailNotifications(prefData.email_notifications ?? true);
           setAppNotifications(prefData.app_notifications ?? true);
           setTheme((prefData as any).theme ?? "light");
+          setAppTheme((prefData as any).theme ?? "light");
           setLanguagePreference((prefData as any).language_preference ?? "english");
           setLearningStyle((prefData as any).learning_style ?? "visual");
           setProfileVisibility((prefData as any).profile_visibility ?? "public");
@@ -117,8 +120,14 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
     prev: string
   ) => {
     setter(value);
+    if (field === "theme") {
+      setAppTheme(value);
+    }
     const ok = await updatePreference(field, value);
-    if (!ok) setter(prev);
+    if (!ok) {
+      setter(prev);
+      if (field === "theme") setAppTheme(prev);
+    }
   };
 
   if (loading) {
