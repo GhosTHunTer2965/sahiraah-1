@@ -12,18 +12,16 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaYahoo } from "react-icons/fa";
 import { AlertCircle, CheckCircle, Mail } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTranslation } from "react-i18next";
 
 // Helper function to clean up auth state
 const cleanupAuthState = () => {
-  // Remove standard auth tokens
   localStorage.removeItem('supabase.auth.token');
-  // Remove all Supabase auth keys from localStorage
   Object.keys(localStorage).forEach((key) => {
     if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
       localStorage.removeItem(key);
     }
   });
-  // Remove from sessionStorage if in use
   Object.keys(sessionStorage || {}).forEach((key) => {
     if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
       sessionStorage.removeItem(key);
@@ -31,10 +29,10 @@ const cleanupAuthState = () => {
   });
 };
 
-// Define a type that includes 'yahoo' as a valid provider
 type ExtendedProvider = 'google' | 'facebook' | 'twitter' | 'apple' | 'github' | 'gitlab' | 'bitbucket' | 'azure' | 'discord' | 'linkedin' | 'slack' | 'spotify' | 'workos' | 'yahoo';
 
 const Login = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
@@ -46,15 +44,12 @@ const Login = () => {
   const [showEmailVerificationAlert, setShowEmailVerificationAlert] = useState(false);
   const navigate = useNavigate();
 
-  // Check if already logged in
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        // Check if email is verified before allowing login
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email_confirmed_at) {
-          // Check if user has expert role
           const { data: roleData } = await supabase
             .from('user_roles')
             .select('role')
@@ -69,7 +64,6 @@ const Login = () => {
           }
         } else {
           setShowEmailVerificationAlert(true);
-          toast.error("Please verify your email before accessing the dashboard.");
         }
       }
     };
@@ -81,42 +75,31 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error("Please provide both email and password");
+      toast.error(t('login.email') + " & " + t('login.password') + " required");
       return;
     }
     
     try {
       setIsLoading(true);
-      
-      // Clean up existing auth state
       cleanupAuthState();
       
-      // Try to sign out first to clear any existing sessions
       try {
         await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-      }
+      } catch (err) {}
       
-      // Now attempt to sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       if (data.user) {
-        // Check if email is verified
         if (!data.user.email_confirmed_at) {
           setShowEmailVerificationAlert(true);
-          toast.error("Please verify your email before accessing the dashboard. Check your inbox for verification link.");
           return;
         }
         
-        // Check if user has expert role
         const { data: roleData } = await supabase
           .from('user_roles')
           .select('role')
@@ -124,9 +107,8 @@ const Login = () => {
           .eq('role', 'expert')
           .maybeSingle();
         
-        toast.success("Login successful!");
+        toast.success(t('login.loginSuccess'));
         
-        // Redirect to expert dashboard if user has expert role
         if (roleData) {
           window.location.href = "/expert-dashboard";
         } else {
@@ -145,7 +127,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!signupEmail || !signupPassword) {
-      toast.error("Please provide both email and password");
+      toast.error(t('login.email') + " & " + t('login.password') + " required");
       return;
     }
     
@@ -155,22 +137,17 @@ const Login = () => {
     }
 
     if (signupPassword.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+      toast.error(t('login.passwordMinLength'));
       return;
     }
     
     try {
       setIsLoading(true);
-      
-      // Clean up existing auth state
       cleanupAuthState();
       
-      // Try to sign out first to clear any existing sessions
       try {
         await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-      }
+      } catch (err) {}
       
       const { data, error } = await supabase.auth.signUp({
         email: signupEmail,
@@ -180,14 +157,12 @@ const Login = () => {
         }
       });
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
       if (data.user) {
         setEmailVerificationSent(true);
         setShowEmailVerificationAlert(true);
-        toast.success("Account created! Please check your email to verify your account before logging in.");
+        toast.success(t('login.checkEmailDesc'));
         setSignupEmail("");
         setSignupPassword("");
         setConfirmPassword("");
@@ -217,8 +192,7 @@ const Login = () => {
       });
 
       if (error) throw error;
-
-      toast.success("Verification email sent! Please check your inbox.");
+      toast.success(t('login.passwordResetSent'));
     } catch (error: any) {
       toast.error(error.message || "Failed to send verification email");
     }
@@ -227,20 +201,14 @@ const Login = () => {
   const handleSocialLogin = async (provider: ExtendedProvider) => {
     try {
       setSocialLoading(provider);
-      
-      // Clean up existing auth state
       cleanupAuthState();
       
-      // Try to sign out first to clear any existing sessions
       try {
         await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-      }
+      } catch (err) {}
       
-      // Use type assertion to handle yahoo provider
       const { data, error } = await supabase.auth.signInWithOAuth({
-        // @ts-ignore - Ignore typescript error for yahoo provider
+        // @ts-ignore
         provider,
         options: {
           redirectTo: window.location.origin,
@@ -248,9 +216,7 @@ const Login = () => {
         }
       });
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
     } catch (error: any) {
       console.error(`${provider} login error:`, error);
       toast.error(error.message || `Could not login with ${provider}`);
@@ -258,22 +224,20 @@ const Login = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-[#f0f6ff] flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-4">
-        {/* Email Verification Alert */}
         {showEmailVerificationAlert && (
           <Alert className="border-amber-200 bg-amber-50">
             <Mail className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800">
               {emailVerificationSent ? (
                 <>
-                  <strong>Check your email!</strong> We've sent you a verification link. Please verify your email before logging in.
+                  <strong>{t('login.checkEmail')}</strong> {t('login.checkEmailDesc')}
                 </>
               ) : (
                 <>
-                  <strong>Email verification required.</strong> Please verify your email to access the dashboard.
+                  <strong>{t('login.emailVerificationRequired')}</strong> {t('login.emailVerificationDesc')}
                 </>
               )}
               <Button 
@@ -282,7 +246,7 @@ const Login = () => {
                 className="ml-2 p-0 h-auto text-amber-700 underline"
                 onClick={handleResendVerification}
               >
-                Resend verification email
+                {t('login.resendVerification')}
               </Button>
             </AlertDescription>
           </Alert>
@@ -290,22 +254,20 @@ const Login = () => {
 
         <Card className="w-full">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center text-blue-900">SahiRaah</CardTitle>
-            <CardDescription className="text-center">
-              Sign in to your account or create a new one
-            </CardDescription>
+            <CardTitle className="text-2xl font-bold text-center text-blue-900">{t('login.title')}</CardTitle>
+            <CardDescription className="text-center">{t('login.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Sign Up</TabsTrigger>
+                <TabsTrigger value="login">{t('login.loginTab')}</TabsTrigger>
+                <TabsTrigger value="register">{t('login.signupTab')}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('login.email')}</Label>
                     <Input 
                       id="email" 
                       type="email" 
@@ -318,7 +280,7 @@ const Login = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Password</Label>
+                      <Label htmlFor="password">{t('login.password')}</Label>
                       <button 
                         type="button"
                         onClick={async () => {
@@ -331,14 +293,14 @@ const Login = () => {
                               redirectTo: `${window.location.origin}/login`,
                             });
                             if (error) throw error;
-                            toast.success("Password reset email sent! Check your inbox.");
+                            toast.success(t('login.passwordResetSent'));
                           } catch (err: any) {
                             toast.error(err.message || "Failed to send reset email");
                           }
                         }}
                         className="text-sm text-blue-700 hover:underline"
                       >
-                        Forgot password?
+                        {t('login.forgotPassword')}
                       </button>
                     </div>
                     <Input 
@@ -356,7 +318,7 @@ const Login = () => {
                     className="w-full bg-blue-700 hover:bg-blue-800"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Signing in..." : "Sign In"}
+                    {isLoading ? t('login.signingIn') : t('login.signIn')}
                   </Button>
 
                   <div className="relative my-4">
@@ -364,38 +326,20 @@ const Login = () => {
                       <Separator />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-[#f0f6ff] px-2 text-gray-500">Or continue with</span>
+                      <span className="bg-[#f0f6ff] px-2 text-gray-500">{t('login.orContinueWith')}</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => handleSocialLogin('google')}
-                      disabled={!!socialLoading}
-                    >
+                    <Button type="button" variant="outline" className="flex items-center justify-center gap-2" onClick={() => handleSocialLogin('google')} disabled={!!socialLoading}>
                       <FcGoogle className="h-5 w-5" />
                       {socialLoading === 'google' && <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></span>}
                     </Button>
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => handleSocialLogin('facebook')}
-                      disabled={!!socialLoading}
-                    >
+                    <Button type="button" variant="outline" className="flex items-center justify-center gap-2" onClick={() => handleSocialLogin('facebook')} disabled={!!socialLoading}>
                       <FaFacebook className="h-5 w-5 text-blue-600" />
                       {socialLoading === 'facebook' && <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></span>}
                     </Button>
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => handleSocialLogin('yahoo')}
-                      disabled={!!socialLoading}
-                    >
+                    <Button type="button" variant="outline" className="flex items-center justify-center gap-2" onClick={() => handleSocialLogin('yahoo')} disabled={!!socialLoading}>
                       <FaYahoo className="h-5 w-5 text-purple-600" />
                       {socialLoading === 'yahoo' && <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></span>}
                     </Button>
@@ -406,7 +350,7 @@ const Login = () => {
               <TabsContent value="register">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t('login.email')}</Label>
                     <Input 
                       id="signup-email" 
                       type="email" 
@@ -418,7 +362,7 @@ const Login = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">{t('login.password')}</Label>
                     <Input 
                       id="signup-password" 
                       type="password" 
@@ -429,10 +373,10 @@ const Login = () => {
                       required
                       minLength={6}
                     />
-                    <p className="text-xs text-gray-500">Must be at least 6 characters long</p>
+                    <p className="text-xs text-gray-500">{t('login.passwordMinLength')}</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Label htmlFor="confirm-password">{t('login.confirmPassword')}</Label>
                     <Input 
                       id="confirm-password" 
                       type="password" 
@@ -448,7 +392,7 @@ const Login = () => {
                     className="w-full bg-blue-700 hover:bg-blue-800"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Creating Account..." : "Create Account"}
+                    {isLoading ? t('login.creatingAccount') : t('login.createAccount')}
                   </Button>
 
                   <div className="relative my-4">
@@ -456,55 +400,28 @@ const Login = () => {
                       <Separator />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-[#f0f6ff] px-2 text-gray-500">Or sign up with</span>
+                      <span className="bg-[#f0f6ff] px-2 text-gray-500">{t('login.orSignUpWith')}</span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => handleSocialLogin('google')}
-                      disabled={!!socialLoading}
-                    >
+                    <Button type="button" variant="outline" className="flex items-center justify-center gap-2" onClick={() => handleSocialLogin('google')} disabled={!!socialLoading}>
                       <FcGoogle className="h-5 w-5" />
                       {socialLoading === 'google' && <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></span>}
                     </Button>
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => handleSocialLogin('facebook')}
-                      disabled={!!socialLoading}
-                    >
+                    <Button type="button" variant="outline" className="flex items-center justify-center gap-2" onClick={() => handleSocialLogin('facebook')} disabled={!!socialLoading}>
                       <FaFacebook className="h-5 w-5 text-blue-600" />
                       {socialLoading === 'facebook' && <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></span>}
                     </Button>
-                    <Button 
-                      type="button"
-                      variant="outline"
-                      className="flex items-center justify-center gap-2"
-                      onClick={() => handleSocialLogin('yahoo')}
-                      disabled={!!socialLoading}
-                    >
+                    <Button type="button" variant="outline" className="flex items-center justify-center gap-2" onClick={() => handleSocialLogin('yahoo')} disabled={!!socialLoading}>
                       <FaYahoo className="h-5 w-5 text-purple-600" />
                       {socialLoading === 'yahoo' && <span className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></span>}
                     </Button>
                   </div>
                 </form>
               </TabsContent>
-
             </Tabs>
           </CardContent>
-          <CardFooter className="flex flex-col gap-2 justify-center">
-            <p className="text-sm text-gray-500 text-center">
-              By continuing, you agree to our{' '}
-              <Link to="/terms" className="text-blue-700 hover:underline">Terms</Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="text-blue-700 hover:underline">Privacy Policy</Link>.
-            </p>
-          </CardFooter>
         </Card>
       </div>
     </div>

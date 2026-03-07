@@ -7,6 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -16,6 +17,7 @@ const contactSchema = z.object({
 });
 
 const Contact = () => {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -28,7 +30,6 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      // Validate input data
       const validated = contactSchema.parse({
         name,
         email,
@@ -36,7 +37,6 @@ const Contact = () => {
         message
       });
       
-      // Store contact form submission in Supabase
       const { error } = await supabase.from("contact_messages").insert({
         name: validated.name,
         email: validated.email,
@@ -48,18 +48,16 @@ const Contact = () => {
       if (error) throw error;
       
       toast({
-        title: "Message Sent",
-        description: "Thank you for your message. We'll get back to you soon!",
+        title: t('contact.messageSent'),
+        description: t('contact.messageSentDesc'),
       });
       
-      // Reset form
       setName("");
       setEmail("");
       setSubject("");
       setMessage("");
       
     } catch (error: any) {
-      // Handle validation errors
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
         toast({
@@ -69,8 +67,8 @@ const Contact = () => {
         });
       } else {
         toast({
-          title: "Error",
-          description: "There was a problem sending your message. Please try again later.",
+          title: t('contact.error'),
+          description: t('contact.errorDesc'),
           variant: "destructive",
         });
       }
@@ -83,38 +81,34 @@ const Contact = () => {
     <div className="container mx-auto py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-blue-900 mb-4">Contact Us</h1>
-          <p className="text-lg text-blue-700">
-            Have questions or feedback? We'd love to hear from you.
-          </p>
+          <h1 className="text-3xl font-bold text-blue-900 mb-4">{t('contact.title')}</h1>
+          <p className="text-lg text-blue-700">{t('contact.subtitle')}</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-10">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl text-blue-900">Get in Touch</CardTitle>
-              <CardDescription>
-                Fill out the form and our team will get back to you within 24 hours.
-              </CardDescription>
+              <CardTitle className="text-2xl text-blue-900">{t('contact.getInTouch')}</CardTitle>
+              <CardDescription>{t('contact.formDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <label htmlFor="name" className="font-medium text-gray-700">
-                    Full Name *
+                    {t('contact.fullName')} *
                   </label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
+                    placeholder={t('contact.fullName')}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
                   <label htmlFor="email" className="font-medium text-gray-700">
-                    Email *
+                    {t('contact.email')} *
                   </label>
                   <Input
                     id="email"
@@ -128,25 +122,25 @@ const Contact = () => {
 
                 <div className="space-y-2">
                   <label htmlFor="subject" className="font-medium text-gray-700">
-                    Subject
+                    {t('contact.subject')}
                   </label>
                   <Input
                     id="subject"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    placeholder="How can we help?"
+                    placeholder={t('contact.subjectPlaceholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <label htmlFor="message" className="font-medium text-gray-700">
-                    Message *
+                    {t('contact.message')} *
                   </label>
                   <Textarea
                     id="message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Your message here..."
+                    placeholder={t('contact.messagePlaceholder')}
                     rows={5}
                     required
                   />
@@ -157,7 +151,7 @@ const Contact = () => {
                   className="w-full bg-blue-700 hover:bg-blue-800"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Sending..." : "Send Message"}
+                  {isSubmitting ? t('contact.sending') : t('contact.send')}
                 </Button>
               </form>
             </CardContent>
@@ -165,24 +159,22 @@ const Contact = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl text-blue-900">Contact Information</CardTitle>
-              <CardDescription>
-                Reach out to us through these channels
-              </CardDescription>
+              <CardTitle className="text-2xl text-blue-900">{t('contact.contactInfo')}</CardTitle>
+              <CardDescription>{t('contact.contactInfoDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="font-medium text-blue-800 mb-1">Email</h3>
+                <h3 className="font-medium text-blue-800 mb-1">{t('contact.emailLabel')}</h3>
                 <p className="text-gray-700">support@sahiraah.in</p>
               </div>
               
               <div>
-                <h3 className="font-medium text-blue-800 mb-1">Phone</h3>
+                <h3 className="font-medium text-blue-800 mb-1">{t('contact.phoneLabel')}</h3>
                 <p className="text-gray-700">+91 6361749943</p>
               </div>
 
               <div>
-                <h3 className="font-medium text-blue-800 mb-1">Address</h3>
+                <h3 className="font-medium text-blue-800 mb-1">{t('contact.addressLabel')}</h3>
                 <address className="not-italic text-gray-700">
                   123 Career Avenue<br />
                   Bangalore, Karnataka 560001<br />
@@ -191,8 +183,8 @@ const Contact = () => {
               </div>
 
               <div>
-                <h3 className="font-medium text-blue-800 mb-1">Office Hours</h3>
-                <p className="text-gray-700">Monday - Friday: 9am - 5pm IST</p>
+                <h3 className="font-medium text-blue-800 mb-1">{t('contact.officeHours')}</h3>
+                <p className="text-gray-700">{t('contact.officeHoursValue')}</p>
               </div>
             </CardContent>
           </Card>
