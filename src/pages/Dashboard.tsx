@@ -10,6 +10,7 @@ import CareerGuidanceChatbot from "@/components/CareerGuidanceChatbot";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, MessageSquare, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface User {
   id: string;
@@ -20,6 +21,7 @@ interface User {
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [quizStarted, setQuizStarted] = useState(false);
@@ -30,7 +32,6 @@ const Dashboard = () => {
   const [showChatbot, setShowChatbot] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in with Supabase
     const getSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -46,7 +47,6 @@ const Dashboard = () => {
           return;
         }
         
-        // Fetch user profile
         const { data: profileData } = await supabase
           .from('user_profiles')
           .select('*')
@@ -59,7 +59,6 @@ const Dashboard = () => {
           email: profileData?.email || data.session.user.email || ''
         });
 
-        // Insert profile if it doesn't exist
         if (!profileData) {
           await supabase.from('user_profiles').insert({
             id: data.session.user.id,
@@ -68,7 +67,6 @@ const Dashboard = () => {
           });
         }
 
-        // Check for existing quiz results
         const { data: existingSessions } = await supabase
           .from('user_quiz_sessions')
           .select('id, is_completed, session_completed_at')
@@ -92,7 +90,6 @@ const Dashboard = () => {
 
     getSession();
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         if (event === 'SIGNED_IN' && currentSession) {
@@ -112,15 +109,12 @@ const Dashboard = () => {
     };
   }, [navigate]);
 
-  // Reset quiz state when navigating to dashboard root or when reset state is passed
   useEffect(() => {
     if (location.pathname === '/dashboard' && !location.hash && !location.search) {
-      // Reset if coming from elsewhere or if reset state is passed
       if (location.state?.reset || quizCompleted || quizStarted) {
         setQuizStarted(false);
         setQuizCompleted(false);
         setCompletedSessionId(null);
-        // Clear the state to prevent repeated resets
         if (location.state?.reset) {
           navigate('/dashboard', { replace: true, state: {} });
         }
@@ -133,8 +127,8 @@ const Dashboard = () => {
     setQuizCompleted(false);
     setCompletedSessionId(null);
     toast({
-      title: "Quiz Started",
-      description: "Career Discovery Quiz Started! Answer the questions to get personalized career recommendations."
+      title: t('dashboard.quizStarted'),
+      description: t('dashboard.quizStartedDesc')
     });
   };
 
@@ -144,12 +138,11 @@ const Dashboard = () => {
     setQuizStarted(false);
     setHasExistingResults(true);
     
-    // Scroll to top to show the results
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
     toast({
-      title: "Analysis Complete!",
-      description: "Your personalized career recommendations are ready. Scroll up to view them."
+      title: t('dashboard.analysisCompleteTitle'),
+      description: t('dashboard.analysisCompleteDesc')
     });
   };
 
@@ -169,8 +162,8 @@ const Dashboard = () => {
     const minRequiredAnswers = 5;
     if (answeredCount < minRequiredAnswers) {
       toast({
-        title: "Incomplete Quiz",
-        description: "Please answer all the questions in the quiz for optimal results",
+        title: t('dashboard.incompleteQuiz'),
+        description: t('dashboard.incompleteQuizDesc'),
         variant: "destructive"
       });
     }
@@ -185,7 +178,6 @@ const Dashboard = () => {
       setQuizCompleted(true);
       setQuizStarted(false);
       
-      // Scroll to top to show the results
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -193,7 +185,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-blue-50">
-        <div className="text-blue-900 text-xl">Loading...</div>
+        <div className="text-blue-900 text-xl">{t('dashboard.loading')}</div>
       </div>
     );
   }
@@ -204,13 +196,10 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="bg-white rounded-xl shadow p-6 mb-8">
           <h1 className="text-3xl font-bold text-blue-900 mb-2">
-            Welcome, {user?.name || "Student"}!
+            {t('dashboard.welcome', { name: user?.name || "Student" })}
           </h1>
-          <p className="text-blue-700 text-lg">
-            Let's discover the career path that's perfectly aligned with your interests and strengths.
-          </p>
+          <p className="text-blue-700 text-lg">{t('dashboard.subtitle')}</p>
         </div>
-
 
         {/* Quiz Section */}
         {quizCompleted && completedSessionId ? (
@@ -222,7 +211,7 @@ const Dashboard = () => {
           </>
         ) : quizStarted ? (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-blue-900 mb-6">AI-Powered Career Assessment</h2>
+            <h2 className="text-2xl font-bold text-blue-900 mb-6">{t('dashboard.aiAssessment')}</h2>
             <EnhancedCareerDiscoveryQuiz 
               onComplete={(sessionId) => handleQuizComplete(sessionId)} 
               onEarlyExit={handleQuizEarlyExit}
@@ -232,11 +221,10 @@ const Dashboard = () => {
           <>
             {/* Three-column Career Discovery Cards */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              {/* Begin Your Career Discovery Card */}
               <Card className="bg-white shadow-md flex flex-col h-full">
                 <CardHeader>
-                  <CardTitle className="text-blue-900">Begin Your Career Discovery</CardTitle>
-                  <CardDescription>Take our comprehensive AI-powered assessment to get personalized recommendations</CardDescription>
+                  <CardTitle className="text-blue-900">{t('dashboard.beginDiscovery')}</CardTitle>
+                  <CardDescription>{t('dashboard.beginDiscoveryDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col">
                   <div className="text-center mb-6">
@@ -245,15 +233,13 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="text-center mb-6">
-                    <h4 className="text-lg font-medium text-blue-900 mb-2">Smart Career Assessment</h4>
-                    <p className="text-blue-700">
-                      Take our AI-powered quiz to discover careers that match your unique strengths
-                    </p>
+                    <h4 className="text-lg font-medium text-blue-900 mb-2">{t('dashboard.smartAssessment')}</h4>
+                    <p className="text-blue-700">{t('dashboard.smartAssessmentDesc')}</p>
                   </div>
                   <div className="space-y-2 text-left flex-1">
-                    <p className="text-sm text-blue-700">✓ Adaptive questions based on your interests</p>
-                    <p className="text-sm text-blue-700">✓ Advanced AI analysis of your strengths</p>
-                    <p className="text-sm text-blue-700">✓ Detailed career roadmaps and resources</p>
+                    <p className="text-sm text-blue-700">✓ {t('dashboard.adaptiveQuestions')}</p>
+                    <p className="text-sm text-blue-700">✓ {t('dashboard.advancedAI')}</p>
+                    <p className="text-sm text-blue-700">✓ {t('dashboard.detailedRoadmaps')}</p>
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -261,16 +247,15 @@ const Dashboard = () => {
                      className="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-semibold w-full"
                      onClick={handleStartQuiz}
                    >
-                     Take Career Quiz
+                     {t('dashboard.takeQuiz')}
                    </Button>
                 </CardFooter>
               </Card>
 
-              {/* AI Career Guidance Card */}
               <Card className="bg-white shadow-md flex flex-col h-full">
                 <CardHeader>
-                  <CardTitle className="text-blue-900">Have Plans or Doubts? Ask AI to Clarify</CardTitle>
-                  <CardDescription>Get instant career guidance with AI-powered chat advisor</CardDescription>
+                  <CardTitle className="text-blue-900">{t('dashboard.askAI')}</CardTitle>
+                  <CardDescription>{t('dashboard.askAIDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col">
                   <div className="text-center mb-6">
@@ -279,15 +264,13 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="text-center mb-6">
-                    <h4 className="text-lg font-medium text-blue-900 mb-2">AI Advisor</h4>
-                    <p className="text-blue-700">
-                      Chat with our AI to get personalized guidance on colleges, careers, exams, and more
-                    </p>
+                    <h4 className="text-lg font-medium text-blue-900 mb-2">{t('dashboard.aiAdvisor')}</h4>
+                    <p className="text-blue-700">{t('dashboard.aiAdvisorDesc')}</p>
                   </div>
                   <div className="space-y-2 text-left flex-1">
-                    <p className="text-sm text-blue-700">✓ Ask about career paths and opportunities</p>
-                    <p className="text-sm text-blue-700">✓ Get college and exam recommendations</p>
-                    <p className="text-sm text-blue-700">✓ Clarify doubts about your future plans</p>
+                    <p className="text-sm text-blue-700">✓ {t('dashboard.askCareerPaths')}</p>
+                    <p className="text-sm text-blue-700">✓ {t('dashboard.getCollegeRecs')}</p>
+                    <p className="text-sm text-blue-700">✓ {t('dashboard.clarifyDoubts')}</p>
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -295,17 +278,16 @@ const Dashboard = () => {
                     className="bg-purple-600 hover:bg-purple-700 text-white w-full"
                     onClick={() => setShowChatbot(true)}
                   >
-                    Chat with AI Advisor
+                    {t('dashboard.chatWithAI')}
                   </Button>
                 </CardFooter>
               </Card>
 
-              {/* Your Career Recommendations Card */}
               <Card className="bg-white shadow-md flex flex-col h-full">
                 <CardHeader>
-                  <CardTitle className="text-blue-900">Your Career Recommendations</CardTitle>
+                  <CardTitle className="text-blue-900">{t('dashboard.yourRecommendations')}</CardTitle>
                   <CardDescription>
-                    {hasExistingResults ? "View your personalized career analysis" : "Based on your profile and responses"}
+                    {hasExistingResults ? t('dashboard.viewAnalysis') : t('dashboard.basedOnProfile')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col">
@@ -316,26 +298,26 @@ const Dashboard = () => {
                   </div>
                   <div className="text-center mb-6">
                     <h4 className="text-lg font-medium text-blue-900 mb-2">
-                      {hasExistingResults ? "Analysis Complete" : "No Recommendations Yet"}
+                      {hasExistingResults ? t('dashboard.analysisComplete') : t('dashboard.noRecsYet')}
                     </h4>
                     <p className="text-blue-700">
                       {hasExistingResults 
-                        ? "Your personalized career recommendations are ready to view" 
-                        : "Take the career quiz to get AI-powered personalized recommendations"}
+                        ? t('dashboard.recsReady')
+                        : t('dashboard.takeQuizForRecs')}
                     </p>
                   </div>
                   <div className="space-y-2 text-left flex-1">
                     {hasExistingResults ? (
                       <>
-                        <p className="text-sm text-blue-700">✓ Detailed career path recommendations</p>
-                        <p className="text-sm text-blue-700">✓ Personalized learning roadmap</p>
-                        <p className="text-sm text-blue-700">✓ Skills assessment and growth areas</p>
+                        <p className="text-sm text-blue-700">✓ {t('dashboard.detailedRecs')}</p>
+                        <p className="text-sm text-blue-700">✓ {t('dashboard.personalizedRoadmap')}</p>
+                        <p className="text-sm text-blue-700">✓ {t('dashboard.skillsAssessment')}</p>
                       </>
                     ) : (
                       <>
-                        <p className="text-sm text-blue-700">✓ Discover careers matching your interests</p>
-                        <p className="text-sm text-blue-700">✓ Get customized learning paths</p>
-                        <p className="text-sm text-blue-700">✓ Identify your unique strengths</p>
+                        <p className="text-sm text-blue-700">✓ {t('dashboard.discoverCareers')}</p>
+                        <p className="text-sm text-blue-700">✓ {t('dashboard.customizedPaths')}</p>
+                        <p className="text-sm text-blue-700">✓ {t('dashboard.identifyStrengths')}</p>
                       </>
                     )}
                   </div>
@@ -346,7 +328,7 @@ const Dashboard = () => {
                       className="bg-blue-600 hover:bg-blue-700 text-white w-full"
                       onClick={handleViewLastResults}
                     >
-                      View My Results
+                      {t('dashboard.viewResults')}
                     </Button>
                   ) : (
                     <Button 
@@ -354,22 +336,18 @@ const Dashboard = () => {
                       className="border-blue-900 text-blue-900 hover:bg-blue-900 hover:text-white w-full"
                       onClick={handleStartQuiz}
                     >
-                      Start Discovery Journey
+                      {t('dashboard.startJourney')}
                     </Button>
                   )}
                 </CardFooter>
               </Card>
             </div>
-
           </>
         )}
 
-        {/* Always show Explore Resources section */}
         <ExploreResources />
-        
       </div>
 
-      {/* Fullscreen AI Advisor */}
       {showChatbot && (
         <CareerGuidanceChatbot onClose={() => setShowChatbot(false)} />
       )}

@@ -2,22 +2,20 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useTranslation } from "react-i18next";
 
 const About = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="relative bg-blue-50 py-10">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-blue-900">About SahiRaah</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-blue-900">{t('about.title')}</h1>
           <div className="max-w-3xl">
-            <p className="text-xl text-blue-700 mb-3">
-              In India, many students default to doctor or engineering careers without proper guidance, 
-              often leading to career dissatisfaction and poor matches with their natural talents.
-            </p>
-            <p className="text-xl text-blue-700">
-              SahiRaah helps students discover careers that truly match their interests and strengths.
-            </p>
+            <p className="text-xl text-blue-700 mb-3">{t('about.intro1')}</p>
+            <p className="text-xl text-blue-700">{t('about.intro2')}</p>
           </div>
         </div>
       </div>
@@ -27,18 +25,12 @@ const About = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="md:w-1/2">
-              <h2 className="text-3xl font-bold mb-4 text-blue-900">Our Mission</h2>
-              <p className="text-lg text-blue-700 mb-3">
-                SahiRaah is on a mission to democratize career guidance for Indian students, helping them 
-                discover and pursue pathways aligned with their unique abilities and passions.
-              </p>
-              <p className="text-lg text-blue-700 mb-4">
-                We believe that every student deserves personalized guidance that goes beyond traditional 
-                expectations, cultural pressures, or limited exposure to career options.
-              </p>
+              <h2 className="text-3xl font-bold mb-4 text-blue-900">{t('about.missionTitle')}</h2>
+              <p className="text-lg text-blue-700 mb-3">{t('about.mission1')}</p>
+              <p className="text-lg text-blue-700 mb-4">{t('about.mission2')}</p>
               <Link to="/login">
                 <Button className="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-semibold">
-                  Join SahiRaah Today
+                  {t('about.joinToday')}
                 </Button>
               </Link>
             </div>
@@ -56,31 +48,31 @@ const About = () => {
       {/* How It Works */}
       <div className="py-10 bg-blue-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8 text-blue-900">How SahiRaah Works</h2>
+          <h2 className="text-3xl font-bold text-center mb-8 text-blue-900">{t('about.howItWorks')}</h2>
           
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white p-5 rounded-xl shadow text-center">
               <div className="bg-blue-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-2xl font-bold text-blue-900">1</span>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-blue-800">Answer Questions</h3>
-              <p className="text-blue-700">Complete a thoughtful questionnaire about your interests, skills, values, and learning preferences.</p>
+              <h3 className="text-xl font-bold mb-2 text-blue-800">{t('about.step1Title')}</h3>
+              <p className="text-blue-700">{t('about.step1Desc')}</p>
             </div>
             
             <div className="bg-white p-5 rounded-xl shadow text-center">
               <div className="bg-blue-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-2xl font-bold text-blue-900">2</span>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-blue-800">AI Analysis</h3>
-              <p className="text-blue-700">Our AI processes your responses to identify patterns and match them with suitable career paths.</p>
+              <h3 className="text-xl font-bold mb-2 text-blue-800">{t('about.step2Title')}</h3>
+              <p className="text-blue-700">{t('about.step2Desc')}</p>
             </div>
             
             <div className="bg-white p-5 rounded-xl shadow text-center">
               <div className="bg-blue-100 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3">
                 <span className="text-2xl font-bold text-blue-900">3</span>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-blue-800">Get Recommendations</h3>
-              <p className="text-blue-700">Receive personalized career recommendations, resources, and next steps to explore your optimal paths.</p>
+              <h3 className="text-xl font-bold mb-2 text-blue-800">{t('about.step3Title')}</h3>
+              <p className="text-blue-700">{t('about.step3Desc')}</p>
             </div>
           </div>
         </div>
@@ -89,7 +81,7 @@ const About = () => {
       {/* Team */}
       <div className="py-10 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8 text-blue-900">Our Team</h2>
+          <h2 className="text-3xl font-bold text-center mb-8 text-blue-900">{t('about.teamTitle')}</h2>
           
           <div className="flex flex-wrap justify-center gap-6">
             <div className="bg-blue-50 p-5 rounded-xl shadow text-center w-full md:w-72">

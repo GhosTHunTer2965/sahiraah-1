@@ -3,27 +3,26 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, BookOpen, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const ExploreResources = () => {
+  const { t } = useTranslation();
 
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold text-foreground mb-2">Explore Resources</h2>
-      <p className="text-muted-foreground mb-6">Based on your interests and strengths, here are some career resources:</p>
+      <h2 className="text-2xl font-bold text-foreground mb-2">{t('explore.title')}</h2>
+      <p className="text-muted-foreground mb-6">{t('explore.subtitle')}</p>
       
       <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {/* Courses Section */}
         <Card className="bg-card rounded-xl shadow-md hover:shadow-lg transition-all">
           <CardHeader>
             <div className="flex items-center gap-2">
               <BookOpen className="h-6 w-6 text-primary" />
-              <CardTitle>Skill Development Courses</CardTitle>
+              <CardTitle>{t('explore.skillCourses')}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <CardDescription>
-              Find courses and resources to build skills for your desired career path. Learn from top platforms with free and paid options.
-            </CardDescription>
+            <CardDescription>{t('explore.skillCoursesDesc')}</CardDescription>
           </CardContent>
           <CardFooter>
             <Button 
@@ -32,30 +31,27 @@ const ExploreResources = () => {
               className="w-full flex justify-between"
             >
               <Link to="/courses">
-                Browse Courses
+                {t('explore.browseCourses')}
                 <ArrowRightIcon className="h-4 w-4" />
               </Link>
             </Button>
           </CardFooter>
         </Card>
 
-        {/* Expert Connect Section */}
         <Card className="bg-card rounded-xl shadow-md hover:shadow-lg transition-all">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Users className="h-6 w-6 text-primary" />
-              <CardTitle>Expert Connect</CardTitle>
+              <CardTitle>{t('explore.expertConnect')}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <CardDescription className="mb-4">
-              Connect with mentors and professionals in your field of interest. Book 1-on-1 sessions for personalized career guidance.
-            </CardDescription>
+            <CardDescription className="mb-4">{t('explore.expertConnectDesc')}</CardDescription>
             <div className="text-sm space-y-2">
-              <p>✓ 60-minute personalized sessions</p>
-              <p>✓ Expert career guidance & roadmap</p>
-              <p>✓ Industry insights & mentorship</p>
-              <p className="font-semibold text-primary">Platform fee: ₹199/session</p>
+              <p>✓ {t('explore.sessionDuration')}</p>
+              <p>✓ {t('explore.expertGuidance')}</p>
+              <p>✓ {t('explore.industryInsights')}</p>
+              <p className="font-semibold text-primary">{t('explore.platformFee')}</p>
             </div>
           </CardContent>
           <CardFooter>
@@ -64,7 +60,7 @@ const ExploreResources = () => {
               className="w-full flex justify-between"
             >
               <Link to="/book-expert">
-                Book Expert Session
+                {t('explore.bookExpert')}
                 <ArrowRightIcon className="h-4 w-4" />
               </Link>
             </Button>
