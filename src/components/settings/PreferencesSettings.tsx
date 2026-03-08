@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/toast/use-toast";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
+import { SARVAM_LANGUAGES } from "@/hooks/useSarvamTranslation";
 
 interface PreferencesSettingsProps {
   userId?: string;
