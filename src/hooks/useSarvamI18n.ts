@@ -64,7 +64,7 @@ export function useSarvamI18n() {
   // Enhanced t function
   const st = useCallback((key: string, options?: any): string => {
     if (!needsDynamicTranslation) {
-      return t(key, options);
+      return String(t(key, options));
     }
 
     // Check if we already have a dynamic translation
