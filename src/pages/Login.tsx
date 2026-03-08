@@ -12,7 +12,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaYahoo } from "react-icons/fa";
 import { AlertCircle, CheckCircle, Mail } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useTranslation } from "react-i18next";
+import { useSarvamI18n } from "@/hooks/useSarvamI18n";
 
 // Helper function to clean up auth state
 const cleanupAuthState = () => {
