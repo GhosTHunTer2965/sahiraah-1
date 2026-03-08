@@ -81,7 +81,7 @@ export function useSarvamI18n() {
     }
 
     // Return English fallback while translating
-    return i18n.t(key, { lng: 'english', ...options });
+    return String(i18n.t(key, { lng: 'english', ...options }));
   }, [needsDynamicTranslation, dynamicTranslations, t, i18n, flushPendingTranslations]);
 
   return { st, isTranslating, currentLang, i18n };
