@@ -216,14 +216,11 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="english">English</SelectItem>
-              <SelectItem value="hindi">हिन्दी (Hindi)</SelectItem>
-              <SelectItem value="tamil">தமிழ் (Tamil)</SelectItem>
-              <SelectItem value="telugu">తెలుగు (Telugu)</SelectItem>
-              <SelectItem value="kannada">ಕನ್ನಡ (Kannada)</SelectItem>
-              <SelectItem value="marathi">मराठी (Marathi)</SelectItem>
-              <SelectItem value="bengali">বাংলা (Bengali)</SelectItem>
-              <SelectItem value="gujarati">ગુજરાતી (Gujarati)</SelectItem>
+              {Object.entries(SARVAM_LANGUAGES).map(([key, lang]) => (
+                <SelectItem key={key} value={key}>
+                  {lang.nativeLabel} ({lang.label})
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </CardContent>
