@@ -29,7 +29,7 @@ type ExtendedProvider = 'google' | 'facebook' | 'twitter' | 'apple' | 'github' |
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { st: t } = useSarvamI18n();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

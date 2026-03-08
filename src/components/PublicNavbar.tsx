@@ -10,10 +10,10 @@ import {
 } from "@/components/ui/sheet"
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/components/ui/navigation-menu"
 import { AlignJustify } from "lucide-react"
-import { useTranslation } from "react-i18next";
+import { useSarvamI18n } from "@/hooks/useSarvamI18n";
 
 const PublicNavbar = () => {
-  const { t } = useTranslation();
+  const { st: t } = useSarvamI18n();
 
   return (
     <div className="bg-[#1a1a2e] py-4 border-b border-gray-700">

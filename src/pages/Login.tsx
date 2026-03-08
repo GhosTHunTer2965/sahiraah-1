@@ -32,7 +32,7 @@ const cleanupAuthState = () => {
 type ExtendedProvider = 'google' | 'facebook' | 'twitter' | 'apple' | 'github' | 'gitlab' | 'bitbucket' | 'azure' | 'discord' | 'linkedin' | 'slack' | 'spotify' | 'workos' | 'yahoo';
 
 const Login = () => {
-  const { t } = useTranslation();
+  const { st: t } = useSarvamI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
