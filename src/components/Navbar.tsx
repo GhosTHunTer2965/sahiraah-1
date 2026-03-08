@@ -11,12 +11,12 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from "@/compon
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { AlignJustify } from "lucide-react"
 import LogoutButton from "@/components/LogoutButton";
-import { useTranslation } from "react-i18next";
+import { useSarvamI18n } from "@/hooks/useSarvamI18n";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
+  const { st: t } = useSarvamI18n();
 
   const handleDashboardClick = (e: React.MouseEvent) => {
     e.preventDefault();
