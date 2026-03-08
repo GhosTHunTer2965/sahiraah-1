@@ -348,36 +348,11 @@ const Courses = () => {
 
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {courses.slice(0, 3).map((course, index) => (
+          {courses.map((course, index) => (
             <Card 
               key={index} 
               className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
               onClick={() => setSelectedCourse(index)}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex justify-between">
-                  <CardTitle className="text-[#1d3557]">{course.title}</CardTitle>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    {course.level}
-                  </Badge>
-                </div>
-                <CardDescription>Duration: {course.duration}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-[#1d3557]">{course.description}</p>
-                <div className="mt-2 text-sm text-blue-700">Click to view free learning resources</div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {courses.slice(3).map((course, index) => (
-            <Card 
-              key={index + 3} 
-              className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
-              onClick={() => setSelectedCourse(index + 3)}
             >
               <CardHeader className="pb-2">
                 <div className="flex justify-between">
