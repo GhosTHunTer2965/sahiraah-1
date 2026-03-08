@@ -4,11 +4,9 @@ import { useSarvamTranslation, SARVAM_LANGUAGES } from './useSarvamTranslation';
 
 /**
  * Hook that wraps react-i18next's `t` function with Sarvam AI real-time translation.
- * For the 8 languages with static translations, it uses those.
- * For all other languages (14 additional), it translates on-the-fly via Sarvam AI.
+ * For English, returns static translations.
+ * For all other languages, translates on-the-fly via Sarvam AI.
  */
-
-const STATIC_LANGUAGES = ['english', 'hindi', 'tamil', 'telugu', 'kannada', 'marathi', 'bengali', 'gujarati'];
 
 export function useSarvamI18n() {
   const { t, i18n } = useTranslation();
@@ -18,24 +16,49 @@ export function useSarvamI18n() {
   const currentLang = i18n.language;
   const pendingKeysRef = useRef<Set<string>>(new Set());
   const batchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flushingRef = useRef(false);
+  const langRef = useRef(currentLang);
 
-  const needsDynamicTranslation = !STATIC_LANGUAGES.includes(currentLang) && currentLang !== 'english';
+  const needsDynamicTranslation = currentLang !== 'english';
+
+  // Track language changes
+  useEffect(() => {
+    langRef.current = currentLang;
+  }, [currentLang]);
 
   // Batch translate pending keys
   const flushPendingTranslations = useCallback(async () => {
+    if (flushingRef.current) return;
+    flushingRef.current = true;
+
     const keys = Array.from(pendingKeysRef.current);
     pendingKeysRef.current.clear();
-    if (keys.length === 0) return;
+    if (keys.length === 0) {
+      flushingRef.current = false;
+      return;
+    }
 
     // Get English values for all keys
-    const englishTexts = keys.map(key => i18n.t(key, { lng: 'english' }));
-    const uniqueTexts = [...new Set(englishTexts.filter(t => t))];
+    const englishTexts = keys.map(key => String(i18n.t(key, { lng: 'english' })));
+    
+    // Deduplicate texts while preserving key mapping
+    const uniqueTextsSet = new Set<string>();
+    const uniqueTexts: string[] = [];
+    englishTexts.forEach(text => {
+      if (text && !uniqueTextsSet.has(text)) {
+        uniqueTextsSet.add(text);
+        uniqueTexts.push(text);
+      }
+    });
 
-    if (uniqueTexts.length === 0) return;
+    if (uniqueTexts.length === 0) {
+      flushingRef.current = false;
+      return;
+    }
 
     setIsTranslating(true);
     try {
-      const translations = await translateTexts(uniqueTexts, currentLang);
+      const translations = await translateTexts(uniqueTexts, langRef.current);
       setDynamicTranslations(prev => {
         const next = { ...prev };
         keys.forEach((key, i) => {
@@ -50,16 +73,20 @@ export function useSarvamI18n() {
       console.error('Sarvam batch translation error:', err);
     } finally {
       setIsTranslating(false);
+      flushingRef.current = false;
     }
-  }, [currentLang, translateTexts, i18n]);
+  }, [translateTexts, i18n]);
 
   // Reset dynamic translations when language changes
   useEffect(() => {
-    if (needsDynamicTranslation) {
-      setDynamicTranslations({});
-      pendingKeysRef.current.clear();
+    setDynamicTranslations({});
+    pendingKeysRef.current.clear();
+    flushingRef.current = false;
+    if (batchTimerRef.current) {
+      clearTimeout(batchTimerRef.current);
+      batchTimerRef.current = null;
     }
-  }, [currentLang, needsDynamicTranslation]);
+  }, [currentLang]);
 
   // Enhanced t function
   const st = useCallback((key: string, options?: any): string => {
@@ -77,7 +104,7 @@ export function useSarvamI18n() {
       pendingKeysRef.current.add(key);
       // Debounce batch translation
       if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
-      batchTimerRef.current = setTimeout(flushPendingTranslations, 100);
+      batchTimerRef.current = setTimeout(flushPendingTranslations, 150);
     }
 
     // Return English fallback while translating

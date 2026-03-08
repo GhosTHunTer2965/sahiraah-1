@@ -70,7 +70,8 @@ export function useSarvamTranslation() {
     }
 
     const cached = translationCache[cacheKey];
-    const uncachedTexts = texts.filter(t => !cached[t]);
+    // Filter out entries where cached value equals the original (failed translations)
+    const uncachedTexts = texts.filter(t => !cached[t] || cached[t] === t);
 
     if (uncachedTexts.length === 0) {
       const result: Record<string, string> = {};
