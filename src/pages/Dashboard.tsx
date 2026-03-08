@@ -10,7 +10,7 @@ import CareerGuidanceChatbot from "@/components/CareerGuidanceChatbot";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, MessageSquare, CheckCircle2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useSarvamI18n } from "@/hooks/useSarvamI18n";
 
 interface User {
   id: string;
