@@ -17,7 +17,7 @@ const contactSchema = z.object({
 });
 
 const Contact = () => {
-  const { t } = useTranslation();
+  const { st: t } = useSarvamI18n();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
