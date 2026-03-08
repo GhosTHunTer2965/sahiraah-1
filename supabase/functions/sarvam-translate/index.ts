@@ -5,6 +5,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// Languages supported by mayura:v1 (faster, cheaper)
+const MAYURA_LANGUAGES = new Set([
+  'bn-IN', 'en-IN', 'gu-IN', 'hi-IN', 'kn-IN', 'ml-IN', 'mr-IN', 'od-IN', 'pa-IN', 'ta-IN', 'te-IN'
+]);
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -32,7 +37,11 @@ serve(async (req) => {
       );
     }
 
-    // Translate each text via Sarvam API (batch up to 50 at a time)
+    // Use sarvam-translate:v1 for all 22 languages, mayura:v1 only for its supported subset
+    const model = MAYURA_LANGUAGES.has(targetLanguage) ? 'mayura:v1' : 'sarvam-translate:v1';
+    console.log(`Translating ${texts.length} texts to ${targetLanguage} using model: ${model}`);
+
+    // Translate each text via Sarvam API
     const batchSize = 10;
     const results: string[] = [];
 
@@ -41,29 +50,35 @@ serve(async (req) => {
       const promises = batch.map(async (text: string) => {
         if (!text || text.trim() === '') return text;
 
-        const response = await fetch('https://api.sarvam.ai/translate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'api-subscription-key': SARVAM_API_KEY,
-          },
-          body: JSON.stringify({
-            input: text.slice(0, 2000),
-            source_language_code: sourceLanguage || 'auto',
-            target_language_code: targetLanguage,
-            model: 'mayura:v1',
-            enable_preprocessing: true,
-          }),
-        });
+        try {
+          const response = await fetch('https://api.sarvam.ai/translate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'api-subscription-key': SARVAM_API_KEY,
+            },
+            body: JSON.stringify({
+              input: text.slice(0, 2000),
+              source_language_code: sourceLanguage || 'en-IN',
+              target_language_code: targetLanguage,
+              model: model,
+              enable_preprocessing: true,
+            }),
+          });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Sarvam API error [${response.status}]:`, errorText);
-          return text; // Return original on error
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Sarvam API error [${response.status}] for "${text.slice(0, 50)}":`, errorText);
+            return text;
+          }
+
+          const data = await response.json();
+          console.log(`Translated: "${text.slice(0, 30)}..." -> "${(data.translated_text || '').slice(0, 30)}..."`);
+          return data.translated_text || text;
+        } catch (err) {
+          console.error(`Translation failed for "${text.slice(0, 50)}":`, err);
+          return text;
         }
-
-        const data = await response.json();
-        return data.translated_text || text;
       });
 
       const batchResults = await Promise.all(promises);
