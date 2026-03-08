@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaYahoo } from "react-icons/fa";
-import { useTranslation } from "react-i18next";
+import { useSarvamI18n } from "@/hooks/useSarvamI18n";
 
 const cleanupAuthState = () => {
   localStorage.removeItem('supabase.auth.token');
@@ -29,7 +29,7 @@ type ExtendedProvider = 'google' | 'facebook' | 'twitter' | 'apple' | 'github' |
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { st: t } = useSarvamI18n();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

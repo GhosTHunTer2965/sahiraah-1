@@ -1,10 +1,10 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
+import { useSarvamI18n } from "@/hooks/useSarvamI18n";
 
 const Index = () => {
-  const { t } = useTranslation();
+  const { st: t } = useSarvamI18n();
 
   return (
     <div className="min-h-screen bg-white">

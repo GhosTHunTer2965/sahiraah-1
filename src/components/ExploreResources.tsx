@@ -3,10 +3,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, BookOpen, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useSarvamI18n } from "@/hooks/useSarvamI18n";
 
 const ExploreResources = () => {
-  const { t } = useTranslation();
+  const { st: t } = useSarvamI18n();
 
   return (
     <div className="mt-8">

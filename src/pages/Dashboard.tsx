@@ -10,7 +10,7 @@ import CareerGuidanceChatbot from "@/components/CareerGuidanceChatbot";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, MessageSquare, CheckCircle2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useSarvamI18n } from "@/hooks/useSarvamI18n";
 
 interface User {
   id: string;
@@ -21,7 +21,7 @@ interface User {
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
+  const { st: t } = useSarvamI18n();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [quizStarted, setQuizStarted] = useState(false);
