@@ -4,13 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookIcon, BellIcon, SunIcon, MoonIcon, GlobeIcon, GraduationCapIcon, ShieldIcon, EyeIcon } from "lucide-react";
+import { BookIcon, BellIcon, SunIcon, MoonIcon, GlobeIcon, GraduationCapIcon, ShieldIcon, EyeIcon, GaugeIcon, FilterIcon, TargetIcon, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/toast/use-toast";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
 import { SARVAM_LANGUAGES } from "@/hooks/useSarvamTranslation";
+import { Button } from "@/components/ui/button";
 
 interface PreferencesSettingsProps {
   userId?: string;
