@@ -246,12 +246,12 @@ const WebsiteChatWidget: React.FC = () => {
           ))}
           
           {isLoading && (
-            <div className="text-left mb-4">
-              <div className="inline-block bg-muted p-3 rounded-lg">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="text-left mb-4 animate-fade-in">
+              <div className="inline-block bg-gradient-to-br from-muted to-muted/50 p-3 rounded-lg shadow-sm">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             </div>
