@@ -178,18 +178,23 @@ const WebsiteChatWidget: React.FC = () => {
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 z-50 w-96 h-[600px] shadow-2xl flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+    <Card className="fixed bottom-6 right-6 z-50 w-96 h-[600px] shadow-2xl flex flex-col animate-scale-in overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b bg-gradient-to-r from-primary/5 to-accent/5 backdrop-blur-sm">
         <CardTitle className="text-lg flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          SahiRaah Assistant
+          <div className="relative">
+            <MessageSquare className="h-5 w-5 transition-transform hover:rotate-12" />
+            <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+          </div>
+          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-semibold">
+            SahiRaah Assistant
+          </span>
         </CardTitle>
         <div className="flex gap-1">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsMinimized(true)}
-            className="h-8 w-8"
+            className="h-8 w-8 hover:scale-110 transition-transform"
           >
             <Minimize2 className="h-4 w-4" />
           </Button>
@@ -197,7 +202,7 @@ const WebsiteChatWidget: React.FC = () => {
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="h-8 w-8"
+            className="h-8 w-8 hover:scale-110 transition-transform hover:rotate-90"
           >
             <X className="h-4 w-4" />
           </Button>
