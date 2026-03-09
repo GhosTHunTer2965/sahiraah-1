@@ -79,6 +79,9 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
           setLearningStyle((prefData as any).learning_style ?? "visual");
           setProfileVisibility((prefData as any).profile_visibility ?? "public");
           setDataSharing((prefData as any).data_sharing ?? true);
+          setLearningPace((prefData as any).learning_pace ?? "standard");
+          setContentFilters((prefData as any).content_filters ?? { job_types: [], price_max: null, locations: [] });
+          setLearningGoals((prefData as any).learning_goals ?? { skills: [], certifications: [], courses: [] });
         } else {
           await supabase.from('user_preferences').insert({
             user_id: userId,
