@@ -155,10 +155,11 @@ const WebsiteChatWidget: React.FC = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-110 flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-110 flex items-center justify-center animate-scale-in group"
         aria-label="Open chat"
       >
-        <MessageSquare className="h-6 w-6" />
+        <MessageSquare className="h-6 w-6 transition-transform group-hover:rotate-12 group-hover:scale-110" />
+        <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full animate-pulse" />
       </button>
     );
   }
@@ -167,27 +168,33 @@ const WebsiteChatWidget: React.FC = () => {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all flex items-center gap-2"
+        className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-105 flex items-center gap-2 animate-slide-in-right group"
       >
-        <MessageSquare className="h-5 w-5" />
+        <MessageSquare className="h-5 w-5 transition-transform group-hover:rotate-12" />
         <span className="text-sm font-medium">Chat with us</span>
+        <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
       </button>
     );
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 z-50 w-96 h-[600px] shadow-2xl flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+    <Card className="fixed bottom-6 right-6 z-50 w-96 h-[600px] shadow-2xl flex flex-col animate-scale-in overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b bg-gradient-to-r from-primary/5 to-accent/5 backdrop-blur-sm">
         <CardTitle className="text-lg flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          SahiRaah Assistant
+          <div className="relative">
+            <MessageSquare className="h-5 w-5 transition-transform hover:rotate-12" />
+            <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+          </div>
+          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent font-semibold">
+            SahiRaah Assistant
+          </span>
         </CardTitle>
         <div className="flex gap-1">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsMinimized(true)}
-            className="h-8 w-8"
+            className="h-8 w-8 hover:scale-110 transition-transform"
           >
             <Minimize2 className="h-4 w-4" />
           </Button>
@@ -195,7 +202,7 @@ const WebsiteChatWidget: React.FC = () => {
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="h-8 w-8"
+            className="h-8 w-8 hover:scale-110 transition-transform hover:rotate-90"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -205,10 +212,12 @@ const WebsiteChatWidget: React.FC = () => {
       <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         <ScrollArea className="flex-1 p-4">
           {messages.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm font-medium mb-2">Hi! How can I help you today?</p>
-              <p className="text-xs">
+            <div className="text-center text-muted-foreground py-8 animate-fade-in">
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50 animate-bounce" />
+              <p className="text-sm font-medium mb-2 animate-fade-in" style={{ animationDelay: '200ms' }}>
+                Hi! How can I help you today?
+              </p>
+              <p className="text-xs animate-fade-in" style={{ animationDelay: '400ms' }}>
                 Ask me about our features, how to navigate the site, or anything else!
               </p>
             </div>
@@ -217,13 +226,14 @@ const WebsiteChatWidget: React.FC = () => {
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}
+              className={`mb-4 animate-fade-in ${msg.role === 'user' ? 'text-right' : 'text-left'}`}
+              style={{ animationDelay: `${idx * 50}ms` }}
             >
               <div
-                className={`inline-block max-w-[85%] p-3 rounded-lg ${
+                className={`inline-block max-w-[85%] p-3 rounded-lg transition-all hover:scale-[1.02] ${
                   msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted prose prose-sm max-w-none'
+                    ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md hover:shadow-lg'
+                    : 'bg-gradient-to-br from-muted to-muted/50 prose prose-sm max-w-none shadow-sm hover:shadow-md'
                 }`}
               >
                 {msg.role === 'assistant' ? (
@@ -236,12 +246,12 @@ const WebsiteChatWidget: React.FC = () => {
           ))}
           
           {isLoading && (
-            <div className="text-left mb-4">
-              <div className="inline-block bg-muted p-3 rounded-lg">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="text-left mb-4 animate-fade-in">
+              <div className="inline-block bg-gradient-to-br from-muted to-muted/50 p-3 rounded-lg shadow-sm">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2.5 h-2.5 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             </div>
@@ -250,23 +260,23 @@ const WebsiteChatWidget: React.FC = () => {
           <div ref={messagesEndRef} />
         </ScrollArea>
         
-        <div className="p-4 border-t flex gap-2">
+        <div className="p-4 border-t bg-gradient-to-r from-background to-muted/20 backdrop-blur-sm flex gap-2">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             disabled={isLoading}
-            className="min-h-[60px] max-h-[120px] resize-none"
+            className="min-h-[60px] max-h-[120px] resize-none transition-all focus:scale-[1.01] focus:shadow-md"
             rows={2}
           />
           <Button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
             size="icon"
-            className="h-[60px] w-[60px] flex-shrink-0"
+            className="h-[60px] w-[60px] flex-shrink-0 transition-all hover:scale-105 active:scale-95 bg-gradient-to-br from-primary to-primary/90 hover:from-primary hover:to-primary group"
           >
-            <Send className="h-5 w-5" />
+            <Send className="h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Button>
         </div>
       </CardContent>
