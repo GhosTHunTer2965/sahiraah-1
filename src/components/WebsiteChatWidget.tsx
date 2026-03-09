@@ -168,10 +168,11 @@ const WebsiteChatWidget: React.FC = () => {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all flex items-center gap-2"
+        className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-105 flex items-center gap-2 animate-slide-in-right group"
       >
-        <MessageSquare className="h-5 w-5" />
+        <MessageSquare className="h-5 w-5 transition-transform group-hover:rotate-12" />
         <span className="text-sm font-medium">Chat with us</span>
+        <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
       </button>
     );
   }
