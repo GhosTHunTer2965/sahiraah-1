@@ -4,13 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookIcon, BellIcon, SunIcon, MoonIcon, GlobeIcon, GraduationCapIcon, ShieldIcon, EyeIcon } from "lucide-react";
+import { BookIcon, BellIcon, SunIcon, MoonIcon, GlobeIcon, GraduationCapIcon, ShieldIcon, EyeIcon, GaugeIcon, FilterIcon, TargetIcon, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/toast/use-toast";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
 import { SARVAM_LANGUAGES } from "@/hooks/useSarvamTranslation";
+import { Button } from "@/components/ui/button";
 
 interface PreferencesSettingsProps {
   userId?: string;
@@ -28,6 +30,10 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
   const [learningStyle, setLearningStyle] = useState("visual");
   const [profileVisibility, setProfileVisibility] = useState("public");
   const [dataSharing, setDataSharing] = useState(true);
+  const [learningPace, setLearningPace] = useState("standard");
+  const [contentFilters, setContentFilters] = useState<any>({ job_types: [], price_max: null, locations: [] });
+  const [learningGoals, setLearningGoals] = useState<any>({ skills: [], certifications: [], courses: [] });
+  const [newGoalInput, setNewGoalInput] = useState({ skills: "", certifications: "", courses: "" });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -73,6 +79,9 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
           setLearningStyle((prefData as any).learning_style ?? "visual");
           setProfileVisibility((prefData as any).profile_visibility ?? "public");
           setDataSharing((prefData as any).data_sharing ?? true);
+          setLearningPace((prefData as any).learning_pace ?? "standard");
+          setContentFilters((prefData as any).content_filters ?? { job_types: [], price_max: null, locations: [] });
+          setLearningGoals((prefData as any).learning_goals ?? { skills: [], certifications: [], courses: [] });
         } else {
           await supabase.from('user_preferences').insert({
             user_id: userId,
@@ -136,6 +145,27 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
       if (field === "theme") setAppTheme(prev);
       if (field === "language_preference") i18n.changeLanguage(prev);
     }
+  };
+
+  const handleContentFiltersUpdate = async (newFilters: any) => {
+    setContentFilters(newFilters);
+    await updatePreference("content_filters", newFilters);
+  };
+
+  const addGoalItem = async (category: 'skills' | 'certifications' | 'courses') => {
+    const value = newGoalInput[category].trim();
+    if (!value) return;
+    
+    const updated = { ...learningGoals, [category]: [...learningGoals[category], value] };
+    setLearningGoals(updated);
+    setNewGoalInput({ ...newGoalInput, [category]: "" });
+    await updatePreference("learning_goals", updated);
+  };
+
+  const removeGoalItem = async (category: 'skills' | 'certifications' | 'courses', index: number) => {
+    const updated = { ...learningGoals, [category]: learningGoals[category].filter((_: any, i: number) => i !== index) };
+    setLearningGoals(updated);
+    await updatePreference("learning_goals", updated);
   };
 
   if (loading) {
@@ -275,6 +305,110 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
               checked={appNotifications}
               onCheckedChange={(c) => handleToggle("app_notifications", c, setAppNotifications)}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Learning Pace */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <GaugeIcon className="h-5 w-5 text-primary" />
+            Learning Pace
+          </CardTitle>
+          <CardDescription>Choose how quickly you want to progress through your learning journey.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select value={learningPace} onValueChange={(v) => handleSelect("learning_pace", v, setLearningPace, learningPace)}>
+            <SelectTrigger className="w-full max-w-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fast-track">⚡ Fast-track — Intensive, complete quickly</SelectItem>
+              <SelectItem value="standard">🎯 Standard — Balanced pace</SelectItem>
+              <SelectItem value="flexible">🌊 Flexible — Learn at your own pace</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {/* Content Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FilterIcon className="h-5 w-5 text-primary" />
+            Content Filters
+          </CardTitle>
+          <CardDescription>Customize what content you see based on your preferences.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="price-max">Maximum Course Price (₹)</Label>
+            <Input
+              id="price-max"
+              type="number"
+              placeholder="e.g., 5000"
+              value={contentFilters.price_max || ""}
+              onChange={(e) => handleContentFiltersUpdate({ ...contentFilters, price_max: e.target.value ? parseInt(e.target.value) : null })}
+              className="max-w-xs mt-2"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Only show courses within this price range</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Learning Goals */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TargetIcon className="h-5 w-5 text-primary" />
+            Learning Goals
+          </CardTitle>
+          <CardDescription>Track the skills and certifications you want to achieve.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Skills to Acquire */}
+          <div>
+            <Label className="text-sm font-semibold">Skills to Acquire</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                placeholder="e.g., Python, Data Analysis"
+                value={newGoalInput.skills}
+                onChange={(e) => setNewGoalInput({ ...newGoalInput, skills: e.target.value })}
+                onKeyPress={(e) => e.key === 'Enter' && addGoalItem('skills')}
+              />
+              <Button onClick={() => addGoalItem('skills')} size="sm">Add</Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-3">
+              {learningGoals.skills.map((skill: string, i: number) => (
+                <Badge key={i} variant="secondary" className="flex items-center gap-1">
+                  {skill}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeGoalItem('skills', i)} />
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Certifications to Earn */}
+          <div>
+            <Label className="text-sm font-semibold">Certifications to Earn</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                placeholder="e.g., AWS Certified, Google Analytics"
+                value={newGoalInput.certifications}
+                onChange={(e) => setNewGoalInput({ ...newGoalInput, certifications: e.target.value })}
+                onKeyPress={(e) => e.key === 'Enter' && addGoalItem('certifications')}
+              />
+              <Button onClick={() => addGoalItem('certifications')} size="sm">Add</Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-3">
+              {learningGoals.certifications.map((cert: string, i: number) => (
+                <Badge key={i} variant="secondary" className="flex items-center gap-1">
+                  {cert}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeGoalItem('certifications', i)} />
+                </Badge>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
