@@ -43,6 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </main>
       <Footer />
+      {!hideChatWidget && <WebsiteChatWidget />}
     </div>
   );
 };
