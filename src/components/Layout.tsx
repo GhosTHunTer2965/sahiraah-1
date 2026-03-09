@@ -17,6 +17,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const alwaysPublicRoutes = ['/login', '/signup'];
   const isAlwaysPublic = alwaysPublicRoutes.includes(location.pathname);
+  
+  // Hide chat widget on expert pages, login, and signup
+  const hideChatWidget = location.pathname.startsWith('/expert') || 
+                         location.pathname === '/login' || 
+                         location.pathname === '/signup';
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
