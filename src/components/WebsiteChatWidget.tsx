@@ -155,10 +155,11 @@ const WebsiteChatWidget: React.FC = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-110 flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-110 flex items-center justify-center animate-scale-in group"
         aria-label="Open chat"
       >
-        <MessageSquare className="h-6 w-6" />
+        <MessageSquare className="h-6 w-6 transition-transform group-hover:rotate-12 group-hover:scale-110" />
+        <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full animate-pulse" />
       </button>
     );
   }
