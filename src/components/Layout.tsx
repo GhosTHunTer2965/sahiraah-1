@@ -5,6 +5,7 @@ import Navbar from './Navbar';
 import PublicNavbar from './PublicNavbar';
 import Footer from './Footer';
 import ScrollToTop from './ScrollToTop';
+import WebsiteChatWidget from './WebsiteChatWidget';
 import { supabase } from '@/integrations/supabase/client';
 
 interface LayoutProps {
@@ -16,6 +17,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const alwaysPublicRoutes = ['/login', '/signup'];
   const isAlwaysPublic = alwaysPublicRoutes.includes(location.pathname);
+  
+  // Hide chat widget on expert pages, login, and signup
+  const hideChatWidget = location.pathname.startsWith('/expert') || 
+                         location.pathname === '/login' || 
+                         location.pathname === '/signup';
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -37,6 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {children}
       </main>
       <Footer />
+      {!hideChatWidget && <WebsiteChatWidget />}
     </div>
   );
 };
