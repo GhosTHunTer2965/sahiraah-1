@@ -27,7 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const showPublicNavbar = isAlwaysPublic || isAuthenticated === false;
+  const showPublicNavbar = isAlwaysPublic || isAuthenticated !== true;
 
   return (
     <div className="flex flex-col min-h-screen">
