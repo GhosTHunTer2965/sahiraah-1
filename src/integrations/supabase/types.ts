@@ -1437,11 +1437,14 @@ export type Database = {
       user_preferences: {
         Row: {
           app_notifications: boolean | null
+          content_filters: Json | null
           created_at: string
           data_sharing: boolean
           email_notifications: boolean | null
           id: string
           language_preference: string
+          learning_goals: Json | null
+          learning_pace: string | null
           learning_style: string
           profile_visibility: string
           theme: string
@@ -1450,11 +1453,14 @@ export type Database = {
         }
         Insert: {
           app_notifications?: boolean | null
+          content_filters?: Json | null
           created_at?: string
           data_sharing?: boolean
           email_notifications?: boolean | null
           id?: string
           language_preference?: string
+          learning_goals?: Json | null
+          learning_pace?: string | null
           learning_style?: string
           profile_visibility?: string
           theme?: string
@@ -1463,11 +1469,14 @@ export type Database = {
         }
         Update: {
           app_notifications?: boolean | null
+          content_filters?: Json | null
           created_at?: string
           data_sharing?: boolean
           email_notifications?: boolean | null
           id?: string
           language_preference?: string
+          learning_goals?: Json | null
+          learning_pace?: string | null
           learning_style?: string
           profile_visibility?: string
           theme?: string
