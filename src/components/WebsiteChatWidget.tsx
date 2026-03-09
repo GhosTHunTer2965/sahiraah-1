@@ -212,10 +212,12 @@ const WebsiteChatWidget: React.FC = () => {
       <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         <ScrollArea className="flex-1 p-4">
           {messages.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-sm font-medium mb-2">Hi! How can I help you today?</p>
-              <p className="text-xs">
+            <div className="text-center text-muted-foreground py-8 animate-fade-in">
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50 animate-bounce" />
+              <p className="text-sm font-medium mb-2 animate-fade-in" style={{ animationDelay: '200ms' }}>
+                Hi! How can I help you today?
+              </p>
+              <p className="text-xs animate-fade-in" style={{ animationDelay: '400ms' }}>
                 Ask me about our features, how to navigate the site, or anything else!
               </p>
             </div>
