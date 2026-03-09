@@ -5,6 +5,7 @@ import Navbar from './Navbar';
 import PublicNavbar from './PublicNavbar';
 import Footer from './Footer';
 import ScrollToTop from './ScrollToTop';
+import WebsiteChatWidget from './WebsiteChatWidget';
 import { supabase } from '@/integrations/supabase/client';
 
 interface LayoutProps {
