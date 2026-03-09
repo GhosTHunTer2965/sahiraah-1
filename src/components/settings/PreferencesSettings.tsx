@@ -30,6 +30,10 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
   const [learningStyle, setLearningStyle] = useState("visual");
   const [profileVisibility, setProfileVisibility] = useState("public");
   const [dataSharing, setDataSharing] = useState(true);
+  const [learningPace, setLearningPace] = useState("standard");
+  const [contentFilters, setContentFilters] = useState<any>({ job_types: [], price_max: null, locations: [] });
+  const [learningGoals, setLearningGoals] = useState<any>({ skills: [], certifications: [], courses: [] });
+  const [newGoalInput, setNewGoalInput] = useState({ skills: "", certifications: "", courses: "" });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
