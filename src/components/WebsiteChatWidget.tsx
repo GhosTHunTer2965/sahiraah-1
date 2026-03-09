@@ -226,13 +226,14 @@ const WebsiteChatWidget: React.FC = () => {
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`mb-4 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}
+              className={`mb-4 animate-fade-in ${msg.role === 'user' ? 'text-right' : 'text-left'}`}
+              style={{ animationDelay: `${idx * 50}ms` }}
             >
               <div
-                className={`inline-block max-w-[85%] p-3 rounded-lg ${
+                className={`inline-block max-w-[85%] p-3 rounded-lg transition-all hover:scale-[1.02] ${
                   msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted prose prose-sm max-w-none'
+                    ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md hover:shadow-lg'
+                    : 'bg-gradient-to-br from-muted to-muted/50 prose prose-sm max-w-none shadow-sm hover:shadow-md'
                 }`}
               >
                 {msg.role === 'assistant' ? (
