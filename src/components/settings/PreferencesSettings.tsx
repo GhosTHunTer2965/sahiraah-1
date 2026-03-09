@@ -147,6 +147,27 @@ export const PreferencesSettings = ({ userId }: PreferencesSettingsProps) => {
     }
   };
 
+  const handleContentFiltersUpdate = async (newFilters: any) => {
+    setContentFilters(newFilters);
+    await updatePreference("content_filters", newFilters);
+  };
+
+  const addGoalItem = async (category: 'skills' | 'certifications' | 'courses') => {
+    const value = newGoalInput[category].trim();
+    if (!value) return;
+    
+    const updated = { ...learningGoals, [category]: [...learningGoals[category], value] };
+    setLearningGoals(updated);
+    setNewGoalInput({ ...newGoalInput, [category]: "" });
+    await updatePreference("learning_goals", updated);
+  };
+
+  const removeGoalItem = async (category: 'skills' | 'certifications' | 'courses', index: number) => {
+    const updated = { ...learningGoals, [category]: learningGoals[category].filter((_: any, i: number) => i !== index) };
+    setLearningGoals(updated);
+    await updatePreference("learning_goals", updated);
+  };
+
   if (loading) {
     return (
       <Card>
