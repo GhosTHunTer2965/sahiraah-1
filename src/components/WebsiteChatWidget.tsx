@@ -260,23 +260,23 @@ const WebsiteChatWidget: React.FC = () => {
           <div ref={messagesEndRef} />
         </ScrollArea>
         
-        <div className="p-4 border-t flex gap-2">
+        <div className="p-4 border-t bg-gradient-to-r from-background to-muted/20 backdrop-blur-sm flex gap-2">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
             disabled={isLoading}
-            className="min-h-[60px] max-h-[120px] resize-none"
+            className="min-h-[60px] max-h-[120px] resize-none transition-all focus:scale-[1.01] focus:shadow-md"
             rows={2}
           />
           <Button
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
             size="icon"
-            className="h-[60px] w-[60px] flex-shrink-0"
+            className="h-[60px] w-[60px] flex-shrink-0 transition-all hover:scale-105 active:scale-95 bg-gradient-to-br from-primary to-primary/90 hover:from-primary hover:to-primary group"
           >
-            <Send className="h-5 w-5" />
+            <Send className="h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Button>
         </div>
       </CardContent>
