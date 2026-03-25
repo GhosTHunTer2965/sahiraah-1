@@ -599,9 +599,11 @@ const CareerQuiz = ({ userId, onComplete }: QuizProps) => {
               className="space-y-4"
             >
               {question.options?.map((option) => (
-                <div key={option} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 border border-gray-200 hover:border-blue-300 transition-all">
-                  <RadioGroupItem value={option} id={option} className="text-blue-600" />
-                  <Label htmlFor={option} className="text-blue-800 font-medium cursor-pointer flex-1">{option}</Label>
+                <div key={option} className="flex items-center rounded-lg hover:bg-blue-50 border border-gray-200 hover:border-blue-300 transition-all relative">
+                  <Label htmlFor={option} className="flex items-center space-x-3 p-3 w-full cursor-pointer">
+                    <RadioGroupItem value={option} id={option} className="text-blue-600" />
+                    <span className="text-blue-800 font-medium flex-1">{option}</span>
+                  </Label>
                 </div>
               ))}
             </RadioGroup>

@@ -16,7 +16,10 @@ const paymentSchema = z.object({
   hourlyRate: z.union([
     z.number().positive().max(100000),
     z.string().regex(/^\d+(\.\d+)?$/).transform(val => parseFloat(val))
-  ])
+  ]),
+  sessionDate: z.string().datetime().optional(),
+  notes: z.string().max(500).optional(),
+  meetingLink: z.string().url().optional()
 });
 
 serve(async (req) => {
@@ -62,7 +65,7 @@ serve(async (req) => {
       );
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, expertId, hourlyRate } = validationResult.data;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, expertId, hourlyRate, sessionDate, notes, meetingLink } = validationResult.data;
 
     // Verify Razorpay signature
     const razorpayKeySecret = Deno.env.get("RAZORPAY_KEY_SECRET") || "";
@@ -97,18 +100,22 @@ serve(async (req) => {
     console.log("Payment verified successfully");
 
     // Create booking record
-    const { error: bookingError } = await supabaseClient
+    const { data: sessionData, error: bookingError } = await supabaseClient
       .from("expert_sessions")
       .insert({
         user_id: user.id,
         expert_id: expertId,
-        session_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        session_date: sessionDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         duration_minutes: 60,
         amount_paid: typeof hourlyRate === 'number' ? hourlyRate : parseFloat(String(hourlyRate)),
         payment_status: "completed",
         session_status: "scheduled",
         stripe_session_id: razorpay_payment_id,
-      });
+        notes: notes || null,
+        meeting_link: meetingLink || null
+      })
+      .select('id')
+      .single();
 
     if (bookingError) {
       console.error("Error creating booking:", bookingError);
@@ -121,7 +128,7 @@ serve(async (req) => {
     console.log("Booking created successfully for user:", user.id);
 
     return new Response(
-      JSON.stringify({ success: true, verified: true }),
+      JSON.stringify({ success: true, verified: true, sessionId: sessionData?.id }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

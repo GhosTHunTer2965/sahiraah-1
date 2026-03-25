@@ -132,22 +132,22 @@ const CareerRecommendations = ({ userAnswers, onRetake }: CareerRecommendationsP
           beginner: {
             resources: [
               { title: "HTML, CSS & JavaScript Fundamentals", link: "https://www.freecodecamp.org/learn/responsive-web-design/", platform: "FreeCodeCamp", estimatedTime: "4-6 weeks" },
-              { title: "Python Programming for Beginners", link: "https://www.youtube.com/watch?v=rfscVS0vtbw", platform: "YouTube", estimatedTime: "6-8 weeks" },
-              { title: "Git & GitHub Tutorial", link: "https://www.youtube.com/watch?v=RGOj5yH7evk", platform: "YouTube", estimatedTime: "2-3 weeks" }
+              { title: "CS50's Introduction to Python", link: "https://cs50.harvard.edu/python/", platform: "Harvard CS50", estimatedTime: "6-8 weeks" },
+              { title: "Git & GitHub Tutorial", link: "https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/GitHub", platform: "MDN Web Docs", estimatedTime: "2-3 weeks" }
             ]
           },
           intermediate: {
             resources: [
-              { title: "React.js Complete Course", link: "https://www.youtube.com/watch?v=bMknfKXIFA8", platform: "YouTube", estimatedTime: "8-12 weeks" },
-              { title: "Node.js & Express.js Tutorial", link: "https://www.youtube.com/watch?v=Oe421EPjeBE", platform: "YouTube", estimatedTime: "6-10 weeks" },
+              { title: "React.js Official Docs", link: "https://react.dev/learn", platform: "React Docs", estimatedTime: "8-12 weeks" },
+              { title: "Node.js API Development", link: "https://www.freecodecamp.org/learn/back-end-development-and-apis/", platform: "FreeCodeCamp", estimatedTime: "6-10 weeks" },
               { title: "Database Design & SQL", link: "https://www.khanacademy.org/computing/computer-programming/sql", platform: "Khan Academy", estimatedTime: "4-6 weeks" }
             ]
           },
           advanced: {
             resources: [
-              { title: "System Design Interview Prep", link: "https://www.youtube.com/watch?v=ZgdS0EUmn70", platform: "YouTube", estimatedTime: "12-16 weeks" },
-              { title: "Cloud Computing with AWS", link: "https://aws.amazon.com/training/awsacademy/", platform: "AWS Academy", estimatedTime: "16-20 weeks" },
-              { title: "Advanced React Patterns", link: "https://www.youtube.com/watch?v=cF2lQ_gZeA8", platform: "YouTube", estimatedTime: "8-12 weeks" }
+              { title: "System Design Essentials", link: "https://bytebytego.com/", platform: "ByteByteGo", estimatedTime: "12-16 weeks" },
+              { title: "Cloud Computing with AWS", link: "https://explore.skillbuilder.aws/learn/course/external/view/elearning/134/aws-cloud-practitioner-essentials", platform: "AWS Skill Builder", estimatedTime: "16-20 weeks" },
+              { title: "Advanced React Architecture", link: "https://react.dev/reference/react", platform: "React Docs", estimatedTime: "8-12 weeks" }
             ]
           }
         },
@@ -178,20 +178,20 @@ const CareerRecommendations = ({ userAnswers, onRetake }: CareerRecommendationsP
           beginner: {
             resources: [
               { title: "Design Thinking Fundamentals", link: "https://www.coursera.org/learn/uva-darden-design-thinking-fundamentals", platform: "Coursera", estimatedTime: "4-6 weeks" },
-              { title: "Figma Tutorial for Beginners", link: "https://www.youtube.com/watch?v=FTFaQWZBqQ8", platform: "YouTube", estimatedTime: "2-3 weeks" },
-              { title: "Introduction to UX Design", link: "https://www.coursera.org/learn/user-experience-design", platform: "Coursera", estimatedTime: "6-8 weeks" }
+              { title: "Figma UI Design Tutorial", link: "https://www.youtube.com/watch?v=jwMmCTEEnqw", platform: "FreeCodeCamp", estimatedTime: "2-3 weeks" },
+              { title: "Google UX Design Certificate HQ", link: "https://grow.google/certificates/ux-design/", platform: "Google", estimatedTime: "6-8 weeks" }
             ]
           },
           intermediate: {
             resources: [
-              { title: "Advanced Figma Techniques", link: "https://www.youtube.com/watch?v=RYDiDpW2VkM", platform: "YouTube", estimatedTime: "8-12 weeks" },
+              { title: "Figma Official Docs", link: "https://help.figma.com/hc/en-us/categories/360002042553-Figma-design", platform: "Figma", estimatedTime: "8-12 weeks" },
               { title: "User Research Methods", link: "https://www.nngroup.com/articles/which-ux-research-methods/", platform: "Nielsen Norman Group", estimatedTime: "6-10 weeks" },
-              { title: "Prototyping with Principle", link: "https://www.youtube.com/watch?v=15muvKI2rJ8", platform: "YouTube", estimatedTime: "4-6 weeks" }
+              { title: "Prototyping Principles", link: "https://help.figma.com/hc/en-us/sections/360006764514-Prototyping", platform: "Figma", estimatedTime: "4-6 weeks" }
             ]
           },
           advanced: {
             resources: [
-              { title: "Design Systems Masterclass", link: "https://www.youtube.com/watch?v=wc5krSHtFP4", platform: "YouTube", estimatedTime: "12-16 weeks" },
+              { title: "Design Systems 101", link: "https://www.nngroup.com/articles/design-systems-101/", platform: "Nielsen Norman Group", estimatedTime: "12-16 weeks" },
               { title: "Advanced UX Strategy", link: "https://www.nngroup.com/courses/ux-strategy/", platform: "Nielsen Norman Group", estimatedTime: "16-20 weeks" },
               { title: "Design Leadership & Management", link: "https://www.designbetter.co/design-leadership-handbook", platform: "InVision", estimatedTime: "8-12 weeks" }
             ]
@@ -224,22 +224,22 @@ const CareerRecommendations = ({ userAnswers, onRetake }: CareerRecommendationsP
           beginner: {
             resources: [
               { title: "Statistics for Data Science", link: "https://www.khanacademy.org/math/statistics-probability", platform: "Khan Academy", estimatedTime: "4-6 weeks" },
-              { title: "Python for Data Science", link: "https://www.youtube.com/watch?v=LHBE6Q9XlzI", platform: "YouTube", estimatedTime: "6-8 weeks" },
+              { title: "Data Analysis with Python", link: "https://www.freecodecamp.org/learn/data-analysis-with-python/", platform: "FreeCodeCamp", estimatedTime: "6-8 weeks" },
               { title: "Introduction to SQL", link: "https://www.w3schools.com/sql/", platform: "W3Schools", estimatedTime: "2-3 weeks" }
             ]
           },
           intermediate: {
             resources: [
-              { title: "Machine Learning Course", link: "https://www.coursera.org/learn/machine-learning", platform: "Coursera", estimatedTime: "8-12 weeks" },
-              { title: "Data Visualization with Python", link: "https://www.youtube.com/watch?v=UO98lJQ3QGI", platform: "YouTube", estimatedTime: "6-10 weeks" },
-              { title: "Pandas & NumPy Tutorial", link: "https://www.youtube.com/watch?v=vmEHCJofslg", platform: "YouTube", estimatedTime: "4-6 weeks" }
+              { title: "Intro to Machine Learning", link: "https://www.kaggle.com/learn/intro-to-machine-learning", platform: "Kaggle", estimatedTime: "8-12 weeks" },
+              { title: "Data Visualization with Python", link: "https://www.kaggle.com/learn/data-visualization", platform: "Kaggle", estimatedTime: "6-10 weeks" },
+              { title: "Pandas & NumPy Tutorial", link: "https://www.kaggle.com/learn/pandas", platform: "Kaggle", estimatedTime: "4-6 weeks" }
             ]
           },
           advanced: {
             resources: [
-              { title: "Deep Learning Specialization", link: "https://www.coursera.org/specializations/deep-learning", platform: "Coursera", estimatedTime: "12-16 weeks" },
-              { title: "Advanced SQL for Data Science", link: "https://www.youtube.com/watch?v=M-55BmjOuXY", platform: "YouTube", estimatedTime: "16-20 weeks" },
-              { title: "MLOps and Model Deployment", link: "https://www.youtube.com/watch?v=NMtlGyimjWw", platform: "YouTube", estimatedTime: "8-12 weeks" }
+              { title: "Practical Deep Learning for Coders", link: "https://course.fast.ai/", platform: "Fast.ai", estimatedTime: "12-16 weeks" },
+              { title: "Advanced SQL for Data Science", link: "https://www.kaggle.com/learn/advanced-sql", platform: "Kaggle", estimatedTime: "16-20 weeks" },
+              { title: "MLOps and Model Deployment", link: "https://ml-ops.org/", platform: "MLOps.org", estimatedTime: "8-12 weeks" }
             ]
           }
         },
@@ -270,22 +270,22 @@ const CareerRecommendations = ({ userAnswers, onRetake }: CareerRecommendationsP
           beginner: {
             resources: [
               { title: "Product Management Fundamentals", link: "https://www.coursera.org/learn/product-management-fundamentals", platform: "Coursera", estimatedTime: "4-6 weeks" },
-              { title: "Introduction to Market Research", link: "https://www.youtube.com/watch?v=NQsKD7E3_UY", platform: "YouTube", estimatedTime: "2-3 weeks" },
-              { title: "Agile and Scrum Basics", link: "https://www.youtube.com/watch?v=9TycLR0TqFA", platform: "YouTube", estimatedTime: "6-8 weeks" }
+              { title: "Introduction to Market Research", link: "https://academy.hubspot.com/courses/market-research", platform: "Hubspot Academy", estimatedTime: "2-3 weeks" },
+              { title: "Agile and Scrum Basics", link: "https://www.atlassian.com/agile", platform: "Atlassian Agile Coach", estimatedTime: "6-8 weeks" }
             ]
           },
           intermediate: {
             resources: [
-              { title: "Advanced Product Strategy", link: "https://www.youtube.com/watch?v=9KHLTZaJcR8", platform: "YouTube", estimatedTime: "8-12 weeks" },
-              { title: "User Story Writing Workshop", link: "https://www.youtube.com/watch?v=0HMsh459h5c", platform: "YouTube", estimatedTime: "6-10 weeks" },
-              { title: "Product Analytics Deep Dive", link: "https://www.youtube.com/watch?v=UXZozNWQLJM", platform: "YouTube", estimatedTime: "4-6 weeks" }
+              { title: "Advanced Product Strategy", link: "https://www.svpg.com/articles/", platform: "SVPG Insights", estimatedTime: "8-12 weeks" },
+              { title: "User Story Writing Workshop", link: "https://www.atlassian.com/agile/project-management/user-stories", platform: "Atlassian", estimatedTime: "6-10 weeks" },
+              { title: "Product Analytics Deep Dive", link: "https://mixpanel.com/blog/product-analytics/", platform: "Mixpanel Basics", estimatedTime: "4-6 weeks" }
             ]
           },
           advanced: {
             resources: [
-              { title: "Product Leadership Masterclass", link: "https://www.youtube.com/watch?v=hvdhBHBzXpM", platform: "YouTube", estimatedTime: "12-16 weeks" },
-              { title: "Strategic Product Planning", link: "https://www.youtube.com/watch?v=jK-ZgqDlZt4", platform: "YouTube", estimatedTime: "16-20 weeks" },
-              { title: "Growth Product Management", link: "https://www.youtube.com/watch?v=Q5JE2cgMbCk", platform: "YouTube", estimatedTime: "8-12 weeks" }
+              { title: "Product Leadership Masterclass", link: "https://www.svpg.com/the-product-leaders-guide/", platform: "SVPG", estimatedTime: "12-16 weeks" },
+              { title: "Strategic Product Planning", link: "https://www.atlassian.com/agile/project-management/product-planning", platform: "Atlassian", estimatedTime: "16-20 weeks" },
+              { title: "Growth Product Management", link: "https://www.reforge.com/growth-series", platform: "Reforge HQ", estimatedTime: "8-12 weeks" }
             ]
           }
         },
@@ -313,23 +313,23 @@ const CareerRecommendations = ({ userAnswers, onRetake }: CareerRecommendationsP
         roadmap: {
           beginner: {
             resources: [
-              { title: "Digital Marketing Fundamentals", link: "https://www.coursera.org/learn/digital-marketing", platform: "Coursera", estimatedTime: "4-6 weeks" },
+              { title: "Digital Marketing Fundamentals", link: "https://skillshop.exceedlms.com/student/catalog/list?category_ids=53-google-ads", platform: "Google Skillshop", estimatedTime: "4-6 weeks" },
               { title: "Google Analytics Beginner Course", link: "https://analytics.google.com/analytics/academy/", platform: "Google Analytics Academy", estimatedTime: "2-3 weeks" },
-              { title: "Content Marketing Basics", link: "https://www.youtube.com/watch?v=BWE3pH7mZrM", platform: "YouTube", estimatedTime: "6-8 weeks" }
+              { title: "Content Marketing Basics", link: "https://academy.hubspot.com/courses/content-marketing", platform: "HubSpot Academy", estimatedTime: "6-8 weeks" }
             ]
           },
           intermediate: {
             resources: [
-              { title: "Advanced SEO Techniques", link: "https://www.youtube.com/watch?v=OU-9Z_mLm3k", platform: "YouTube", estimatedTime: "8-12 weeks" },
-              { title: "Facebook Ads Mastery", link: "https://www.facebook.com/business/learn", platform: "Facebook Blueprint", estimatedTime: "6-10 weeks" },
-              { title: "Email Marketing Strategy", link: "https://www.youtube.com/watch?v=7nRQJjBCWl8", platform: "YouTube", estimatedTime: "4-6 weeks" }
+              { title: "Advanced SEO Techniques", link: "https://moz.com/learn/seo", platform: "Moz Academy", estimatedTime: "8-12 weeks" },
+              { title: "Facebook Ads Mastery", link: "https://www.facebook.com/business/learn", platform: "Meta Blueprint", estimatedTime: "6-10 weeks" },
+              { title: "Email Marketing Strategy", link: "https://academy.hubspot.com/courses/email-marketing", platform: "HubSpot Academy", estimatedTime: "4-6 weeks" }
             ]
           },
           advanced: {
             resources: [
-              { title: "Marketing Automation", link: "https://www.youtube.com/watch?v=DM4s3lkW8mI", platform: "YouTube", estimatedTime: "12-16 weeks" },
-              { title: "Growth Hacking Strategies", link: "https://www.youtube.com/watch?v=J8YPwDW9Ixo", platform: "YouTube", estimatedTime: "16-20 weeks" },
-              { title: "Advanced Analytics & Attribution", link: "https://www.youtube.com/watch?v=xjOpNurPpNk", platform: "YouTube", estimatedTime: "8-12 weeks" }
+              { title: "Marketing Automation", link: "https://academy.hubspot.com/courses/marketing-automation", platform: "HubSpot Academy", estimatedTime: "12-16 weeks" },
+              { title: "Growth Hacking Strategies", link: "https://cxl.com/institute/programs/growth-marketing-training/", platform: "CXL Institute", estimatedTime: "16-20 weeks" },
+              { title: "Advanced Analytics & Attribution", link: "https://analytics.google.com/analytics/academy/course/7", platform: "Google Academy", estimatedTime: "8-12 weeks" }
             ]
           }
         },

@@ -78,101 +78,37 @@ const ExpertBooking = () => {
 
       setIsBooking(true);
 
-      // Create Razorpay order
-      const { data, error } = await supabase.functions.invoke('create-expert-session-payment', {
-        body: {
-          expertId: selectedExpert.id,
-          expertName: selectedExpert.name,
-          hourlyRate: selectedExpert.hourly_rate,
-        },
-      });
+      // Bypass Razorpay: generate default session meeting link
+      const generatedMeetingLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}`;
+      const sessionDateTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // Default to tomorrow
 
-      if (error) throw error;
-
-      // Load Razorpay script if not already loaded
-      if (!(window as any).Razorpay) {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        document.body.appendChild(script);
-        
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
+      const { error: bookingError } = await supabase
+        .from('expert_sessions')
+        .insert({
+          user_id: user.id,
+          expert_id: selectedExpert.id,
+          session_date: sessionDateTime.toISOString(),
+          duration_minutes: 60,
+          amount_paid: selectedExpert.hourly_rate,
+          payment_status: 'completed',
+          session_status: 'scheduled',
+          meeting_link: generatedMeetingLink
         });
-      }
 
-      // Configure Razorpay options for fullscreen redirect mode
-      const options = {
-        key: data.keyId,
-        amount: data.amount,
-        currency: data.currency,
-        name: 'Expert Career Guidance',
-        description: `Session with ${data.expertName}`,
-        order_id: data.orderId,
-        redirect: true,
-        prefill: {
-          email: data.userEmail,
-        },
-        handler: async function (response: any) {
-          try {
-            setRazorpayOpen(false);
-            const { error: verifyError } = await supabase.functions.invoke('verify-expert-payment', {
-              body: {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                expertId: selectedExpert.id,
-                hourlyRate: selectedExpert.hourly_rate,
-              },
-            });
+      if (bookingError) throw bookingError;
 
-            if (verifyError) throw verifyError;
-
-            setBookingSuccess(true);
-            toast.success('Payment successful! Your session has been booked.');
-            setSelectedExpert(null);
-            
-            setTimeout(() => {
-              setBookingSuccess(false);
-            }, 5000);
-          } catch (err) {
-            console.error('Payment verification error:', err);
-            toast.error('Payment received but booking failed. Please contact support.');
-          }
-        },
-        modal: {
-          ondismiss: function () {
-            setRazorpayOpen(false);
-            setIsBooking(false);
-            toast.error('Payment was cancelled');
-          },
-          escape: true,
-          backdropclose: true,
-        },
-        theme: {
-          color: '#3b82f6',
-        },
-      };
-
-      // Close dialog before opening Razorpay to prevent modal conflicts
-      setRazorpayOpen(true);
-      // Unmount dialog immediately to remove any overlays/focus traps
+      setBookingSuccess(true);
+      toast.success('Session booked successfully!');
       setSelectedExpert(null);
-      // Ensure no element retains focus or pointer event blocks
-      (document.activeElement as HTMLElement | null)?.blur?.();
-      document.body.style.pointerEvents = 'auto';
-      
-      // Wait for dialog to fully close before opening Razorpay (handles exit animations)
+      setIsBooking(false);
+
       setTimeout(() => {
-        requestAnimationFrame(() => {
-          const razorpay = new (window as any).Razorpay(options);
-          razorpay.open();
-        });
-      }, 400);
+        setBookingSuccess(false);
+      }, 5000);
+
     } catch (error) {
-      console.error('Error initiating payment:', error);
-      toast.error('Failed to initiate payment. Please try again.');
+      console.error('Error booking session:', error);
+      toast.error('Booking failed. Please try again.');
       setIsBooking(false);
     }
   };

@@ -10,6 +10,13 @@ import { Separator } from "@/components/ui/separator";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaYahoo } from "react-icons/fa";
 import { useSarvamI18n } from "@/hooks/useSarvamI18n";
+import { z } from "zod";
+
+const signupSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name is too long"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 const cleanupAuthState = () => {
   localStorage.removeItem('supabase.auth.token');
@@ -42,6 +49,13 @@ const Signup = () => {
     
     if (password !== confirmPassword) {
       toast.error("Passwords don't match.");
+      return;
+    }
+
+    try {
+      signupSchema.parse({ name, email, password });
+    } catch (e: any) {
+      toast.error(e.errors[0].message);
       return;
     }
 

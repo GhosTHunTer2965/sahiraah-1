@@ -59,6 +59,7 @@ const BookExpertSession = () => {
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [razorpayOpen, setRazorpayOpen] = useState(false);
   const [bookedSessionId, setBookedSessionId] = useState<string | null>(null);
   const [step, setStep] = useState<'expert' | 'details' | 'confirm'>('expert');
 
@@ -304,7 +305,9 @@ const BookExpertSession = () => {
       const sessionDateTime = new Date(selectedDate);
       sessionDateTime.setHours(parseInt(hours), 0, 0, 0);
 
-      // Create booking directly without payment (Razorpay disabled)
+      // Bypass Razorpay: generate meeting link and create booking directly
+      const generatedMeetingLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}`;
+
       const { data: sessionData, error: bookingError } = await supabase
         .from('expert_sessions')
         .insert({
@@ -313,22 +316,48 @@ const BookExpertSession = () => {
           session_date: sessionDateTime.toISOString(),
           duration_minutes: 60,
           amount_paid: selectedExpert.hourly_rate,
-          payment_status: 'pending', // Payment disabled
+          payment_status: 'completed',
           session_status: 'scheduled',
           notes: notes || null,
+          meeting_link: generatedMeetingLink
         })
         .select('id')
         .single();
 
       if (bookingError) throw bookingError;
 
-      setBookedSessionId(sessionData?.id || null);
+      // Extract expert user_id to send them a notification
+      const { data: expertData } = await supabase
+        .from('experts')
+        .select('user_id')
+        .eq('id', selectedExpert.id)
+        .single();
+
+      // Trigger Notification for the Student
+      await (supabase as any).from('notifications').insert({
+        user_id: user.id,
+        title: 'Session Booked Successfully! 🎉',
+        message: `Your session with ${selectedExpert.name} on ${format(selectedDate, 'PPP')} at ${availableTimeSlots.find(s => s.id === selectedTimeSlot)?.time} is confirmed!`,
+        link: `/video-meeting/${sessionData.id}`,
+      });
+
+      // Trigger Notification for the Expert
+      if (expertData?.user_id) {
+        await (supabase as any).from('notifications').insert({
+          user_id: expertData.user_id,
+          title: 'New Session Booked! 📅',
+          message: `${name} just booked a session with you on ${format(selectedDate, 'PPP')} at ${availableTimeSlots.find(s => s.id === selectedTimeSlot)?.time}.`,
+        });
+      }
+
+      setBookedSessionId(sessionData.id);
       setBookingSuccess(true);
       setIsBooking(false);
       toast.success('Session booked successfully!');
+
     } catch (error) {
       console.error('Error booking session:', error);
-      toast.error('Failed to book session. Please try again.');
+      toast.error('Booking failed. Please try again.');
       setIsBooking(false);
     }
   };

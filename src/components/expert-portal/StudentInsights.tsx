@@ -108,7 +108,6 @@ const StudentInsights = ({ expertId }: StudentInsightsProps) => {
       {/* Header with Search */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-white">Student Insights</h2>
           <p className="text-gray-400 text-sm">{students.length} student{students.length !== 1 ? 's' : ''} • View profiles and session history</p>
         </div>
         <div className="relative w-full sm:w-64">
@@ -122,9 +121,9 @@ const StudentInsights = ({ expertId }: StudentInsightsProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Students List */}
-        <div className="lg:col-span-1 rounded-xl bg-[#12121a] border border-[#1e1e2e] overflow-hidden">
+        <div className="md:col-span-1 rounded-xl bg-[#12121a] border border-[#1e1e2e] overflow-hidden">
           <div className="p-4 border-b border-[#1e1e2e]">
             <h3 className="font-medium text-white">Your Students ({filteredStudents.length})</h3>
           </div>
@@ -164,7 +163,7 @@ const StudentInsights = ({ expertId }: StudentInsightsProps) => {
         </div>
 
         {/* Student Details */}
-        <div className="lg:col-span-2">
+        <div className="md:col-span-2">
           {selectedStudent ? (
             <div className="space-y-6">
               {/* Student Header */}

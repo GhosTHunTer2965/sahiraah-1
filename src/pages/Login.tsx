@@ -13,6 +13,17 @@ import { FaFacebook, FaYahoo } from "react-icons/fa";
 import { AlertCircle, CheckCircle, Mail } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSarvamI18n } from "@/hooks/useSarvamI18n";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+const signupSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 // Helper function to clean up auth state
 const cleanupAuthState = () => {
@@ -80,6 +91,13 @@ const Login = () => {
     }
     
     try {
+      loginSchema.parse({ email, password });
+    } catch (e: any) {
+      toast.error(e.errors[0].message);
+      return;
+    }
+
+    try {
       setIsLoading(true);
       cleanupAuthState();
       
@@ -141,6 +159,13 @@ const Login = () => {
       return;
     }
     
+    try {
+      signupSchema.parse({ email: signupEmail, password: signupPassword });
+    } catch (e: any) {
+      toast.error(e.errors[0].message);
+      return;
+    }
+
     try {
       setIsLoading(true);
       cleanupAuthState();

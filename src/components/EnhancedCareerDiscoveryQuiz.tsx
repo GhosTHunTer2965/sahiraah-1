@@ -398,10 +398,10 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
               className="space-y-3"
             >
               {currentQuestion.options?.map((option, index) => (
-                <div key={index} className="flex items-center space-x-3 p-4 rounded-lg border border-border hover:bg-accent hover:border-primary transition-all cursor-pointer">
-                  <RadioGroupItem value={option} id={`option-${index}`} />
-                  <Label htmlFor={`option-${index}`} className="cursor-pointer flex-1">
-                    {option}
+                <div key={index} className="flex items-center rounded-lg border border-border hover:bg-accent hover:border-primary transition-all relative">
+                  <Label htmlFor={`option-${index}`} className="flex items-center space-x-3 p-4 w-full cursor-pointer">
+                    <RadioGroupItem value={option} id={`option-${index}`} />
+                    <span className="flex-1">{option}</span>
                   </Label>
                 </div>
               ))}

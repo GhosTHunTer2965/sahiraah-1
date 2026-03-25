@@ -14,17 +14,6 @@ export const SARVAM_LANGUAGES: Record<string, { code: string; label: string; nat
   malayalam: { code: 'ml-IN', label: 'Malayalam', nativeLabel: 'മലയാളം' },
   punjabi: { code: 'pa-IN', label: 'Punjabi', nativeLabel: 'ਪੰਜਾਬੀ' },
   odia: { code: 'od-IN', label: 'Odia', nativeLabel: 'ଓଡ଼ିଆ' },
-  assamese: { code: 'as-IN', label: 'Assamese', nativeLabel: 'অসমীয়া' },
-  maithili: { code: 'mai-IN', label: 'Maithili', nativeLabel: 'मैथिली' },
-  santali: { code: 'sat-IN', label: 'Santali', nativeLabel: 'ᱥᱟᱱᱛᱟᱲᱤ' },
-  kashmiri: { code: 'ks-IN', label: 'Kashmiri', nativeLabel: 'कॉशुर' },
-  nepali: { code: 'ne-IN', label: 'Nepali', nativeLabel: 'नेपाली' },
-  konkani: { code: 'kok-IN', label: 'Konkani', nativeLabel: 'कोंकणी' },
-  sindhi: { code: 'sd-IN', label: 'Sindhi', nativeLabel: 'سنڌي' },
-  dogri: { code: 'doi-IN', label: 'Dogri', nativeLabel: 'डोगरी' },
-  manipuri: { code: 'mni-IN', label: 'Manipuri', nativeLabel: 'মৈতৈলোন্' },
-  bodo: { code: 'brx-IN', label: 'Bodo', nativeLabel: 'बड़ो' },
-  urdu: { code: 'ur-IN', label: 'Urdu', nativeLabel: 'اردو' },
 };
 
 // In-memory cache for translations

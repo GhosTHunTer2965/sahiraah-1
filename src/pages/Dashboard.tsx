@@ -7,6 +7,7 @@ import EnhancedCareerDiscoveryQuiz from "@/components/EnhancedCareerDiscoveryQui
 import GeminiCareerReport from "@/components/GeminiCareerReport";
 import ExploreResources from "@/components/ExploreResources";
 import CareerGuidanceChatbot from "@/components/CareerGuidanceChatbot";
+import MyExpertBookings from "@/components/MyExpertBookings";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, MessageSquare, CheckCircle2 } from "lucide-react";
@@ -137,6 +138,7 @@ const Dashboard = () => {
     setQuizCompleted(true);
     setQuizStarted(false);
     setHasExistingResults(true);
+    setLastSessionId(sessionId); // Track the new session id immediately 
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
@@ -344,6 +346,12 @@ const Dashboard = () => {
             </div>
           </>
         )}
+
+        {/* User Session History Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-blue-900 mb-6">{t('dashboard.yourSessions', { defaultValue: 'Your Expert Sessions' })}</h2>
+          <MyExpertBookings />
+        </div>
 
         <ExploreResources />
       </div>

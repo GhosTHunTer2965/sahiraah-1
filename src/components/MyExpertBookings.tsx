@@ -2,7 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Video, User, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, Video, User, RefreshCw, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +37,7 @@ interface Booking {
 const MyExpertBookings = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -133,6 +146,31 @@ const MyExpertBookings = () => {
     return new Date(date) > new Date();
   };
 
+  const handleClearHistory = async () => {
+    try {
+      setIsClearing(true);
+      const pastSessionIds = pastBookings.map(b => b.id);
+      
+      if (pastSessionIds.length === 0) return;
+
+      const { error } = await supabase
+        .from('expert_sessions')
+        .delete()
+        .in('id', pastSessionIds);
+
+      if (error) throw error;
+      
+      toast.success('Session history cleared successfully');
+      // The real-time subscription will trigger a reload, but we can do it optimistically
+      setBookings(prev => prev.filter(b => !pastSessionIds.includes(b.id)));
+    } catch (error) {
+      console.error('Error clearing history:', error);
+      toast.error('Failed to clear session history');
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   const upcomingBookings = bookings.filter(b => isUpcoming(b.session_date) && b.session_status !== 'cancelled');
   const pastBookings = bookings.filter(b => !isUpcoming(b.session_date) || b.session_status === 'cancelled');
 
@@ -237,14 +275,36 @@ const MyExpertBookings = () => {
       {/* Past Sessions */}
       {pastBookings.length > 0 && (
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-muted-foreground" />
               Past Sessions
-              <Badge variant="outline" className="ml-auto">
+              <Badge variant="outline" className="ml-2">
                 {pastBookings.length}
               </Badge>
             </CardTitle>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive h-8 px-2" disabled={isClearing}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear History
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete your past session history. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearHistory} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                    {isClearing ? 'Clearing...' : 'Clear History'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardHeader>
           <CardContent className="space-y-3">
             {pastBookings.map((booking) => (

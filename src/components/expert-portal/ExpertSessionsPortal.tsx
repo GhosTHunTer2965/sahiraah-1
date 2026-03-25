@@ -301,7 +301,7 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      {session.session_status === 'scheduled' && !isPast && (
+                      {session.session_status === 'scheduled' && (
                         <>
                           {session.meeting_link && (
                             <Button
@@ -332,7 +332,7 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                             onClick={() => updateSessionStatus(session.id, 'completed')}
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
-                            Complete
+                            {isPast ? 'Mark Complete' : 'Complete'}
                           </Button>
                           <Button
                             size="sm"
@@ -344,17 +344,6 @@ const ExpertSessionsPortal = ({ expertId }: ExpertSessionsPortalProps) => {
                             Cancel
                           </Button>
                         </>
-                      )}
-                      {session.session_status === 'scheduled' && isPast && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20"
-                          onClick={() => updateSessionStatus(session.id, 'completed')}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Mark Complete
-                        </Button>
                       )}
                       {/* Notes button for all sessions */}
                       <Button

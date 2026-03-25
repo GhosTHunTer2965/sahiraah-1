@@ -12,6 +12,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 import { AlignJustify } from "lucide-react"
 import LogoutButton from "@/components/LogoutButton";
 import { useSarvamI18n } from "@/hooks/useSarvamI18n";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -49,6 +50,9 @@ const Navbar = () => {
               <Link to="/settings">{t('nav.settings')}</Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
+              <NotificationBell />
+            </NavigationMenuItem>
+            <NavigationMenuItem>
               <LogoutButton />
             </NavigationMenuItem>
           </NavigationMenuList>
@@ -70,6 +74,9 @@ const Navbar = () => {
               <Link to="/about">{t('nav.about')}</Link>
               <Link to="/contact">{t('nav.contact')}</Link>
               <Link to="/settings">{t('nav.settings')}</Link>
+              <div className="py-2">
+                <NotificationBell />
+              </div>
               <LogoutButton />
             </div>
           </SheetContent>

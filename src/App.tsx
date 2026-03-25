@@ -32,8 +32,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
 // Auth protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+const ProtectedRoute = ({ 
+  children, 
+  requireUser = true 
+}: { 
+  children: React.ReactNode,
+  requireUser?: boolean
+}) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isExpert, setIsExpert] = useState<boolean>(false);
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -42,20 +50,32 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         const { data } = await supabase.auth.getSession();
         
         if (data.session) {
+          // Check if user has expert role
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.session.user.id)
+            .eq('role', 'expert')
+            .maybeSingle();
+
+          setIsExpert(!!roleData);
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
+          setIsExpert(false);
         }
       } catch (error) {
         console.error("Authentication check error:", error);
         setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
       }
     };
     
     checkAuth();
   }, []);
   
-  if (isAuthenticated === null) {
+  if (isLoading) {
     // Still checking auth status
     return <div className="min-h-screen flex items-center justify-center bg-blue-50">Loading...</div>;
   }
@@ -64,8 +84,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     // Not authenticated, redirect to login
     return <Navigate to="/login" replace />;
   }
+
+  // If the route strictly requires a normal user, but the user is an expert, redirect them to expert-dashboard
+  if (requireUser && isExpert) {
+    return <Navigate to="/expert-dashboard" replace />;
+  }
   
-  // Authenticated, render children
+  // Authenticated and passed role checks, render children
   return <>{children}</>;
 };
 
@@ -155,7 +180,7 @@ const App = () => {
             <Route
               path="/video-meeting/:sessionId"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireUser={false}>
                   <VideoMeeting />
                 </ProtectedRoute>
               }

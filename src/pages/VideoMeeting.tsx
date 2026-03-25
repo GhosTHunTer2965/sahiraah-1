@@ -29,6 +29,7 @@ const VideoMeeting = () => {
   const [loading, setLoading] = useState(true);
   const [meetingStarted, setMeetingStarted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isExpert, setIsExpert] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -47,6 +48,17 @@ const VideoMeeting = () => {
         return;
       }
 
+      // Check user role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'expert')
+        .maybeSingle();
+        
+      const userIsExpert = !!roleData;
+      setIsExpert(userIsExpert);
+
       const { data, error } = await supabase
         .from('expert_sessions')
         .select(`
@@ -63,8 +75,7 @@ const VideoMeeting = () => {
           )
         `)
         .eq('id', sessionId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle(); // Removed .eq('user_id', user.id) because it blocks experts from viewing!
 
       if (error) throw error;
 
@@ -100,6 +111,9 @@ const VideoMeeting = () => {
 
   // Jitsi Meet public instance - allows any room name
   const getMeetingUrl = () => {
+    if (session?.meeting_link) {
+      return session.meeting_link; // Use the provided unique link if available
+    }
     const roomName = getRoomName();
     return `https://meet.jit.si/${roomName}`;
   };
@@ -110,14 +124,18 @@ const VideoMeeting = () => {
       return;
     }
     setMeetingStarted(true);
-    toast.success('Meeting started! Share this page with your expert.');
+    toast.success('Meeting started!');
   };
 
   const endMeeting = () => {
     setMeetingStarted(false);
     setIsFullscreen(false);
-    // Navigate to feedback page
-    navigate(`/session-feedback/${sessionId}`);
+    // Navigate based on role: Experts go to portal, Students go to dashboard
+    if (isExpert) {
+        navigate('/expert-dashboard');
+    } else {
+        navigate('/dashboard');
+    }
   };
 
   const toggleFullscreen = () => {
@@ -150,7 +168,7 @@ const VideoMeeting = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/dashboard')} className="w-full">
+            <Button onClick={() => navigate(isExpert ? '/expert-dashboard' : '/dashboard')} className="w-full">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Dashboard
             </Button>
@@ -182,7 +200,7 @@ const VideoMeeting = () => {
         </div>
         <iframe
           ref={iframeRef}
-          src={getMeetingUrl()}
+           src={getMeetingUrl()}
           allow="camera; microphone; fullscreen; display-capture; autoplay"
           className="w-full h-full border-0"
         />
@@ -195,7 +213,7 @@ const VideoMeeting = () => {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <Button
           variant="ghost"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate(isExpert ? '/expert-dashboard' : '/dashboard')}
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Mail, Briefcase, IndianRupee, Save, Camera, Eye, EyeOff, X, Plus } from 'lucide-react';
+import { User, Mail, Briefcase, IndianRupee, Save, Camera, Eye, EyeOff, X, Plus, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from 'sonner';
 
 interface ExpertData {
@@ -33,12 +44,13 @@ const ExpertProfilePortal = ({ expertId }: ExpertProfilePortalProps) => {
     title: '',
     bio: '',
     email: '',
-    hourly_rate: 0,
+    hourly_rate: 0 as number | string,
     is_available: true,
   });
   const [expertiseTags, setExpertiseTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [sessionStats, setSessionStats] = useState({ total: 0, completed: 0, students: 0 });
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     loadExpert();
@@ -114,7 +126,7 @@ const ExpertProfilePortal = ({ expertId }: ExpertProfilePortalProps) => {
           title: formData.title,
           bio: formData.bio,
           email: formData.email,
-          hourly_rate: formData.hourly_rate,
+          hourly_rate: formData.hourly_rate === '' ? 0 : Number(formData.hourly_rate),
           expertise: expertiseTags,
           is_available: formData.is_available,
         })
@@ -149,6 +161,31 @@ const ExpertProfilePortal = ({ expertId }: ExpertProfilePortalProps) => {
       console.error('Error toggling availability:', error);
       setFormData({ ...formData, is_available: !newValue });
       toast.error('Failed to update availability');
+    }
+  };
+
+  const handleResetData = async () => {
+    setIsResetting(true);
+    try {
+      // First, delete related chat sessions if needed
+      // Delete all sessions for this expert
+      const { error: sessionError } = await supabase
+        .from('expert_sessions')
+        .delete()
+        .eq('expert_id', expertId);
+
+      if (sessionError) throw sessionError;
+
+      toast.success('Dashboard data has been reset successfully');
+      // Reload stats to reflect empty state
+      loadStats();
+      // Optionally trigger reload of overview components by refreshing the page or lifting state
+      // For now, reloadStats updates the profile view. The overview tab will reload when mounted.
+    } catch (error: any) {
+      console.error('Error resetting dashboard data:', error);
+      toast.error('Failed to reset dashboard data. You may have active sessions.');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -270,7 +307,7 @@ const ExpertProfilePortal = ({ expertId }: ExpertProfilePortalProps) => {
             <Input
               type="number"
               value={formData.hourly_rate}
-              onChange={(e) => setFormData({ ...formData, hourly_rate: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value === '' ? '' : Number(e.target.value) })}
               className="bg-[#1e1e2e] border-[#2e2e3e] text-white"
               placeholder="1000"
             />
@@ -340,6 +377,46 @@ const ExpertProfilePortal = ({ expertId }: ExpertProfilePortalProps) => {
             </>
           )}
         </Button>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="rounded-xl bg-red-950/20 border border-red-900/50 p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-red-500 flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5" />
+          Danger Zone
+        </h3>
+        <p className="text-sm text-gray-400">
+          Resetting your dashboard data will permanently delete all your session history and earnings history. This action cannot be undone. Scheduled sessions will also be cancelled and removed.
+        </p>
+        
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="destructive"
+              className="w-full sm:w-auto mt-4"
+              disabled={isResetting}
+            >
+              {isResetting ? 'Resetting...' : 'Reset Dashboard History'}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="bg-[#12121a] border-[#2e2e3e] text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-500">Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-400">
+                This action cannot be undone. This will permanently delete all your scheduled and completed sessions, as well as your earnings history.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-[#1e1e2e] border-[#2e2e3e] hover:bg-[#2e2e3e] hover:text-white">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleResetData}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Yes, delete all history
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

@@ -11,12 +11,12 @@ import {
   IndianRupee,
   ChevronLeft,
   ChevronRight,
-  Bell,
   User,
   GraduationCap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface ExpertLayoutProps {
   children: React.ReactNode;
@@ -122,10 +122,7 @@ const ExpertLayout = ({ children, expertName, activeTab, onTabChange }: ExpertLa
               <p className="text-sm text-gray-500">Welcome back, {expertName}</p>
             </div>
             <div className="flex items-center gap-4">
-              <button className="relative p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#1e1e2e] transition-colors">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-violet-500 rounded-full"></span>
-              </button>
+              <NotificationBell />
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>

@@ -31,7 +31,7 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
     title: '',
     bio: '',
     expertise: '',
-    hourly_rate: 199,
+    hourly_rate: 199 as number | string,
   });
 
   useEffect(() => {
@@ -81,7 +81,7 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
           title: formData.title,
           bio: formData.bio,
           expertise: expertiseArray,
-          hourly_rate: formData.hourly_rate,
+          hourly_rate: formData.hourly_rate === '' ? 0 : Number(formData.hourly_rate),
         })
         .eq('id', expertId);
 
@@ -192,7 +192,7 @@ const ExpertProfile = ({ expertId }: ExpertProfileProps) => {
                 id="rate"
                 type="number"
                 value={formData.hourly_rate}
-                onChange={(e) => setFormData({ ...formData, hourly_rate: parseInt(e.target.value) || 0 })}
+                onChange={(e) => setFormData({ ...formData, hourly_rate: e.target.value === '' ? '' : Number(e.target.value) })}
                 className="pl-10"
                 min={0}
               />
