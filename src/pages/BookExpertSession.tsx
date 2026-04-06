@@ -305,8 +305,8 @@ const BookExpertSession = () => {
       const sessionDateTime = new Date(selectedDate);
       sessionDateTime.setHours(parseInt(hours), 0, 0, 0);
 
-      // Bypass Razorpay: generate meeting link and create booking directly
-      const generatedMeetingLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}`;
+      // Generate a unique Jitsi meeting link for the session
+      const generatedMeetingLink = `https://meet.jit.si/CareerGuidance-${Math.random().toString(36).substring(2, 10)}-${Date.now()}`;
 
       const { data: sessionData, error: bookingError } = await supabase
         .from('expert_sessions')

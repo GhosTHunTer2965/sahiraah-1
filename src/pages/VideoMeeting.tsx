@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Video, ArrowLeft, PhoneOff, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, Video, ArrowLeft, PhoneOff, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -28,9 +28,7 @@ const VideoMeeting = () => {
   const [session, setSession] = useState<SessionDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [meetingStarted, setMeetingStarted] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isExpert, setIsExpert] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (sessionId) {
@@ -123,23 +121,20 @@ const VideoMeeting = () => {
       toast.error('Session details not loaded');
       return;
     }
+    
     setMeetingStarted(true);
-    toast.success('Meeting started!');
+    window.open(getMeetingUrl(), '_blank');
+    toast.success('Meeting launched in a new tab!');
   };
 
   const endMeeting = () => {
     setMeetingStarted(false);
-    setIsFullscreen(false);
     // Navigate based on role: Experts go to portal, Students go to dashboard
     if (isExpert) {
         navigate('/expert-dashboard');
     } else {
         navigate('/dashboard');
     }
-  };
-
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
   };
 
   const openInNewTab = () => {
@@ -180,33 +175,6 @@ const VideoMeeting = () => {
 
   const sessionDate = new Date(session.session_date);
 
-  // Fullscreen meeting view
-  if (meetingStarted && isFullscreen) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background">
-        <div className="absolute top-4 right-4 z-10 flex gap-2">
-          <Button variant="outline" size="sm" onClick={toggleFullscreen}>
-            <Minimize2 className="h-4 w-4 mr-2" />
-            Exit Fullscreen
-          </Button>
-          <Button variant="outline" size="sm" onClick={openInNewTab}>
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Open in Tab
-          </Button>
-          <Button variant="destructive" size="sm" onClick={endMeeting}>
-            <PhoneOff className="h-4 w-4 mr-2" />
-            End Meeting
-          </Button>
-        </div>
-        <iframe
-          ref={iframeRef}
-           src={getMeetingUrl()}
-          allow="camera; microphone; fullscreen; display-capture; autoplay"
-          className="w-full h-full border-0"
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -288,18 +256,10 @@ const VideoMeeting = () => {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={toggleFullscreen}
-                    >
-                      <Maximize2 className="mr-2 h-4 w-4" />
-                      Fullscreen
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full"
                       onClick={openInNewTab}
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />
-                      Open in New Tab
+                      Rejoin Meeting
                     </Button>
                     <Button
                       variant="destructive"
@@ -322,48 +282,38 @@ const VideoMeeting = () => {
                 <CardTitle>Video Meeting</CardTitle>
                 <CardDescription>
                   {meetingStarted 
-                    ? 'Meeting in progress - share this page URL with your expert'
+                    ? 'Meeting is open in another tab'
                     : 'Start your video meeting session'
                   }
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {!meetingStarted ? (
-                  <div className="flex flex-col items-center justify-center h-[500px] text-center space-y-6">
-                    <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Video className="h-12 w-12 text-primary" />
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-xl font-semibold">Ready to Start Your Session?</p>
-                      <p className="text-sm text-muted-foreground max-w-md">
-                        Click the button below to start a video meeting. Your expert can join using the same session link.
-                      </p>
-                    </div>
-                    <Button 
-                      size="lg" 
-                      onClick={startMeeting}
-                      className="gap-2"
-                    >
-                      <Video className="h-5 w-5" />
-                      Start Meeting
-                    </Button>
-                    <p className="text-xs text-muted-foreground">
-                      Powered by Jitsi Meet - Free & Secure Video Conferencing
+                <div className="flex flex-col items-center justify-center h-[500px] text-center space-y-6">
+                  <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Video className="h-12 w-12 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xl font-semibold">
+                      {meetingStarted ? "Meeting in Progress" : "Ready to Start Your Session?"}
+                    </p>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                      {meetingStarted 
+                        ? "Your meeting has been securely launched in a new tab. Since video platforms block iframe embeddings, we open the room right in your browser natively!"
+                        : "Click the button below to start your video meeting. It will open securely in a new tab."}
                     </p>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <iframe
-                      ref={iframeRef}
-                      src={getMeetingUrl()}
-                      allow="camera; microphone; fullscreen; display-capture; autoplay"
-                      className="w-full h-[500px] rounded-lg border-0 bg-muted"
-                    />
-                    <p className="text-xs text-muted-foreground text-center">
-                      Share this page URL with your expert so they can join the same meeting room
-                    </p>
-                  </div>
-                )}
+                  <Button 
+                    size="lg" 
+                    onClick={startMeeting}
+                    className="gap-2"
+                  >
+                    <ExternalLink className="h-5 w-5" />
+                    {meetingStarted ? "Rejoin Meeting tab" : "Launch Meeting"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Powered by Jitsi Meet - Free & Secure Video Conferencing
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>

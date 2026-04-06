@@ -27,6 +27,7 @@ import VideoMeeting from "./pages/VideoMeeting";
 import SessionFeedback from "./pages/SessionFeedback";
 import ExpertLogin from "./pages/ExpertLogin";
 import ExpertDashboard from "./pages/ExpertDashboard";
+import ResetPassword from "./pages/ResetPassword";
 import ExpertProtectedRoute from "./components/ExpertProtectedRoute";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
@@ -107,6 +108,7 @@ const App = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/"
               element={
