@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import EnhancedCareerDiscoveryQuiz from "@/components/EnhancedCareerDiscoveryQuiz";
+import GeminiCareerQuiz from "@/components/GeminiCareerQuiz";
 import GeminiCareerReport from "@/components/GeminiCareerReport";
 import ExploreResources from "@/components/ExploreResources";
 import CareerGuidanceChatbot from "@/components/CareerGuidanceChatbot";
@@ -192,6 +192,34 @@ const Dashboard = () => {
     );
   }
 
+  // When taking the quiz, show ONLY the assessment questions in full view
+  if (quizStarted) {
+    return (
+      <div className="min-h-screen bg-[#f0f6ff] py-10">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <GeminiCareerQuiz 
+            onComplete={(sessionId) => handleQuizComplete(sessionId)} 
+            onBack={handleBackToDashboard}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // When quiz is completed, show the report
+  if (quizCompleted && completedSessionId) {
+    return (
+      <div className="min-h-screen bg-[#f0f6ff] py-10">
+        <div className="container mx-auto px-4">
+          <GeminiCareerReport 
+            sessionId={completedSessionId} 
+            onRetake={handleBackToDashboard} 
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f0f6ff] py-8">
       <div className="container mx-auto px-4">
@@ -202,25 +230,6 @@ const Dashboard = () => {
           </h1>
           <p className="text-blue-700 text-lg">{t('dashboard.subtitle')}</p>
         </div>
-
-        {/* Quiz Section */}
-        {quizCompleted && completedSessionId ? (
-          <>
-            <GeminiCareerReport 
-              sessionId={completedSessionId} 
-              onRetake={handleBackToDashboard} 
-            />
-          </>
-        ) : quizStarted ? (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-blue-900 mb-6">{t('dashboard.aiAssessment')}</h2>
-            <EnhancedCareerDiscoveryQuiz 
-              onComplete={(sessionId) => handleQuizComplete(sessionId)} 
-              onEarlyExit={handleQuizEarlyExit}
-            />
-          </div>
-        ) : (
-          <>
             {/* Three-column Career Discovery Cards */}
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               <Card className="bg-white shadow-md flex flex-col h-full">
@@ -344,9 +353,6 @@ const Dashboard = () => {
                 </CardFooter>
               </Card>
             </div>
-          </>
-        )}
-
         {/* User Session History Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-blue-900 mb-6">{t('dashboard.yourSessions', { defaultValue: 'Your Expert Sessions' })}</h2>

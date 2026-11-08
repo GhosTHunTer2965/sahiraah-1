@@ -16,7 +16,7 @@ const answerSchema = z.object({
 
 const requestSchema = z.object({
   sessionId: z.string().uuid().optional(),
-  answers: z.array(answerSchema).max(50).optional().default([]),
+  answers: z.array(answerSchema).max(120).optional().default([]),
   action: z.enum(['generate_questions', 'analyze']).optional(),
   educationLevel: z.string().min(1).max(100).optional().default('Not specified'),
 });

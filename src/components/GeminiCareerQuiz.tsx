@@ -44,7 +44,7 @@ const GeminiCareerQuiz = ({ onComplete, onBack }: Props) => {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const { toast } = useToast();
 
-  const maxQuestions = 15;
+  const maxQuestions = 20;
 
   const startQuiz = async () => {
     if (!studentName.trim() || !educationLevel) {
@@ -90,13 +90,14 @@ const GeminiCareerQuiz = ({ onComplete, onBack }: Props) => {
   };
 
   const generateNextQuestion = async (currentAnswers: Answer[]) => {
+    setCurrentAnswer("");
     setLoading(true);
     try {
       const response = await supabase.functions.invoke('gemini-career-guidance', {
         body: {
           action: 'generate_question',
           answers: currentAnswers,
-          currentQuestionCount: questionCount,
+          currentQuestionCount: currentAnswers.length,
           userName: studentName,
           educationLevel: educationLevel
         }
@@ -179,7 +180,7 @@ const GeminiCareerQuiz = ({ onComplete, onBack }: Props) => {
       const response = await supabase.functions.invoke('gemini-career-guidance', {
         body: {
           action: 'generate_report',
-          answers: answers,
+          answers: answers.length > 0 ? answers : currentAnswers,
           userName: studentName,
           educationLevel: educationLevel
         }
@@ -332,8 +333,24 @@ const GeminiCareerQuiz = ({ onComplete, onBack }: Props) => {
           <div className="space-y-4">
             <h3 className="text-lg font-medium">{currentQuestion.question}</h3>
             
-            <Textarea
-              placeholder="Type your answer here... Share your thoughts and preferences"
+            {currentQuestion.type === "radio" && currentQuestion.options && currentQuestion.options.length > 0 ? (
+              <RadioGroup
+                value={currentAnswer}
+                onValueChange={(val) => setCurrentAnswer(val)}
+                className="space-y-3"
+              >
+                {currentQuestion.options.map((option, idx) => (
+                  <div key={idx} className="flex items-center space-x-3 p-3.5 rounded-lg border border-border hover:bg-accent cursor-pointer transition-colors">
+                    <RadioGroupItem value={option} id={"opt-" + idx} />
+                    <Label htmlFor={"opt-" + idx} className="flex-1 cursor-pointer font-medium text-sm">
+                      {option}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            ) : (
+              <Textarea
+                placeholder={currentQuestion.placeholder || "Type your answer in a sentence or two... Share your thoughts"}
               value={currentAnswer}
               onChange={(e) => setCurrentAnswer(e.target.value)}
               onKeyDown={(e) => {
@@ -345,7 +362,8 @@ const GeminiCareerQuiz = ({ onComplete, onBack }: Props) => {
                 }
               }}
               className="min-h-[120px]"
-            />
+              />
+            )}
           </div>
         )}
 

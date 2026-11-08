@@ -8,6 +8,10 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, AlertCircle, ArrowLeft } from "lucide-react";
+import {
+  ASSESSMENT_SECTION_LABELS,
+  careerAssessmentQuestions,
+} from "@/data/careerAssessmentQuestions";
 
 interface Props {
   onComplete: (sessionId: string) => void;
@@ -31,7 +35,6 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [educationLevel, setEducationLevel] = useState<string>("");
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
-  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const [timerExpired, setTimerExpired] = useState(false);
   const { toast } = useToast();
 
@@ -85,12 +88,12 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
     }
   }, [timerExpired]);
 
-  // Reset timer when question changes (300s for questions 16-20, 60s otherwise)
+  // Multiple-choice questions get 60s; written questions get 5 minutes
   useEffect(() => {
-    const timeLimit = currentQuestionIndex >= 15 ? 300 : 60;
+    const timeLimit = currentQuestion?.type === "text" ? 300 : 60;
     setTimeLeft(timeLimit);
     setTimerExpired(false);
-  }, [currentQuestionIndex]);
+  }, [currentQuestionIndex, currentQuestion?.type, allQuestions.length]);
 
   // Create session on mount
   useEffect(() => {
@@ -102,7 +105,7 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
         .from('user_quiz_sessions')
         .insert({
           user_id: user.id,
-          total_questions: 20
+          total_questions: careerAssessmentQuestions.length + 1
         })
         .select()
         .single();
@@ -186,10 +189,18 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
     const newAnswers = { ...answers, [currentQuestion.id]: answerValue };
     setAnswers(newAnswers);
 
-    // If this is the education level question, generate adaptive questions
+    // After education level, continue with the fixed assessment questions
     if (currentQuestion.category === "education_level" && !educationLevel) {
       setEducationLevel(answerValue);
-      await generateAdaptiveQuestions(answerValue);
+      const questions: Question[] = careerAssessmentQuestions.map((q, index) => ({
+        id: index + 1,
+        question: q.question,
+        type: q.type,
+        options: q.options,
+        category: q.section,
+      }));
+      setAllQuestions(questions);
+      setCurrentQuestionIndex(0);
       setCurrentAnswer("");
       return;
     }
@@ -236,34 +247,6 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
 
     // Sufficient answers - generate recommendations
     await generateRecommendations();
-  };
-
-  const generateAdaptiveQuestions = async (eduLevel: string) => {
-    setIsGeneratingQuestions(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('groq-career-analysis', {
-        body: {
-          action: 'generate_questions',
-          educationLevel: eduLevel
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.questions && Array.isArray(data.questions)) {
-        setAllQuestions(data.questions);
-        setCurrentQuestionIndex(0);
-      }
-    } catch (error) {
-      console.error('Error generating questions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate questions. Using default questions.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsGeneratingQuestions(false);
-    }
   };
 
   const generateRecommendations = async () => {
@@ -330,19 +313,17 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
     }
   };
 
-  if (isProcessing || isGeneratingQuestions) {
+  if (isProcessing) {
     return (
       <Card className="max-w-4xl mx-auto">
         <CardContent className="pt-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <h3 className="text-xl font-semibold text-blue-900 mb-2">
-              {isGeneratingQuestions ? "Generating Personalized Questions" : "Analyzing Your Responses"}
+              Analyzing Your Responses
             </h3>
             <p className="text-blue-700">
-              {isGeneratingQuestions 
-                ? "Creating questions tailored to your education level..." 
-                : "Our AI is generating your personalized career recommendations..."}
+              Our AI is generating your personalized career recommendations...
             </p>
             <p className="text-sm text-blue-600 mt-4">This may take a moment</p>
           </div>
@@ -383,6 +364,11 @@ const EnhancedCareerDiscoveryQuiz = ({ onComplete, onEarlyExit }: Props) => {
         )}
 
         <div className="space-y-4">
+          {currentQuestion?.category && currentQuestion.category !== "education_level" && (
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
+              {ASSESSMENT_SECTION_LABELS[currentQuestion.category] || currentQuestion.category}
+            </p>
+          )}
           <p className="text-lg font-medium text-blue-900">
             {currentQuestion?.question}
           </p>
