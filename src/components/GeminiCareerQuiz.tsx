@@ -258,12 +258,12 @@ const GeminiCareerQuiz = ({ onComplete, onBack }: Props) => {
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-semibold text-blue-900 mb-2">What to Expect:</h3>
              <ul className="text-sm text-blue-800 space-y-1">
-               <li>• Up to 15 short, easy-to-understand questions</li>
-               <li>• Type your own answers, no multiple choice</li>
-               <li>• Get 5 tailored career recommendations</li>
-               <li>• Receive 3 free courses for each level</li>
-               <li>• Save results and courses to your history</li>
-             </ul>
+               <li>• 20 personalized, AI-generated questions adapted to you in real-time</li>
+               <li>• Questions 1–15: Quick multiple choice with 4 tailored options</li>
+               <li>• Questions 16–20: 1–2 sentence answers to explore your deep passions</li>
+               <li>• 5 tailored career recommendations with growth & salary details</li>
+               <li>• Curated learning roadmaps with free recommended courses</li>
+</ul>
           </div>
 
           <div className="flex gap-4">
